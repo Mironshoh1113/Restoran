@@ -70,6 +70,6 @@ Route::middleware('auth')->group(function () {
 });
 
 // Telegram webhook
-Route::post('/telegram/webhook', [TelegramController::class, 'webhook'])->name('telegram.webhook');
+Route::post('/telegram/webhook/{token}', [TelegramController::class, 'webhook'])->name('telegram.webhook');
 
 require __DIR__.'/auth.php';

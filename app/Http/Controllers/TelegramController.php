@@ -26,10 +26,21 @@ class TelegramController extends Controller
     /**
      * Handle webhook from Telegram
      */
-    public function webhook(Request $request)
+    public function webhook(Request $request, $token)
     {
         $update = $request->all();
         Log::info('Telegram Webhook', $update);
+
+        // Find restaurant by bot token
+        $restaurant = Restaurant::where('bot_token', $token)->first();
+        
+        if (!$restaurant) {
+            Log::error('Restaurant not found for bot token: ' . $token);
+            return response('OK');
+        }
+
+        // Set bot token for this request
+        $this->telegramService->setBotToken($token);
 
         // Handle different types of updates
         if (isset($update['message'])) {
@@ -124,8 +135,11 @@ class TelegramController extends Controller
      */
     protected function handleStart($chatId)
     {
-        // Find restaurant by bot token (you might need to adjust this logic)
-        $restaurant = Restaurant::where('bot_token', $this->telegramService->getBotToken())->first();
+        // Get current bot token
+        $botToken = $this->telegramService->getBotToken();
+        
+        // Find restaurant by bot token
+        $restaurant = Restaurant::where('bot_token', $botToken)->first();
         
         if (!$restaurant) {
             $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
@@ -376,8 +390,11 @@ class TelegramController extends Controller
      */
     protected function handleContact($chatId, $contact)
     {
+        // Get current bot token
+        $botToken = $this->telegramService->getBotToken();
+        
         // Find restaurant by bot token
-        $restaurant = Restaurant::where('bot_token', $this->telegramService->getBotToken())->first();
+        $restaurant = Restaurant::where('bot_token', $botToken)->first();
         
         if (!$restaurant) {
             $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
@@ -432,8 +449,11 @@ class TelegramController extends Controller
      */
     protected function getRestaurantByChatId($chatId)
     {
+        // Get current bot token
+        $botToken = $this->telegramService->getBotToken();
+        
         // This is a simplified version. You might want to store user-restaurant mapping
-        return Restaurant::where('bot_token', $this->telegramService->getBotToken())->first();
+        return Restaurant::where('bot_token', $botToken)->first();
     }
 
     /**
