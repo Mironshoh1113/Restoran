@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark:bg-gray-900">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }} - Admin</title>
+    <title>{{ config('app.name', 'ForkNow') }} - Admin</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -17,26 +17,24 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
     <!-- Custom Tailwind Config -->
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         primary: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            200: '#bfdbfe',
-                            300: '#93c5fd',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
                         }
                     },
                     fontFamily: {
@@ -68,8 +66,185 @@
         }
     </script>
     
-    <!-- Custom Styles -->
+    <!-- Custom CSS for Dark Mode -->
     <style>
+        /* Dark mode styles */
+        .dark {
+            color-scheme: dark;
+        }
+        
+        .dark body {
+            background-color: #111827 !important;
+            color: #f9fafb !important;
+        }
+        
+        .dark .bg-white {
+            background-color: #1f2937 !important;
+        }
+        
+        .dark .bg-gray-50 {
+            background-color: #111827 !important;
+        }
+        
+        .dark .bg-gray-100 {
+            background-color: #1f2937 !important;
+        }
+        
+        .dark .bg-gray-200 {
+            background-color: #374151 !important;
+        }
+        
+        .dark .bg-gray-300 {
+            background-color: #4b5563 !important;
+        }
+        
+        .dark .bg-gray-400 {
+            background-color: #6b7280 !important;
+        }
+        
+        .dark .bg-gray-500 {
+            background-color: #9ca3af !important;
+        }
+        
+        .dark .bg-gray-600 {
+            background-color: #d1d5db !important;
+        }
+        
+        .dark .bg-gray-700 {
+            background-color: #e5e7eb !important;
+        }
+        
+        .dark .bg-gray-800 {
+            background-color: #f3f4f6 !important;
+        }
+        
+        .dark .bg-gray-900 {
+            background-color: #f9fafb !important;
+        }
+        
+        .dark .text-gray-900 {
+            color: #f9fafb !important;
+        }
+        
+        .dark .text-gray-800 {
+            color: #f3f4f6 !important;
+        }
+        
+        .dark .text-gray-700 {
+            color: #d1d5db !important;
+        }
+        
+        .dark .text-gray-600 {
+            color: #9ca3af !important;
+        }
+        
+        .dark .text-gray-500 {
+            color: #6b7280 !important;
+        }
+        
+        .dark .text-gray-400 {
+            color: #9ca3af !important;
+        }
+        
+        .dark .text-gray-300 {
+            color: #d1d5db !important;
+        }
+        
+        .dark .text-gray-200 {
+            color: #e5e7eb !important;
+        }
+        
+        .dark .text-gray-100 {
+            color: #f3f4f6 !important;
+        }
+        
+        .dark .text-gray-50 {
+            color: #f9fafb !important;
+        }
+        
+        .dark .border-gray-200 {
+            border-color: #374151 !important;
+        }
+        
+        .dark .border-gray-300 {
+            border-color: #4b5563 !important;
+        }
+        
+        .dark .border-gray-400 {
+            border-color: #6b7280 !important;
+        }
+        
+        .dark .border-gray-500 {
+            border-color: #9ca3af !important;
+        }
+        
+        .dark .border-gray-600 {
+            border-color: #d1d5db !important;
+        }
+        
+        .dark .border-gray-700 {
+            border-color: #e5e7eb !important;
+        }
+        
+        .dark .border-gray-800 {
+            border-color: #f3f4f6 !important;
+        }
+        
+        .dark .border-gray-900 {
+            border-color: #f9fafb !important;
+        }
+        
+        .dark .shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        .dark .shadow-lg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        .dark .shadow-xl {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        /* Gradient overrides */
+        .dark .bg-gradient-to-br {
+            background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%) !important;
+        }
+        
+        .dark .bg-gradient-to-r {
+            background: linear-gradient(to right, #111827 0%, #1f2937 100%) !important;
+        }
+        
+        .dark .bg-gradient-to-l {
+            background: linear-gradient(to left, #111827 0%, #1f2937 100%) !important;
+        }
+        
+        .dark .bg-gradient-to-t {
+            background: linear-gradient(to top, #111827 0%, #1f2937 100%) !important;
+        }
+        
+        .dark .bg-gradient-to-b {
+            background: linear-gradient(to bottom, #111827 0%, #1f2937 100%) !important;
+        }
+        
+        /* Force dark mode on html element */
+        html.dark {
+            background-color: #111827 !important;
+        }
+        
+        html.dark body {
+            background-color: #111827 !important;
+        }
+        
+        html.dark .min-h-screen {
+            background-color: #111827 !important;
+        }
+        
+        /* Ensure transitions work */
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+        }
+        
         /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -79,13 +254,25 @@
             background: #f1f1f1;
         }
         
+        .dark ::-webkit-scrollbar-track {
+            background: #374151 !important;
+        }
+        
         ::-webkit-scrollbar-thumb {
             background: #c1c1c1;
             border-radius: 3px;
         }
         
+        .dark ::-webkit-scrollbar-thumb {
+            background: #6b7280 !important;
+        }
+        
         ::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af !important;
         }
         
         /* Line clamp utilities */
@@ -131,6 +318,10 @@
         .card-hover:hover {
             transform: translateY(-4px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .dark .card-hover:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
         }
         
         /* Loading spinner */
@@ -197,8 +388,8 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased bg-gray-50">
-    <div class="min-h-screen flex flex-col">
+<body class="font-sans antialiased bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div class="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <!-- Navigation -->
         @include('layouts.navigation')
 
@@ -207,14 +398,14 @@
             <!-- Page Content -->
             <main class="p-6">
                 @if(session('success'))
-                    <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg flex items-center animate-fade-in">
+                    <div class="mb-6 bg-green-100 dark:bg-green-900/20 border border-green-400 dark:border-green-800 text-green-700 dark:text-green-200 px-4 py-3 rounded-lg flex items-center animate-fade-in">
                         <i class="fas fa-check-circle mr-2"></i>
                         <span>{{ session('success') }}</span>
                     </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-center animate-fade-in">
+                    <div class="mb-6 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg flex items-center animate-fade-in">
                         <i class="fas fa-exclamation-circle mr-2"></i>
                         <span>{{ session('error') }}</span>
                     </div>
@@ -227,14 +418,54 @@
 
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-3">
             <div class="spinner"></div>
-            <span class="text-gray-700">Yuklanmoqda...</span>
+            <span class="text-gray-700 dark:text-gray-300">Yuklanmoqda...</span>
         </div>
     </div>
 
-    <!-- Custom JavaScript -->
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom Script for Dark Mode -->
     <script>
+        // Initialize dark mode immediately
+        (function() {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+        
+        // Global dark mode toggle function
+        window.toggleDarkMode = function() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
+            
+            // Force re-render of all elements
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(element => {
+                // Trigger reflow for each element
+                element.style.display = 'none';
+                element.offsetHeight;
+                element.style.display = '';
+            });
+            
+            // Force body re-render
+            document.body.style.display = 'none';
+            document.body.offsetHeight;
+            document.body.style.display = '';
+            
+            // Force html re-render
+            document.documentElement.style.display = 'none';
+            document.documentElement.offsetHeight;
+            document.documentElement.style.display = '';
+            
+            return isDark;
+        };
+        
         // Global JavaScript functions
         window.showLoading = function() {
             document.getElementById('loading-overlay').classList.remove('hidden');
