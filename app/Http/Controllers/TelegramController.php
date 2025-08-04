@@ -12,6 +12,7 @@ use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class TelegramController extends Controller
 {
@@ -124,7 +125,7 @@ class TelegramController extends Controller
     protected function handleStart($chatId)
     {
         // Find restaurant by bot token (you might need to adjust this logic)
-        $restaurant = Restaurant::where('bot_token', $this->telegramService->botToken)->first();
+        $restaurant = Restaurant::where('bot_token', $this->telegramService->getBotToken())->first();
         
         if (!$restaurant) {
             $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
@@ -376,7 +377,7 @@ class TelegramController extends Controller
     protected function handleContact($chatId, $contact)
     {
         // Find restaurant by bot token
-        $restaurant = Restaurant::where('bot_token', $this->telegramService->botToken)->first();
+        $restaurant = Restaurant::where('bot_token', $this->telegramService->getBotToken())->first();
         
         if (!$restaurant) {
             $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
@@ -390,7 +391,7 @@ class TelegramController extends Controller
                 'name' => $contact['first_name'] . ' ' . ($contact['last_name'] ?? ''),
                 'phone' => $contact['phone_number'],
                 'email' => 'telegram_' . $chatId . '@example.com', // Temporary email
-                'password' => bcrypt(str_random(16)), // Random password
+                'password' => bcrypt(Str::random(16)), // Random password
                 'role' => 'user',
                 'restaurant_id' => $restaurant->id
             ]
@@ -432,7 +433,68 @@ class TelegramController extends Controller
     protected function getRestaurantByChatId($chatId)
     {
         // This is a simplified version. You might want to store user-restaurant mapping
-        return Restaurant::where('bot_token', $this->telegramService->botToken)->first();
+        return Restaurant::where('bot_token', $this->telegramService->getBotToken())->first();
+    }
+
+    /**
+     * Handle remove from cart
+     */
+    protected function handleRemoveFromCart($chatId, $itemId)
+    {
+        $item = MenuItem::find($itemId);
+        if (!$item) {
+            $this->telegramService->sendMessage($chatId, 'Taom topilmadi.');
+            return;
+        }
+
+        // Get cart for this user
+        $cart = Cache::get("cart_{$chatId}", []);
+        
+        if (isset($cart[$itemId])) {
+            if ($cart[$itemId]['quantity'] > 1) {
+                $cart[$itemId]['quantity']--;
+            } else {
+                unset($cart[$itemId]);
+            }
+        }
+
+        Cache::put("cart_{$chatId}", $cart, 3600); // 1 hour
+
+        $this->telegramService->sendMessage($chatId, "➖ {$item->name} savatdan olindi!");
+    }
+
+    /**
+     * Handle payment
+     */
+    protected function handlePayment($chatId, $orderId, $paymentType)
+    {
+        $order = Order::find($orderId);
+        if (!$order) {
+            $this->telegramService->sendMessage($chatId, 'Buyurtma topilmadi.');
+            return;
+        }
+
+        // Update order payment type
+        $order->update(['payment_type' => $paymentType]);
+
+        $this->telegramService->sendMessage($chatId, "To'lov turi: " . ($paymentType === 'card' ? 'Karta' : 'Naqd pul'));
+    }
+
+    /**
+     * Handle cancel order
+     */
+    protected function handleCancelOrder($chatId, $orderId)
+    {
+        $order = Order::find($orderId);
+        if (!$order) {
+            $this->telegramService->sendMessage($chatId, 'Buyurtma topilmadi.');
+            return;
+        }
+
+        // Update order status
+        $order->update(['status' => 'cancelled']);
+
+        $this->telegramService->sendMessage($chatId, "Buyurtma bekor qilindi.");
     }
 
     /**

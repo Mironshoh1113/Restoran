@@ -30,6 +30,14 @@ class TelegramService
     }
 
     /**
+     * Get bot token
+     */
+    public function getBotToken()
+    {
+        return $this->botToken;
+    }
+
+    /**
      * Send message to user
      */
     public function sendMessage($chatId, $text, $keyboard = null, $parseMode = 'HTML')
