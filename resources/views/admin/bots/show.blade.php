@@ -131,6 +131,132 @@
         </div>
     </div>
 
+    <!-- Bot Profile Management -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Bot Image Upload -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-image text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Bot rasmi</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Profil rasmini yangilash</p>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                @if($restaurant->bot_image)
+                    <div class="flex items-center space-x-4">
+                        <img src="{{ Storage::url($restaurant->bot_image) }}" alt="Bot Image" class="w-16 h-16 rounded-lg object-cover">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Joriy rasm</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-500">Telegram da ko'rinadi</p>
+                        </div>
+                    </div>
+                @endif
+                
+                <form id="botPhotoForm" enctype="multipart/form-data" class="space-y-3">
+                    <div>
+                        <label for="bot_photo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Yangi rasm</label>
+                        <input type="file" id="bot_photo" name="bot_photo" accept="image/*"
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">JPG, PNG formatida, maksimal 1MB</p>
+                    </div>
+                    <button type="button" onclick="updateBotPhoto()" 
+                            class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center justify-center space-x-2">
+                        <i class="fas fa-upload"></i>
+                        <span>Rasmni yangilash</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bot Name & Description -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-edit text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Bot ma'lumotlari</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Nomi va tavsifi</p>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="edit_bot_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot nomi</label>
+                    <input type="text" id="edit_bot_name" value="{{ $restaurant->bot_name ?? '' }}"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                           placeholder="Restaurant Bot">
+                    <button onclick="updateBotName()" 
+                            class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2">
+                        <i class="fas fa-save"></i>
+                        <span>Nomi yangilash</span>
+                    </button>
+                </div>
+                
+                <div>
+                    <label for="edit_bot_description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot tavsifi</label>
+                    <textarea id="edit_bot_description" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              placeholder="Bot haqida qisqacha ma'lumot...">{{ $restaurant->bot_description ?? '' }}</textarea>
+                    <button onclick="updateBotDescription()" 
+                            class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2">
+                        <i class="fas fa-save"></i>
+                        <span>Tavsif yangilash</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bot Commands Management -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-terminal text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Bot buyruqlari</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Telegram bot buyruqlarini boshqarish</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <button onclick="getBotCommands()" 
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center space-x-2">
+                    <i class="fas fa-download"></i>
+                    <span>Buyruqlarni yuklash</span>
+                </button>
+                <button onclick="showCommandsEditor()" 
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2">
+                    <i class="fas fa-edit"></i>
+                    <span>Buyruqlarni tahrirlash</span>
+                </button>
+            </div>
+            
+            <div id="commandsList" class="hidden">
+                <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">Joriy buyruqlar:</h4>
+                <div id="commandsContainer" class="space-y-2"></div>
+            </div>
+            
+            <div id="commandsEditor" class="hidden">
+                <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">Buyruqlarni tahrirlash:</h4>
+                <div id="commandsForm" class="space-y-3"></div>
+                <button onclick="saveBotCommands()" 
+                        class="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center space-x-2">
+                    <i class="fas fa-save"></i>
+                    <span>Buyruqlarni saqlash</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Setup Instructions -->
     <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
         <div class="flex items-start space-x-3">
@@ -155,7 +281,7 @@
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Bot sozlamalari</h3>
         </div>
         
-        <form action="{{ route('admin.bots.update', $restaurant) }}" method="POST" class="p-6 space-y-6">
+        <form action="{{ route('admin.bots.update', $restaurant) }}" method="POST" class="p-6 space-y-6" enctype="multipart/form-data">
             @csrf
             @method('PATCH')
             
@@ -290,6 +416,226 @@ function togglePassword(fieldId) {
         field.type = 'password';
         icon.className = 'fas fa-eye';
     }
+}
+
+function updateBotPhoto() {
+    const formData = new FormData();
+    const fileInput = document.getElementById('bot_photo');
+    
+    if (!fileInput.files[0]) {
+        showNotification('Rasm tanlang', 'warning');
+        return;
+    }
+    
+    formData.append('bot_photo', fileInput.files[0]);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    
+    fetch(`/admin/bots/{{ $restaurant->id }}/update-photo`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('✅ ' + data.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('❌ ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Xatolik yuz berdi', 'error');
+    });
+}
+
+function updateBotName() {
+    const botName = document.getElementById('edit_bot_name').value;
+    
+    if (!botName) {
+        showNotification('Bot nomini kiriting', 'warning');
+        return;
+    }
+    
+    fetch(`/admin/bots/{{ $restaurant->id }}/update-name`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            bot_name: botName
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('✅ ' + data.message, 'success');
+        } else {
+            showNotification('❌ ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Xatolik yuz berdi', 'error');
+    });
+}
+
+function updateBotDescription() {
+    const botDescription = document.getElementById('edit_bot_description').value;
+    
+    if (!botDescription) {
+        showNotification('Bot tavsifini kiriting', 'warning');
+        return;
+    }
+    
+    fetch(`/admin/bots/{{ $restaurant->id }}/update-description`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            bot_description: botDescription
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('✅ ' + data.message, 'success');
+        } else {
+            showNotification('❌ ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Xatolik yuz berdi', 'error');
+    });
+}
+
+function getBotCommands() {
+    fetch(`/admin/bots/{{ $restaurant->id }}/commands`, {
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayCommands(data.commands);
+            showNotification('✅ Buyruqlar yuklandi', 'success');
+        } else {
+            showNotification('❌ ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Xatolik yuz berdi', 'error');
+    });
+}
+
+function displayCommands(commands) {
+    const container = document.getElementById('commandsContainer');
+    const list = document.getElementById('commandsList');
+    
+    container.innerHTML = '';
+    
+    commands.forEach(command => {
+        const commandDiv = document.createElement('div');
+        commandDiv.className = 'flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg';
+        commandDiv.innerHTML = `
+            <div>
+                <span class="font-medium text-gray-800 dark:text-gray-200">/${command.command}</span>
+                <p class="text-sm text-gray-600 dark:text-gray-400">${command.description}</p>
+            </div>
+        `;
+        container.appendChild(commandDiv);
+    });
+    
+    list.classList.remove('hidden');
+}
+
+function showCommandsEditor() {
+    const editor = document.getElementById('commandsEditor');
+    const form = document.getElementById('commandsForm');
+    
+    form.innerHTML = `
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Buyruq</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Tavsif</span>
+            </div>
+            <div id="commandsList">
+                <div class="flex items-center space-x-3">
+                    <input type="text" name="commands[0][command]" placeholder="start" 
+                           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <input type="text" name="commands[0][description]" placeholder="Botni ishga tushirish" 
+                           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+                <div class="flex items-center space-x-3">
+                    <input type="text" name="commands[1][command]" placeholder="menu" 
+                           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <input type="text" name="commands[1][description]" placeholder="Menyu ko'rish" 
+                           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+                <div class="flex items-center space-x-3">
+                    <input type="text" name="commands[2][command]" placeholder="help" 
+                           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <input type="text" name="commands[2][description]" placeholder="Yordam" 
+                           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+            </div>
+        </div>
+    `;
+    
+    editor.classList.remove('hidden');
+}
+
+function saveBotCommands() {
+    const form = document.getElementById('commandsForm');
+    const inputs = form.querySelectorAll('input[name*="[command]"]');
+    const commands = [];
+    
+    inputs.forEach((input, index) => {
+        const command = input.value.trim();
+        const description = form.querySelector(`input[name="commands[${index}][description]"]`).value.trim();
+        
+        if (command && description) {
+            commands.push({
+                command: command,
+                description: description
+            });
+        }
+    });
+    
+    if (commands.length === 0) {
+        showNotification('Kamida bitta buyruq kiriting', 'warning');
+        return;
+    }
+    
+    fetch(`/admin/bots/{{ $restaurant->id }}/commands`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            commands: commands
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('✅ ' + data.message, 'success');
+            document.getElementById('commandsEditor').classList.add('hidden');
+        } else {
+            showNotification('❌ ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Xatolik yuz berdi', 'error');
+    });
 }
 
 function testBot() {

@@ -49,6 +49,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('bots/{restaurant}/webhook', [BotController::class, 'deleteWebhook'])->name('bots.delete-webhook');
         Route::post('bots/{restaurant}/send-test', [BotController::class, 'sendTestMessage'])->name('bots.send-test');
         
+        // New bot management routes
+        Route::post('bots/{restaurant}/update-name', [BotController::class, 'updateBotName'])->name('bots.update-name');
+        Route::post('bots/{restaurant}/update-description', [BotController::class, 'updateBotDescription'])->name('bots.update-description');
+        Route::post('bots/{restaurant}/update-photo', [BotController::class, 'updateBotPhoto'])->name('bots.update-photo');
+        Route::get('bots/{restaurant}/commands', [BotController::class, 'getBotCommands'])->name('bots.get-commands');
+        Route::post('bots/{restaurant}/commands', [BotController::class, 'setBotCommands'])->name('bots.set-commands');
+        
         // Project routes
         Route::get('restaurants/{restaurant}/projects', [ProjectController::class, 'index'])->name('projects.index');
         Route::get('restaurants/{restaurant}/projects/create', [ProjectController::class, 'create'])->name('projects.create');

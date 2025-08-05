@@ -8,6 +8,7 @@ use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Storage;
 
 class BotController extends Controller
 {
@@ -68,17 +69,35 @@ class BotController extends Controller
         $this->authorize('update', $restaurant);
         
         $request->validate([
+            'bot_name' => 'nullable|string|max:255',
+            'bot_username' => 'nullable|string|max:255',
             'bot_token' => 'nullable|string',
-            'bot_username' => 'nullable|string',
+            'bot_description' => 'nullable|string',
+            'bot_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'webhook_url' => 'nullable|url'
         ]);
 
         $oldToken = $restaurant->bot_token;
         
-        $restaurant->update([
+        $data = [
+            'bot_name' => $request->bot_name,
+            'bot_username' => $request->bot_username,
             'bot_token' => $request->bot_token,
-            'bot_username' => $request->bot_username
-        ]);
+            'bot_description' => $request->bot_description,
+        ];
+
+        // Handle bot image upload
+        if ($request->hasFile('bot_image')) {
+            // Delete old image
+            if ($restaurant->bot_image) {
+                Storage::disk('public')->delete($restaurant->bot_image);
+            }
+            
+            $imagePath = $request->file('bot_image')->store('bot-images', 'public');
+            $data['bot_image'] = $imagePath;
+        }
+
+        $restaurant->update($data);
 
         // Set webhook if token and URL provided
         if ($request->bot_token && $request->webhook_url) {
@@ -103,6 +122,157 @@ class BotController extends Controller
         }
 
         return redirect()->back()->with('success', 'Bot sozlamalari yangilandi.');
+    }
+
+    /**
+     * Update bot name via Telegram API
+     */
+    public function updateBotName(Request $request, Restaurant $restaurant)
+    {
+        $this->authorize('update', $restaurant);
+        
+        $request->validate([
+            'bot_name' => 'required|string|max:255'
+        ]);
+
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            $telegramService = new TelegramService($restaurant->bot_token);
+            $result = $telegramService->setMyName($request->bot_name);
+            
+            if ($result['ok']) {
+                $restaurant->update(['bot_name' => $request->bot_name]);
+                return response()->json(['success' => true, 'message' => 'Bot nomi muvaffaqiyatli yangilandi']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Bot nomini yangilashda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Update bot description via Telegram API
+     */
+    public function updateBotDescription(Request $request, Restaurant $restaurant)
+    {
+        $this->authorize('update', $restaurant);
+        
+        $request->validate([
+            'bot_description' => 'required|string|max:512'
+        ]);
+
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            $telegramService = new TelegramService($restaurant->bot_token);
+            $result = $telegramService->setMyDescription($request->bot_description);
+            
+            if ($result['ok']) {
+                $restaurant->update(['bot_description' => $request->bot_description]);
+                return response()->json(['success' => true, 'message' => 'Bot tavsifi muvaffaqiyatli yangilandi']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Bot tavsifini yangilashda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Upload bot profile photo
+     */
+    public function updateBotPhoto(Request $request, Restaurant $restaurant)
+    {
+        $this->authorize('update', $restaurant);
+        
+        $request->validate([
+            'bot_photo' => 'required|image|mimes:jpeg,png,jpg|max:1024'
+        ]);
+
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            $telegramService = new TelegramService($restaurant->bot_token);
+            
+            // Upload to Telegram
+            $result = $telegramService->setProfilePhoto($request->file('bot_photo'));
+            
+            if ($result['ok']) {
+                // Save locally
+                $imagePath = $request->file('bot_photo')->store('bot-images', 'public');
+                $restaurant->update(['bot_image' => $imagePath]);
+                
+                return response()->json(['success' => true, 'message' => 'Bot rasmi muvaffaqiyatli yangilandi']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Bot rasmini yangilashda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get bot commands
+     */
+    public function getBotCommands(Restaurant $restaurant)
+    {
+        $this->authorize('view', $restaurant);
+        
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            $telegramService = new TelegramService($restaurant->bot_token);
+            $result = $telegramService->getMyCommands();
+            
+            if ($result['ok']) {
+                return response()->json(['success' => true, 'commands' => $result['result']]);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Buyruqlarni olishda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Set bot commands
+     */
+    public function setBotCommands(Request $request, Restaurant $restaurant)
+    {
+        $this->authorize('update', $restaurant);
+        
+        $request->validate([
+            'commands' => 'required|array',
+            'commands.*.command' => 'required|string',
+            'commands.*.description' => 'required|string'
+        ]);
+
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            $telegramService = new TelegramService($restaurant->bot_token);
+            $result = $telegramService->setMyCommands($request->commands);
+            
+            if ($result['ok']) {
+                return response()->json(['success' => true, 'message' => 'Bot buyruqlari muvaffaqiyatli yangilandi']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Bot buyruqlarini yangilashda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
     }
 
     /**
