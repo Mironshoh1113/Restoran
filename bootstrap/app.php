@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook/*',
+            'webhook',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
