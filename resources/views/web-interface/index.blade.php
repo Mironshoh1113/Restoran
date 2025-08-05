@@ -418,8 +418,7 @@
             fetch(endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(orderData)
             })
