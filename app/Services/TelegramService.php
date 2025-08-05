@@ -375,4 +375,107 @@ class TelegramService
     {
         return $this->makeRequest('getMyCommands');
     }
+
+    /**
+     * Save or update telegram user
+     */
+    public function saveTelegramUser($userData, Restaurant $restaurant)
+    {
+        $telegramUser = \App\Models\TelegramUser::updateOrCreate(
+            [
+                'restaurant_id' => $restaurant->id,
+                'telegram_id' => $userData['id']
+            ],
+            [
+                'username' => $userData['username'] ?? null,
+                'first_name' => $userData['first_name'] ?? null,
+                'last_name' => $userData['last_name'] ?? null,
+                'language_code' => $userData['language_code'] ?? 'uz',
+                'is_bot' => $userData['is_bot'] ?? false,
+                'last_activity' => now(),
+            ]
+        );
+
+        return $telegramUser;
+    }
+
+    /**
+     * Get telegram users for restaurant
+     */
+    public function getTelegramUsers(Restaurant $restaurant, $limit = 50)
+    {
+        return $restaurant->telegramUsers()
+            ->active()
+            ->orderBy('last_activity', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Send message to all users of a restaurant
+     */
+    public function sendMessageToAllUsers(Restaurant $restaurant, $message, $keyboard = null)
+    {
+        $users = $restaurant->telegramUsers()->active()->get();
+        $successCount = 0;
+        $errorCount = 0;
+
+        foreach ($users as $user) {
+            try {
+                $result = $this->sendMessage($user->telegram_id, $message, $keyboard);
+                if ($result['ok']) {
+                    $successCount++;
+                    $user->updateActivity();
+                } else {
+                    $errorCount++;
+                }
+            } catch (\Exception $e) {
+                $errorCount++;
+                Log::error('Failed to send message to user', [
+                    'user_id' => $user->telegram_id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        return [
+            'success_count' => $successCount,
+            'error_count' => $errorCount,
+            'total_users' => $users->count()
+        ];
+    }
+
+    /**
+     * Send message to specific users
+     */
+    public function sendMessageToUsers($userIds, $message, $keyboard = null)
+    {
+        $users = \App\Models\TelegramUser::whereIn('telegram_id', $userIds)->get();
+        $successCount = 0;
+        $errorCount = 0;
+
+        foreach ($users as $user) {
+            try {
+                $result = $this->sendMessage($user->telegram_id, $message, $keyboard);
+                if ($result['ok']) {
+                    $successCount++;
+                    $user->updateActivity();
+                } else {
+                    $errorCount++;
+                }
+            } catch (\Exception $e) {
+                $errorCount++;
+                Log::error('Failed to send message to user', [
+                    'user_id' => $user->telegram_id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        return [
+            'success_count' => $successCount,
+            'error_count' => $errorCount,
+            'total_users' => $users->count()
+        ];
+    }
 } 

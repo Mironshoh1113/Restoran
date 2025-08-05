@@ -393,4 +393,95 @@ class BotController extends Controller
             return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Show telegram users for restaurant
+     */
+    public function users(Restaurant $restaurant)
+    {
+        $this->authorize('view', $restaurant);
+        
+        $users = $restaurant->telegramUsers()
+            ->orderBy('last_activity', 'desc')
+            ->paginate(20);
+        
+        return view('admin.bots.users', compact('restaurant', 'users'));
+    }
+
+    /**
+     * Send message to selected users
+     */
+    public function sendMessageToUsers(Request $request, Restaurant $restaurant)
+    {
+        $this->authorize('update', $restaurant);
+        
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'integer',
+            'message' => 'required|string|max:4096'
+        ]);
+
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            $telegramService = new TelegramService($restaurant->bot_token);
+            $result = $telegramService->sendMessageToUsers($request->user_ids, $request->message);
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Xabar {$result['success_count']} ta foydalanuvchiga yuborildi. {$result['error_count']} ta xatolik yuz berdi.",
+                'result' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Send message to all users
+     */
+    public function sendMessageToAllUsers(Request $request, Restaurant $restaurant)
+    {
+        $this->authorize('update', $restaurant);
+        
+        $request->validate([
+            'message' => 'required|string|max:4096'
+        ]);
+
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            $telegramService = new TelegramService($restaurant->bot_token);
+            $result = $telegramService->sendMessageToAllUsers($restaurant, $request->message);
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Xabar {$result['success_count']} ta foydalanuvchiga yuborildi. {$result['error_count']} ta xatolik yuz berdi.",
+                'result' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get users statistics
+     */
+    public function getUsersStats(Restaurant $restaurant)
+    {
+        $this->authorize('view', $restaurant);
+        
+        $stats = [
+            'total_users' => $restaurant->telegramUsers()->count(),
+            'active_users' => $restaurant->telegramUsers()->active()->count(),
+            'recent_users' => $restaurant->telegramUsers()->recent(7)->count(),
+            'today_users' => $restaurant->telegramUsers()->whereDate('last_activity', today())->count(),
+        ];
+        
+        return response()->json(['success' => true, 'stats' => $stats]);
+    }
 } 

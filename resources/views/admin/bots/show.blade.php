@@ -10,11 +10,18 @@
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-200">{{ $restaurant->name }} - Bot sozlamalari</h1>
             <p class="text-gray-600 dark:text-gray-400">Telegram bot sozlamalarini boshqarish</p>
         </div>
-        <a href="{{ route('admin.bots.index') }}" 
-           class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-            <i class="fas fa-arrow-left"></i>
-            <span>Orqaga</span>
-        </a>
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('admin.bots.users', $restaurant) }}" 
+               class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                <i class="fas fa-users"></i>
+                <span>Foydalanuvchilar</span>
+            </a>
+            <a href="{{ route('admin.bots.index') }}" 
+               class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                <i class="fas fa-arrow-left"></i>
+                <span>Orqaga</span>
+            </a>
+        </div>
     </div>
 
     <!-- Bot Status Cards -->

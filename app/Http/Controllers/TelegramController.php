@@ -61,6 +61,9 @@ class TelegramController extends Controller
         $text = $message['text'] ?? '';
         $contact = $message['contact'] ?? null;
 
+        // Save or update telegram user
+        $this->saveTelegramUser($message['from']);
+
         // Handle contact sharing
         if ($contact) {
             $this->handleContact($chatId, $contact);
@@ -523,5 +526,39 @@ class TelegramController extends Controller
     protected function sendRestaurantNotFound($chatId)
     {
         $this->telegramService->sendMessage($chatId, 'Kechirasiz, restoran topilmadi.');
+    }
+
+    /**
+     * Save or update telegram user
+     */
+    protected function saveTelegramUser($userData)
+    {
+        // Get current bot token
+        $botToken = $this->telegramService->getBotToken();
+        
+        // Find restaurant by bot token
+        $restaurant = Restaurant::where('bot_token', $botToken)->first();
+        
+        if (!$restaurant) {
+            return;
+        }
+
+        // Save or update telegram user
+        $telegramUser = \App\Models\TelegramUser::updateOrCreate(
+            [
+                'restaurant_id' => $restaurant->id,
+                'telegram_id' => $userData['id']
+            ],
+            [
+                'username' => $userData['username'] ?? null,
+                'first_name' => $userData['first_name'] ?? null,
+                'last_name' => $userData['last_name'] ?? null,
+                'language_code' => $userData['language_code'] ?? 'uz',
+                'is_bot' => $userData['is_bot'] ?? false,
+                'last_activity' => now(),
+            ]
+        );
+
+        return $telegramUser;
     }
 } 

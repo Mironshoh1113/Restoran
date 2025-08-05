@@ -56,6 +56,12 @@ Route::middleware('auth')->group(function () {
         Route::get('bots/{restaurant}/commands', [BotController::class, 'getBotCommands'])->name('bots.get-commands');
         Route::post('bots/{restaurant}/commands', [BotController::class, 'setBotCommands'])->name('bots.set-commands');
         
+        // Telegram users management routes
+        Route::get('bots/{restaurant}/users', [BotController::class, 'users'])->name('bots.users');
+        Route::post('bots/{restaurant}/users/send', [BotController::class, 'sendMessageToUsers'])->name('bots.send-to-users');
+        Route::post('bots/{restaurant}/users/send-all', [BotController::class, 'sendMessageToAllUsers'])->name('bots.send-to-all-users');
+        Route::get('bots/{restaurant}/users/stats', [BotController::class, 'getUsersStats'])->name('bots.users-stats');
+        
         // Project routes
         Route::get('restaurants/{restaurant}/projects', [ProjectController::class, 'index'])->name('projects.index');
         Route::get('restaurants/{restaurant}/projects/create', [ProjectController::class, 'create'])->name('projects.create');
