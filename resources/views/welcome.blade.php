@@ -216,6 +216,78 @@
                 background-color: #111827 !important;
             }
             
+            /* Footer dark mode fixes */
+            .dark footer {
+                background-color: #1f2937 !important;
+            }
+            
+            .dark footer .text-gray-400 {
+                color: #d1d5db !important;
+            }
+            
+            .dark footer .text-white {
+                color: #ffffff !important;
+            }
+            
+            .dark footer .border-gray-800 {
+                border-color: #374151 !important;
+            }
+            
+            .dark footer a:hover {
+                color: #ffffff !important;
+            }
+            
+            /* Additional footer dark mode overrides */
+            html.dark footer {
+                background-color: #1f2937 !important;
+            }
+            
+            html.dark footer * {
+                color: inherit !important;
+            }
+            
+            html.dark footer .text-gray-400 {
+                color: #d1d5db !important;
+            }
+            
+            html.dark footer .text-white {
+                color: #ffffff !important;
+            }
+            
+            html.dark footer .border-gray-800 {
+                border-color: #374151 !important;
+            }
+            
+            html.dark footer a:hover {
+                color: #ffffff !important;
+            }
+            
+            /* Force footer styles in dark mode */
+            body.dark footer,
+            .dark footer,
+            html.dark footer {
+                background-color: #1f2937 !important;
+                color: #ffffff !important;
+            }
+            
+            body.dark footer .text-gray-400,
+            .dark footer .text-gray-400,
+            html.dark footer .text-gray-400 {
+                color: #d1d5db !important;
+            }
+            
+            body.dark footer .text-white,
+            .dark footer .text-white,
+            html.dark footer .text-white {
+                color: #ffffff !important;
+            }
+            
+            body.dark footer .border-gray-800,
+            .dark footer .border-gray-800,
+            html.dark footer .border-gray-800 {
+                border-color: #374151 !important;
+            }
+            
             /* Ensure transitions work */
             * {
                 transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
@@ -641,7 +713,7 @@
         </section>
 
         <!-- Footer -->
-        <footer class="bg-gray-900 text-white py-12">
+        <footer class="bg-gray-900 dark:bg-gray-800 text-white py-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid md:grid-cols-4 gap-8">
                     <div>
@@ -651,45 +723,45 @@
                                     <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
                                 </svg>
                             </div>
-                            <span class="text-xl font-bold">ForkNow</span>
+                            <span class="text-xl font-bold text-white dark:text-white">ForkNow</span>
                         </div>
-                        <p class="text-gray-400">
+                        <p class="text-gray-400 dark:text-gray-300">
                             Restoranlaringizni raqamlashtirish uchun zamonaviy yechimlar.
                         </p>
                     </div>
 
                     <div>
-                        <h3 class="text-lg font-semibold mb-4">Mahsulot</h3>
-                        <ul class="space-y-2 text-gray-400">
-                            <li><a href="#" class="hover:text-white transition-colors">Xususiyatlar</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Narxlar</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">API</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Hujjatlar</a></li>
+                        <h3 class="text-lg font-semibold mb-4 text-white dark:text-white">Mahsulot</h3>
+                        <ul class="space-y-2 text-gray-400 dark:text-gray-300">
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Xususiyatlar</a></li>
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Narxlar</a></li>
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">API</a></li>
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Hujjatlar</a></li>
                         </ul>
                     </div>
 
                     <div>
-                        <h3 class="text-lg font-semibold mb-4">Kompaniya</h3>
-                        <ul class="space-y-2 text-gray-400">
-                            <li><a href="#" class="hover:text-white transition-colors">Haqida</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Karyera</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Yangiliklar</a></li>
+                        <h3 class="text-lg font-semibold mb-4 text-white dark:text-white">Kompaniya</h3>
+                        <ul class="space-y-2 text-gray-400 dark:text-gray-300">
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Haqida</a></li>
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Blog</a></li>
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Karyera</a></li>
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Yangiliklar</a></li>
                         </ul>
                     </div>
 
                     <div>
-                        <h3 class="text-lg font-semibold mb-4">Qo'llab-quvvatlash</h3>
-                        <ul class="space-y-2 text-gray-400">
-                            <li><a href="#" class="hover:text-white transition-colors">Yordam markazi</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Aloqa</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Status</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Xavfsizlik</a></li>
+                        <h3 class="text-lg font-semibold mb-4 text-white dark:text-white">Qo'llab-quvvatlash</h3>
+                        <ul class="space-y-2 text-gray-400 dark:text-gray-300">
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Yordam markazi</a></li>
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Aloqa</a></li>
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Status</a></li>
+                            <li><a href="#" class="hover:text-white dark:hover:text-white transition-colors">Xavfsizlik</a></li>
                         </ul>
                     </div>
                 </div>
 
-                <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <div class="border-t border-gray-800 dark:border-gray-700 mt-8 pt-8 text-center text-gray-400 dark:text-gray-300">
                     <p>&copy; 2024 ForkNow. Barcha huquqlar himoyalangan.</p>
                 </div>
             </div>
