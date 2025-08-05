@@ -413,7 +413,7 @@
             const token = currentUrl.split('/').pop();
             const endpoint = token && token !== 'web-interface' ? 
                 `/web-interface/${token}/order` : 
-                '/web-interface/{{ $token ?? "test" }}/order';
+                '/web-interface/order';
             
             fetch(endpoint, {
                 method: 'POST',

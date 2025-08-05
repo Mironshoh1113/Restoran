@@ -450,6 +450,74 @@ class TelegramController extends Controller
     }
 
     /**
+     * Place order from web interface without token
+     */
+    public function placeOrderWithoutToken(Request $request)
+    {
+        // Get restaurant from query parameter or use first available
+        $restaurantId = $request->get('restaurant_id');
+        
+        if ($restaurantId) {
+            $restaurant = Restaurant::find($restaurantId);
+        } else {
+            $restaurant = Restaurant::first();
+        }
+        
+        if (!$restaurant) {
+            return response()->json(['error' => 'Restaurant not found'], 404);
+        }
+        
+        // Validate request
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:menu_items,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'delivery_address' => 'required|string',
+            'payment_method' => 'required|in:cash,card',
+            'customer_name' => 'required|string',
+            'customer_phone' => 'required|string'
+        ]);
+        
+        // Calculate total
+        $total = 0;
+        $orderItems = [];
+        
+        foreach ($request->items as $item) {
+            $menuItem = MenuItem::find($item['id']);
+            $subtotal = $menuItem->price * $item['quantity'];
+            $total += $subtotal;
+            
+            $orderItems[] = [
+                'menu_item_id' => $item['id'],
+                'name' => $menuItem->name,
+                'price' => $menuItem->price,
+                'quantity' => $item['quantity'],
+                'subtotal' => $subtotal
+            ];
+        }
+        
+        // Create order
+        $order = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'user_id' => null,
+            'telegram_chat_id' => null,
+            'total_amount' => $total,
+            'delivery_address' => $request->delivery_address,
+            'payment_method' => $request->payment_method,
+            'status' => 'pending',
+            'items' => json_encode($orderItems),
+            'customer_name' => $request->customer_name,
+            'customer_phone' => $request->customer_phone
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'order_id' => $order->id,
+            'message' => 'Buyurtma qabul qilindi!'
+        ]);
+    }
+
+    /**
      * Place order from web interface
      */
     public function placeOrder(Request $request, $token)

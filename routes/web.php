@@ -104,6 +104,7 @@ Route::post('/telegram/webhook/{token}', [TelegramController::class, 'webhook'])
 Route::get('/web-interface/{token}', [TelegramController::class, 'webInterface'])->name('web.interface');
 Route::get('/web-interface', [TelegramController::class, 'webInterfaceFromApp'])->name('web.interface.app');
 Route::post('/web-interface/{token}/order', [TelegramController::class, 'placeOrder'])->name('web.place-order');
+Route::post('/web-interface/order', [TelegramController::class, 'placeOrderWithoutToken'])->name('web.place-order-no-token');
 Route::get('/web-interface/{token}/menu', [TelegramController::class, 'getMenu'])->name('web.get-menu');
 
 // Git Webhook Route for Auto Deployment
