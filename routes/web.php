@@ -173,6 +173,79 @@ Route::post('/test-order', function (Request $request) {
     }
 });
 
+// Test order placement endpoint
+Route::post('/test-order-placement', function (Request $request) {
+    try {
+        $restaurant = \App\Models\Restaurant::first();
+        if (!$restaurant) {
+            return response()->json(['error' => 'No restaurant found'], 404);
+        }
+        
+        // Validate request
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:menu_items,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'delivery_address' => 'required|string',
+            'payment_method' => 'required|in:cash,card',
+            'customer_name' => 'required|string',
+            'customer_phone' => 'required|string',
+            'telegram_chat_id' => 'nullable|numeric'
+        ]);
+        
+        // Calculate total
+        $total = 0;
+        $orderItems = [];
+        
+        foreach ($request->items as $item) {
+            $menuItem = \App\Models\MenuItem::find($item['id']);
+            if (!$menuItem) {
+                return response()->json(['error' => 'Menu item not found: ' . $item['id']], 404);
+            }
+            $subtotal = $menuItem->price * $item['quantity'];
+            $total += $subtotal;
+            
+            $orderItems[] = [
+                'menu_item_id' => $item['id'],
+                'name' => $menuItem->name,
+                'price' => $menuItem->price,
+                'quantity' => $item['quantity'],
+                'subtotal' => $subtotal
+            ];
+        }
+        
+        // Create order
+        $order = \App\Models\Order::create([
+            'restaurant_id' => $restaurant->id,
+            'user_id' => null,
+            'project_id' => null,
+            'telegram_chat_id' => $request->telegram_chat_id ? (string) $request->telegram_chat_id : null,
+            'total_amount' => $total,
+            'delivery_address' => $request->delivery_address,
+            'payment_method' => $request->payment_method,
+            'status' => 'pending',
+            'items' => json_encode($orderItems),
+            'customer_name' => $request->customer_name,
+            'customer_phone' => $request->customer_phone,
+            'order_number' => 'TEST-' . time(),
+            'total_price' => $total,
+            'payment_type' => $request->payment_method,
+            'address' => $request->delivery_address
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'message' => 'Test order placement successful'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Test order placement failed: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
 // Git Webhook Route for Auto Deployment
 Route::post('/webhook', function () {
     // Set error reporting

@@ -498,7 +498,7 @@ class TelegramController extends Controller
                 'payment_method' => 'required|in:cash,card',
                 'customer_name' => 'required|string',
                 'customer_phone' => 'required|string',
-                'telegram_chat_id' => 'nullable|string'
+                'telegram_chat_id' => 'nullable|numeric'
             ]);
             
             Log::info('Request validation passed', ['validated_data' => $validated]);
@@ -535,7 +535,7 @@ class TelegramController extends Controller
                 'restaurant_id' => $restaurant->id,
                 'user_id' => null,
                 'project_id' => null,
-                'telegram_chat_id' => $request->telegram_chat_id,
+                'telegram_chat_id' => $request->telegram_chat_id ? (string) $request->telegram_chat_id : null,
                 'total_amount' => $total,
                 'delivery_address' => $request->delivery_address,
                 'payment_method' => $request->payment_method,
@@ -635,7 +635,8 @@ class TelegramController extends Controller
                 'delivery_address' => 'required|string',
                 'payment_method' => 'required|in:cash,card',
                 'customer_name' => 'required|string',
-                'customer_phone' => 'required|string'
+                'customer_phone' => 'required|string',
+                'telegram_chat_id' => 'nullable|numeric'
             ]);
             
             Log::info('Request validation passed', ['validated_data' => $validated]);
@@ -671,7 +672,7 @@ class TelegramController extends Controller
             $orderData = [
                 'restaurant_id' => $restaurant->id,
                 'user_id' => $user->id,
-                'telegram_chat_id' => $sessionData['chat_id'],
+                'telegram_chat_id' => $sessionData['chat_id'] ? (string) $sessionData['chat_id'] : null,
                 'total_amount' => $total,
                 'delivery_address' => $request->delivery_address,
                 'payment_method' => $request->payment_method,
