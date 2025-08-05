@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\RestaurantController;
 use App\Http\Controllers\Admin\OrderController;
@@ -106,6 +107,33 @@ Route::get('/web-interface', [TelegramController::class, 'webInterfaceFromApp'])
 Route::post('/web-interface/{token}/order', [TelegramController::class, 'placeOrder'])->name('web.place-order');
 Route::post('/web-interface/order', [TelegramController::class, 'placeOrderWithoutToken'])->name('web.place-order-no-token');
 Route::get('/web-interface/{token}/menu', [TelegramController::class, 'getMenu'])->name('web.get-menu');
+
+// Test endpoint for debugging
+Route::get('/test-api', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'API is working correctly',
+        'timestamp' => now()
+    ]);
+});
+
+// Debug endpoint for web interface
+Route::get('/debug-web-interface', function (Request $request) {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Web interface debug endpoint',
+        'request_data' => [
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+            'headers' => $request->headers->all(),
+            'query_params' => $request->query(),
+            'restaurants_count' => \App\Models\Restaurant::count(),
+            'categories_count' => \App\Models\Category::count(),
+            'menu_items_count' => \App\Models\MenuItem::count()
+        ],
+        'timestamp' => now()
+    ]);
+});
 
 // Git Webhook Route for Auto Deployment
 Route::post('/webhook', function () {

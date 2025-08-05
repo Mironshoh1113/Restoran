@@ -495,6 +495,16 @@
             };
         }
         
+        // Add error handling for network issues
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+        
+        // Add unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+        });
+        
         let cart = {};
         let selectedPaymentMethod = 'cash';
         
@@ -587,21 +597,37 @@
                 telegram_chat_id: telegramChatId
             };
             
-            // Get the current URL to determine the endpoint
-            const currentUrl = window.location.pathname;
-            const token = currentUrl.split('/').pop();
-            const endpoint = token && token !== 'web-interface' ? 
-                `/web-interface/${token}/order` : 
-                '/web-interface/order';
+                    // Get the current URL to determine the endpoint
+        const currentUrl = window.location.pathname;
+        const token = currentUrl.split('/').pop();
+        const endpoint = token && token !== 'web-interface' ? 
+            `/web-interface/${token}/order` : 
+            '/web-interface/order';
+        
+        console.log('Submitting order to endpoint:', endpoint);
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (csrfToken) {
+                headers['X-CSRF-TOKEN'] = csrfToken;
+            }
             
             fetch(endpoint, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify(orderData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     document.getElementById('order-form').classList.add('hidden');
@@ -618,11 +644,25 @@
                         tg.close();
                     }, 3000);
                 } else {
-                    alert('Xatolik yuz berdi: ' + data.error);
+                    alert('Xatolik yuz berdi: ' + (data.error || 'Noma\'lum xatolik'));
                 }
             })
             .catch(error => {
-                alert('Xatolik yuz berdi: ' + error.message);
+                console.error('Order submission error:', error);
+                
+                // Show more detailed error message
+                let errorMessage = 'Xatolik yuz berdi: ';
+                if (error.name === 'TypeError' && error.message.includes('JSON')) {
+                    errorMessage += 'Server javob qaytarmayapti. Iltimos, qaytadan urinib ko\'ring.';
+                } else if (error.message.includes('404')) {
+                    errorMessage += 'Sahifa topilmadi. Iltimos, qaytadan urinib ko\'ring.';
+                } else if (error.message.includes('500')) {
+                    errorMessage += 'Server xatosi. Iltimos, keyinroq urinib ko\'ring.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                alert(errorMessage);
             });
         });
         

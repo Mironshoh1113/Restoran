@@ -21,12 +21,30 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Deploy webhook
 Route::post('/deploy', function () {
-    // Git pull qilamiz
-    shell_exec('cd /home/host1801295/simpsons.uz/htdocs/www && git pull origin main');
-
-    // Composer va cache lar (ixtiyoriy)
-    shell_exec('cd /home/host1801295/simpsons.uz/htdocs/www && composer install --no-dev --optimize-autoloader');
-    shell_exec('cd /home/host1801295/simpsons.uz/htdocs/www && php artisan config:cache');
-
-    return response('OK', 200);
+    try {
+        // Get the current directory
+        $currentDir = base_path();
+        
+        // Git pull
+        $gitPull = shell_exec("cd {$currentDir} && git pull origin main 2>&1");
+        
+        // Composer install
+        $composerInstall = shell_exec("cd {$currentDir} && composer install --no-dev --optimize-autoloader 2>&1");
+        
+        // Cache config
+        $configCache = shell_exec("cd {$currentDir} && php artisan config:cache 2>&1");
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Deployment completed successfully',
+            'git_pull' => $gitPull,
+            'composer_install' => $composerInstall,
+            'config_cache' => $configCache
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }); 
