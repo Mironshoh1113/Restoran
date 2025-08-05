@@ -61,6 +61,12 @@ class TelegramController extends Controller
         $text = $message['text'] ?? '';
         $contact = $message['contact'] ?? null;
 
+        // Handle web app data
+        if (isset($message['web_app_data'])) {
+            $this->handleWebAppData($chatId, $message['web_app_data']);
+            return;
+        }
+
         // Save or update telegram user
         $telegramUser = $this->saveTelegramUser($message['from']);
 
@@ -161,8 +167,276 @@ class TelegramController extends Controller
             // User is not registered, request contact
             $this->requestContact($chatId);
         } else {
-            // User is registered, send welcome message
-            $this->telegramService->sendWelcomeMessage($chatId, $restaurant);
+            // User is registered, send welcome message with web interface
+            $this->sendWelcomeWithWebInterface($chatId, $restaurant, $user);
+        }
+    }
+
+    /**
+     * Send welcome message with web interface
+     */
+    protected function sendWelcomeWithWebInterface($chatId, $restaurant, $user)
+    {
+        // Generate unique session token for web interface
+        $sessionToken = Str::random(32);
+        
+        // Store session data in cache
+        Cache::put("web_session_{$sessionToken}", [
+            'chat_id' => $chatId,
+            'restaurant_id' => $restaurant->id,
+            'user_id' => $user->id,
+            'created_at' => now()
+        ], 3600); // 1 hour
+
+        // Create web interface URL
+        $webUrl = url("/web-interface/{$sessionToken}");
+        
+        $message = "🍽 *{$restaurant->name}*\n\n";
+        $message .= "Xush kelibsiz! Restoran menyusini ko'rish uchun quyidagi tugmani bosing:\n\n";
+        $message .= "📱 *Web sahifani ochish* - menyu va buyurtma berish uchun";
+        
+        $keyboard = [
+            [
+                ['text' => '🍽 Menyuni ko\'rish', 'web_app' => ['url' => $webUrl]]
+            ],
+            [
+                ['text' => '📞 Aloqa', 'callback_data' => 'contact'],
+                ['text' => '📍 Manzil', 'callback_data' => 'location']
+            ]
+        ];
+        
+        $this->telegramService->sendMessageWithKeyboard($chatId, $message, $keyboard);
+    }
+
+    /**
+     * Handle web app data from Telegram
+     */
+    protected function handleWebAppData($chatId, $webAppData)
+    {
+        $data = json_decode($webAppData, true);
+        
+        if (!$data) {
+            $this->telegramService->sendMessage($chatId, 'Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
+            return;
+        }
+        
+        // Handle different web app actions
+        switch ($data['action'] ?? '') {
+            case 'order_placed':
+                $this->handleOrderPlaced($chatId, $data);
+                break;
+            case 'menu_viewed':
+                $this->handleMenuViewed($chatId, $data);
+                break;
+            default:
+                $this->telegramService->sendMessage($chatId, 'Buyurtma qabul qilindi! Tez orada siz bilan bog\'lanamiz.');
+        }
+    }
+
+    /**
+     * Handle order placed from web interface
+     */
+    protected function handleOrderPlaced($chatId, $data)
+    {
+        $orderData = $data['order'] ?? [];
+        $restaurant = Restaurant::where('bot_token', $this->telegramService->getBotToken())->first();
+        
+        if (!$restaurant) {
+            $this->telegramService->sendMessage($chatId, 'Xatolik yuz berdi.');
+            return;
+        }
+        
+        // Create order
+        $order = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'user_id' => $data['user_id'] ?? null,
+            'telegram_chat_id' => $chatId,
+            'total_amount' => $orderData['total'] ?? 0,
+            'delivery_address' => $orderData['address'] ?? '',
+            'payment_method' => $orderData['payment_method'] ?? 'cash',
+            'status' => 'pending',
+            'items' => json_encode($orderData['items'] ?? []),
+            'customer_name' => $orderData['customer_name'] ?? '',
+            'customer_phone' => $orderData['customer_phone'] ?? ''
+        ]);
+        
+        // Send confirmation to user
+        $message = "✅ *Buyurtma qabul qilindi!*\n\n";
+        $message .= "📋 Buyurtma raqami: *#{$order->id}*\n";
+        $message .= "💰 Jami: *{$order->total_amount} so'm*\n";
+        $message .= "📍 Manzil: *{$order->delivery_address}*\n";
+        $message .= "💳 To'lov: *" . ($order->payment_method === 'card' ? 'Karta' : 'Naqd pul') . "*\n\n";
+        $message .= "Tez orada siz bilan bog'lanamiz!";
+        
+        $this->telegramService->sendMessage($chatId, $message);
+        
+        // Notify admin about new order
+        $this->notifyAdminAboutOrder($order);
+    }
+
+    /**
+     * Handle menu viewed from web interface
+     */
+    protected function handleMenuViewed($chatId, $data)
+    {
+        $this->telegramService->sendMessage($chatId, '🍽 Menyu ko\'rildi. Buyurtma berish uchun menyuni oching.');
+    }
+
+    /**
+     * Web interface for Telegram users
+     */
+    public function webInterface($token)
+    {
+        // Get session data from cache
+        $sessionData = Cache::get("web_session_{$token}");
+        
+        if (!$sessionData) {
+            return response('Session expired', 404);
+        }
+        
+        $restaurant = Restaurant::find($sessionData['restaurant_id']);
+        $user = \App\Models\User::find($sessionData['user_id']);
+        
+        if (!$restaurant || !$user) {
+            return response('Invalid session', 404);
+        }
+        
+        // Get categories and menu items
+        $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
+        
+        return view('web-interface.index', compact('restaurant', 'user', 'categories', 'token'));
+    }
+
+    /**
+     * Get menu data for web interface
+     */
+    public function getMenu($token)
+    {
+        $sessionData = Cache::get("web_session_{$token}");
+        
+        if (!$sessionData) {
+            return response()->json(['error' => 'Session expired'], 404);
+        }
+        
+        $restaurant = Restaurant::find($sessionData['restaurant_id']);
+        
+        if (!$restaurant) {
+            return response()->json(['error' => 'Restaurant not found'], 404);
+        }
+        
+        $categories = Category::where('restaurant_id', $restaurant->id)
+            ->with(['menuItems' => function($query) {
+                $query->where('is_active', true);
+            }])
+            ->get();
+        
+        return response()->json([
+            'restaurant' => $restaurant,
+            'categories' => $categories
+        ]);
+    }
+
+    /**
+     * Place order from web interface
+     */
+    public function placeOrder(Request $request, $token)
+    {
+        $sessionData = Cache::get("web_session_{$token}");
+        
+        if (!$sessionData) {
+            return response()->json(['error' => 'Session expired'], 404);
+        }
+        
+        $restaurant = Restaurant::find($sessionData['restaurant_id']);
+        $user = \App\Models\User::find($sessionData['user_id']);
+        
+        if (!$restaurant || !$user) {
+            return response()->json(['error' => 'Invalid session'], 404);
+        }
+        
+        // Validate request
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:menu_items,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'delivery_address' => 'required|string',
+            'payment_method' => 'required|in:cash,card',
+            'customer_name' => 'required|string',
+            'customer_phone' => 'required|string'
+        ]);
+        
+        // Calculate total
+        $total = 0;
+        $orderItems = [];
+        
+        foreach ($request->items as $item) {
+            $menuItem = MenuItem::find($item['id']);
+            $subtotal = $menuItem->price * $item['quantity'];
+            $total += $subtotal;
+            
+            $orderItems[] = [
+                'menu_item_id' => $item['id'],
+                'name' => $menuItem->name,
+                'price' => $menuItem->price,
+                'quantity' => $item['quantity'],
+                'subtotal' => $subtotal
+            ];
+        }
+        
+        // Create order
+        $order = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'user_id' => $user->id,
+            'telegram_chat_id' => $sessionData['chat_id'],
+            'total_amount' => $total,
+            'delivery_address' => $request->delivery_address,
+            'payment_method' => $request->payment_method,
+            'status' => 'pending',
+            'items' => json_encode($orderItems),
+            'customer_name' => $request->customer_name,
+            'customer_phone' => $request->customer_phone
+        ]);
+        
+        // Send confirmation to Telegram
+        $this->handleOrderPlaced($sessionData['chat_id'], [
+            'order' => [
+                'id' => $order->id,
+                'total' => $total,
+                'address' => $request->delivery_address,
+                'payment_method' => $request->payment_method,
+                'customer_name' => $request->customer_name,
+                'customer_phone' => $request->customer_phone,
+                'items' => $orderItems
+            ],
+            'user_id' => $user->id
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'order_id' => $order->id,
+            'message' => 'Buyurtma qabul qilindi!'
+        ]);
+    }
+
+    /**
+     * Notify admin about new order
+     */
+    protected function notifyAdminAboutOrder($order)
+    {
+        $restaurant = $order->restaurant;
+        
+        $message = "🆕 *Yangi buyurtma!*\n\n";
+        $message .= "📋 Buyurtma raqami: *#{$order->id}*\n";
+        $message .= "🏪 Restoran: *{$restaurant->name}*\n";
+        $message .= "👤 Mijoz: *{$order->customer_name}*\n";
+        $message .= "📞 Telefon: *{$order->customer_phone}*\n";
+        $message .= "📍 Manzil: *{$order->delivery_address}*\n";
+        $message .= "💰 Jami: *{$order->total_amount} so'm*\n";
+        $message .= "💳 To'lov: *" . ($order->payment_method === 'card' ? 'Karta' : 'Naqd pul') . "*\n\n";
+        
+        // Send to admin if admin has telegram chat id
+        if ($restaurant->admin_telegram_chat_id) {
+            $this->telegramService->sendMessage($restaurant->admin_telegram_chat_id, $message);
         }
     }
 

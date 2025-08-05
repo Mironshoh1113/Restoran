@@ -100,6 +100,11 @@ Route::middleware('auth')->group(function () {
 // Telegram webhook
 Route::post('/telegram/webhook/{token}', [TelegramController::class, 'webhook'])->name('telegram.webhook');
 
+// Web interface for Telegram users
+Route::get('/web-interface/{token}', [TelegramController::class, 'webInterface'])->name('web.interface');
+Route::post('/web-interface/{token}/order', [TelegramController::class, 'placeOrder'])->name('web.place-order');
+Route::get('/web-interface/{token}/menu', [TelegramController::class, 'getMenu'])->name('web.get-menu');
+
 // Git Webhook Route for Auto Deployment
 Route::post('/webhook', function () {
     // Set error reporting

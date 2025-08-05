@@ -551,4 +551,71 @@ class TelegramService
             ->get()
             ->reverse();
     }
+
+    /**
+     * Send message with inline keyboard
+     */
+    public function sendMessageWithKeyboard($chatId, $message, $keyboard)
+    {
+        $data = [
+            'chat_id' => $chatId,
+            'text' => $message,
+            'parse_mode' => 'Markdown',
+            'reply_markup' => json_encode([
+                'inline_keyboard' => $keyboard
+            ])
+        ];
+        
+        return $this->makeRequest('sendMessage', $data);
+    }
+
+    /**
+     * Send message with web app button
+     */
+    public function sendMessageWithWebApp($chatId, $message, $webAppUrl, $buttonText = 'Menyuni ko\'rish')
+    {
+        $data = [
+            'chat_id' => $chatId,
+            'text' => $message,
+            'parse_mode' => 'Markdown',
+            'reply_markup' => json_encode([
+                'inline_keyboard' => [
+                    [
+                        [
+                            'text' => $buttonText,
+                            'web_app' => ['url' => $webAppUrl]
+                        ]
+                    ]
+                ]
+            ])
+        ];
+        
+        return $this->makeRequest('sendMessage', $data);
+    }
+
+    /**
+     * Handle web app data
+     */
+    public function handleWebAppData($chatId, $webAppData)
+    {
+        // This method will be called when user interacts with web app
+        $data = json_decode($webAppData, true);
+        
+        if (!$data) {
+            $this->sendMessage($chatId, 'Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
+            return;
+        }
+        
+        // Handle different web app actions
+        switch ($data['action'] ?? '') {
+            case 'order_placed':
+                $this->sendMessage($chatId, '✅ Buyurtma qabul qilindi! Tez orada siz bilan bog\'lanamiz.');
+                break;
+            case 'menu_viewed':
+                $this->sendMessage($chatId, '🍽 Menyu ko\'rildi. Buyurtma berish uchun menyuni oching.');
+                break;
+            default:
+                $this->sendMessage($chatId, 'Buyurtma qabul qilindi! Tez orada siz bilan bog\'lanamiz.');
+        }
+    }
 } 
