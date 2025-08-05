@@ -16,6 +16,8 @@ class Restaurant extends Model
         'owner_user_id',
         'bot_token',
         'bot_username',
+        'bot_name',
+        'bot_description',
         'is_active',
         'phone',
         'address',

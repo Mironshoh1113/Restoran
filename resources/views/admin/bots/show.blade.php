@@ -17,29 +17,19 @@
         </a>
     </div>
 
-    <!-- Setup Instructions -->
-    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
-        <div class="flex items-start space-x-3">
-            <i class="fas fa-info-circle text-blue-600 dark:text-blue-400 text-xl mt-1"></i>
-            <div>
-                <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">Telegram Bot Sozlash</h3>
-                <div class="text-blue-700 dark:text-blue-300 space-y-2 text-sm">
-                    <p><strong>1.</strong> Telegram da @BotFather ga murojaat qiling</p>
-                    <p><strong>2.</strong> <code>/newbot</code> buyrug'ini yuboring</p>
-                    <p><strong>3.</strong> Bot nomi va username ni kiriting</p>
-                    <p><strong>4.</strong> Bot token ni nusxalab saqlang</p>
-                    <p><strong>5.</strong> Quyidagi forma orqali bot token va webhook URL ni kiriting</p>
-                    <p><strong>6.</strong> "Saqlash" tugmasini bosing</p>
+    <!-- Bot Status Cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Bot Information Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-robot text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Bot ma'lumotlari</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Asosiy ma'lumotlar</p>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Bot Status -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Bot Information -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Bot ma'lumotlari</h3>
             
             @if($botInfo && $botInfo['ok'])
                 <div class="space-y-3">
@@ -71,16 +61,20 @@
             @endif
         </div>
 
-        <!-- Webhook Information -->
+        <!-- Webhook Status Card -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Webhook ma'lumotlari</h3>
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-link text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Webhook holati</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Ulanish ma'lumotlari</p>
+                </div>
+            </div>
             
             @if($webhookInfo && $webhookInfo['ok'])
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-600 dark:text-gray-400">Webhook URL:</span>
-                        <span class="font-medium text-sm text-gray-800 dark:text-gray-200">{{ $webhookInfo['result']['url'] ?? 'O\'rnatilmagan' }}</span>
-                    </div>
                     <div class="flex items-center justify-between">
                         <span class="text-gray-600 dark:text-gray-400">Holat:</span>
                         <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $webhookInfo['result']['url'] ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200' }}">
@@ -88,8 +82,12 @@
                         </span>
                     </div>
                     <div class="flex items-center justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">URL:</span>
+                        <span class="font-medium text-xs text-gray-800 dark:text-gray-200 truncate max-w-32">{{ $webhookInfo['result']['url'] ?? 'O\'rnatilmagan' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
                         <span class="text-gray-600 dark:text-gray-400">Xatolar:</span>
-                        <span class="font-medium text-gray-800 dark:text-gray-200">{{ $webhookInfo['result']['last_error_message'] ?? 'Yo\'q' }}</span>
+                        <span class="font-medium text-xs text-gray-800 dark:text-gray-200">{{ $webhookInfo['result']['last_error_message'] ?? 'Yo\'q' }}</span>
                     </div>
                 </div>
             @else
@@ -100,6 +98,55 @@
                 </div>
             @endif
         </div>
+
+        <!-- Quick Actions Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-cogs text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Tezkor amallar</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Bot boshqaruvi</p>
+                </div>
+            </div>
+            
+            <div class="space-y-2">
+                <button onclick="testBot()" 
+                        class="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center space-x-2">
+                    <i class="fas fa-play"></i>
+                    <span>Test qilish</span>
+                </button>
+                <button onclick="setWebhook()" 
+                        class="w-full px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center space-x-2">
+                    <i class="fas fa-link"></i>
+                    <span>Webhook o'rnatish</span>
+                </button>
+                <button onclick="deleteWebhook()" 
+                        class="w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center space-x-2">
+                    <i class="fas fa-unlink"></i>
+                    <span>Webhook o'chirish</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Instructions -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+        <div class="flex items-start space-x-3">
+            <i class="fas fa-info-circle text-blue-600 dark:text-blue-400 text-xl mt-1"></i>
+            <div>
+                <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">Telegram Bot Sozlash</h3>
+                <div class="text-blue-700 dark:text-blue-300 space-y-2 text-sm">
+                    <p><strong>1.</strong> Telegram da @BotFather ga murojaat qiling</p>
+                    <p><strong>2.</strong> <code>/newbot</code> buyrug'ini yuboring</p>
+                    <p><strong>3.</strong> Bot nomi va username ni kiriting</p>
+                    <p><strong>4.</strong> Bot token ni nusxalab saqlang</p>
+                    <p><strong>5.</strong> Quyidagi forma orqali bot token va webhook URL ni kiriting</p>
+                    <p><strong>6.</strong> "Saqlash" tugmasini bosing</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Bot Settings Form -->
@@ -108,61 +155,97 @@
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Bot sozlamalari</h3>
         </div>
         
-        <form action="{{ route('admin.bots.update', $restaurant) }}" method="POST" class="p-6 space-y-4">
+        <form action="{{ route('admin.bots.update', $restaurant) }}" method="POST" class="p-6 space-y-6">
             @csrf
             @method('PATCH')
             
+            <!-- Bot Basic Settings -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="bot_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot nomi</label>
+                    <input type="text" id="bot_name" name="bot_name" value="{{ old('bot_name', $restaurant->bot_name ?? '') }}"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                           placeholder="Restaurant Bot">
+                    @error('bot_name')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Botning ko'rinadigan nomi</p>
+                </div>
+                
                 <div>
                     <label for="bot_username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot username</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">@</span>
                         <input type="text" id="bot_username" name="bot_username" value="{{ old('bot_username', $restaurant->bot_username) }}"
                                class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                               placeholder="bot_username">
+                               placeholder="restaurant_bot">
                     </div>
                     @error('bot_username')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
-                </div>
-                
-                <div>
-                    <label for="bot_token" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot token</label>
-                    <input type="text" id="bot_token" name="bot_token" value="{{ old('bot_token', $restaurant->bot_token) }}"
-                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                           placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz">
-                    @error('bot_token')
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">BotFather dan olingan token</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">BotFather dan olingan username</p>
                 </div>
             </div>
             
+            <!-- Bot Token -->
+            <div>
+                <label for="bot_token" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot token</label>
+                <div class="relative">
+                    <input type="password" id="bot_token" name="bot_token" value="{{ old('bot_token', $restaurant->bot_token) }}"
+                           class="w-full pr-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                           placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz">
+                    <button type="button" onclick="togglePassword('bot_token')" 
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                        <i class="fas fa-eye" id="bot_token_icon"></i>
+                    </button>
+                </div>
+                @error('bot_token')
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">BotFather dan olingan token (xavfsizlik uchun yashirin)</p>
+            </div>
+            
+            <!-- Webhook URL -->
             <div>
                 <label for="webhook_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Webhook URL</label>
-                <input type="url" id="webhook_url" name="webhook_url" value="{{ old('webhook_url', url('/telegram/webhook')) }}"
+                <input type="url" id="webhook_url" name="webhook_url" value="{{ old('webhook_url', url('/telegram/webhook/' . ($restaurant->bot_token ? hash('sha256', $restaurant->bot_token) : ''))) }}"
                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                       placeholder="https://example.com/telegram/webhook">
+                       placeholder="https://example.com/telegram/webhook/token">
                 @error('webhook_url')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Telegram webhook URL manzili</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Telegram webhook URL manzili (avtomatik yaratiladi)</p>
             </div>
             
+            <!-- Bot Description -->
+            <div>
+                <label for="bot_description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot tavsifi</label>
+                <textarea id="bot_description" name="bot_description" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="Bot haqida qisqacha ma'lumot...">{{ old('bot_description', $restaurant->bot_description ?? '') }}</textarea>
+                @error('bot_description')
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Bot haqida ma'lumot (ixtiyoriy)</p>
+            </div>
+            
+            <!-- Save Button -->
             <div class="flex items-center justify-end space-x-3 pt-4">
                 <button type="button" onclick="testBot()" 
-                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-                    <i class="fas fa-play mr-2"></i>Test qilish
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center space-x-2">
+                    <i class="fas fa-play"></i>
+                    <span>Test qilish</span>
                 </button>
                 <button type="submit" 
-                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
-                    Saqlash
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center space-x-2">
+                    <i class="fas fa-save"></i>
+                    <span>Saqlash</span>
                 </button>
             </div>
         </form>
     </div>
 
-    <!-- Test Message -->
+    <!-- Test Message Section -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Test xabar yuborish</h3>
@@ -175,53 +258,40 @@
                     <input type="number" id="test_chat_id" 
                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                            placeholder="123456789">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Telegram chat ID raqami</p>
                 </div>
                 <div>
                     <label for="test_message" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Xabar</label>
                     <input type="text" id="test_message" value="Test xabar"
                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                            placeholder="Test xabar">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Yuboriladigan xabar</p>
                 </div>
             </div>
             
             <button onclick="sendTestMessage()" 
-                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
-                <i class="fas fa-paper-plane mr-2"></i>Xabar yuborish
+                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center space-x-2">
+                <i class="fas fa-paper-plane"></i>
+                <span>Xabar yuborish</span>
             </button>
-        </div>
-    </div>
-
-    <!-- Webhook Actions -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Webhook boshqaruvi</h3>
-        </div>
-        
-        <div class="p-6 space-y-4">
-            <div class="flex items-center space-x-4">
-                <button onclick="setWebhook()" 
-                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                    <i class="fas fa-link mr-2"></i>Webhook o'rnatish
-                </button>
-                <button onclick="deleteWebhook()" 
-                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
-                    <i class="fas fa-unlink mr-2"></i>Webhook o'chirish
-                </button>
-            </div>
-            
-            <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                <div class="flex items-center space-x-2">
-                    <i class="fas fa-info-circle text-yellow-600 dark:text-yellow-400"></i>
-                    <span class="text-sm text-yellow-800 dark:text-yellow-200">
-                        Webhook o'rnatish uchun avval bot token va webhook URL ni to'ldiring
-                    </span>
-                </div>
-            </div>
         </div>
     </div>
 </div>
 
 <script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '_icon');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        field.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
 function testBot() {
     fetch(`/admin/bots/{{ $restaurant->id }}/test`, {
         method: 'POST',
@@ -232,14 +302,14 @@ function testBot() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('✅ ' + data.message);
+            showNotification('✅ ' + data.message, 'success');
         } else {
-            alert('❌ ' + data.message);
+            showNotification('❌ ' + data.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Xatolik yuz berdi');
+        showNotification('Xatolik yuz berdi', 'error');
     });
 }
 
@@ -248,7 +318,7 @@ function sendTestMessage() {
     const message = document.getElementById('test_message').value;
     
     if (!chatId || !message) {
-        alert('Chat ID va xabar to\'ldiring');
+        showNotification('Chat ID va xabar to\'ldiring', 'warning');
         return;
     }
     
@@ -266,14 +336,14 @@ function sendTestMessage() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('✅ ' + data.message);
+            showNotification('✅ ' + data.message, 'success');
         } else {
-            alert('❌ ' + data.message);
+            showNotification('❌ ' + data.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Xatolik yuz berdi');
+        showNotification('Xatolik yuz berdi', 'error');
     });
 }
 
@@ -281,7 +351,7 @@ function setWebhook() {
     const webhookUrl = document.getElementById('webhook_url').value;
     
     if (!webhookUrl) {
-        alert('Webhook URL ni to\'ldiring');
+        showNotification('Webhook URL ni to\'ldiring', 'warning');
         return;
     }
     
@@ -298,14 +368,14 @@ function setWebhook() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('✅ ' + data.message);
+            showNotification('✅ ' + data.message, 'success');
         } else {
-            alert('❌ ' + data.message);
+            showNotification('❌ ' + data.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Xatolik yuz berdi');
+        showNotification('Xatolik yuz berdi', 'error');
     });
 }
 
@@ -323,15 +393,41 @@ function deleteWebhook() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('✅ ' + data.message);
+            showNotification('✅ ' + data.message, 'success');
         } else {
-            alert('❌ ' + data.message);
+            showNotification('❌ ' + data.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Xatolik yuz berdi');
+        showNotification('Xatolik yuz berdi', 'error');
     });
+}
+
+function showNotification(message, type = 'info') {
+    const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        warning: 'bg-yellow-500',
+        info: 'bg-blue-500'
+    };
+    
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
 }
 </script>
 @endsection 
