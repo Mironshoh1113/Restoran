@@ -81,9 +81,21 @@ class OrderController extends Controller
 
     protected function sendOrderStatusNotification(Order $order, $oldStatus)
     {
+        Log::info('Starting order status notification', [
+            'order_id' => $order->id,
+            'telegram_chat_id' => $order->telegram_chat_id,
+            'old_status' => $oldStatus,
+            'new_status' => $order->status
+        ]);
+
         if (!$order->telegram_chat_id) {
             Log::info('Order has no telegram_chat_id', ['order_id' => $order->id]);
             return;
+        }
+
+        // Load restaurant relationship if not loaded
+        if (!$order->relationLoaded('restaurant')) {
+            $order->load('restaurant');
         }
 
         if (!$order->restaurant) {
@@ -94,14 +106,19 @@ class OrderController extends Controller
         if (!$order->restaurant->bot_token) {
             Log::error('Restaurant has no bot token', [
                 'order_id' => $order->id,
-                'restaurant_id' => $order->restaurant->id
+                'restaurant_id' => $order->restaurant->id,
+                'restaurant_name' => $order->restaurant->name
             ]);
             return;
         }
 
         try {
-            $telegramService = new TelegramService();
-            $telegramService->setBotToken($order->restaurant->bot_token);
+            Log::info('Creating TelegramService with bot token', [
+                'restaurant_id' => $order->restaurant->id,
+                'bot_token' => $order->restaurant->bot_token
+            ]);
+
+            $telegramService = new TelegramService($order->restaurant->bot_token);
 
             $statusMessages = [
                 'pending' => '⏳ Buyurtma qabul qilindi',
@@ -123,26 +140,35 @@ class OrderController extends Controller
             $message .= "`{$oldStatus}` → `{$order->status}`\n\n";
             $message .= "📝 *Yangilangan holat:* " . ($statusMessages[$order->status] ?? $order->status);
 
+            Log::info('Sending Telegram message', [
+                'chat_id' => $order->telegram_chat_id,
+                'message_length' => strlen($message),
+                'bot_token' => $order->restaurant->bot_token
+            ]);
+
             $result = $telegramService->sendMessage($order->telegram_chat_id, $message);
             
             if ($result['ok']) {
                 Log::info('Order status notification sent successfully', [
                     'order_id' => $order->id,
                     'chat_id' => $order->telegram_chat_id,
-                    'status' => $order->status
+                    'status' => $order->status,
+                    'message_id' => $result['result']['message_id'] ?? null
                 ]);
             } else {
                 Log::error('Failed to send order status notification', [
                     'order_id' => $order->id,
                     'chat_id' => $order->telegram_chat_id,
-                    'error' => $result['error'] ?? 'Unknown error'
+                    'error' => $result['error'] ?? 'Unknown error',
+                    'result' => $result
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error('Telegram notification error: ' . $e->getMessage(), [
+            Log::error('Telegram notification exception', [
                 'order_id' => $order->id,
                 'chat_id' => $order->telegram_chat_id,
-                'exception' => $e
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }

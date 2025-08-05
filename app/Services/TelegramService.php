@@ -161,24 +161,46 @@ class TelegramService
      */
     protected function makeRequest($method, $data = [])
     {
+        if (!$this->botToken) {
+            Log::error('Bot token not set for Telegram API request', ['method' => $method]);
+            return ['ok' => false, 'error' => 'Bot token not set'];
+        }
+
         $url = $this->apiUrl . $this->botToken . '/' . $method;
 
         try {
+            Log::info('Making Telegram API request', [
+                'method' => $method,
+                'url' => $url,
+                'bot_token' => $this->botToken,
+                'data' => $data
+            ]);
+
             $response = Http::timeout($this->timeout)->post($url, $data);
+            $responseData = $response->json();
             
-            if (config('telegram.debug')) {
-                Log::info('Telegram API Request', [
+            Log::info('Telegram API Response', [
+                'method' => $method,
+                'status_code' => $response->status(),
+                'response' => $responseData
+            ]);
+
+            if (!$response->successful()) {
+                Log::error('Telegram API HTTP error', [
                     'method' => $method,
-                    'data' => $data,
-                    'response' => $response->json()
+                    'status_code' => $response->status(),
+                    'response' => $responseData
                 ]);
+                return ['ok' => false, 'error' => 'HTTP ' . $response->status()];
             }
 
-            return $response->json();
+            return $responseData;
         } catch (\Exception $e) {
-            Log::error('Telegram API Error', [
+            Log::error('Telegram API Exception', [
                 'method' => $method,
-                'error' => $e->getMessage()
+                'url' => $url,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return ['ok' => false, 'error' => $e->getMessage()];

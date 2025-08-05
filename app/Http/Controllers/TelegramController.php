@@ -808,6 +808,8 @@ class TelegramController extends Controller
     protected function handleMyOrders($chatId)
     {
         try {
+            Log::info('Starting handleMyOrders', ['chat_id' => $chatId]);
+            
             // Get current bot token
             $botToken = $this->telegramService->getBotToken();
             
@@ -816,6 +818,8 @@ class TelegramController extends Controller
                 $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
                 return;
             }
+            
+            Log::info('Found bot token', ['chat_id' => $chatId, 'bot_token' => $botToken]);
             
             // Find restaurant by bot token
             $restaurant = Restaurant::where('bot_token', $botToken)->first();
@@ -829,6 +833,12 @@ class TelegramController extends Controller
                 return;
             }
 
+            Log::info('Found restaurant', [
+                'chat_id' => $chatId,
+                'restaurant_id' => $restaurant->id,
+                'restaurant_name' => $restaurant->name
+            ]);
+
             // Get orders for this user from this restaurant
             $orders = Order::where('telegram_chat_id', $chatId)
                 ->where('restaurant_id', $restaurant->id)
@@ -838,7 +848,8 @@ class TelegramController extends Controller
             Log::info('Found orders for user', [
                 'chat_id' => $chatId,
                 'restaurant_id' => $restaurant->id,
-                'orders_count' => $orders->count()
+                'orders_count' => $orders->count(),
+                'orders' => $orders->pluck('id', 'order_number')->toArray()
             ]);
 
             if ($orders->isEmpty()) {
@@ -863,18 +874,31 @@ class TelegramController extends Controller
                 $message .= "📊 {$status}\n\n";
             }
 
+            Log::info('Sending my orders message', [
+                'chat_id' => $chatId,
+                'message_length' => strlen($message),
+                'orders_count' => $orders->count()
+            ]);
+
             $result = $this->telegramService->sendMessage($chatId, $message);
             
-            if (!$result['ok']) {
+            if ($result['ok']) {
+                Log::info('My orders message sent successfully', [
+                    'chat_id' => $chatId,
+                    'message_id' => $result['result']['message_id'] ?? null
+                ]);
+            } else {
                 Log::error('Failed to send my orders message', [
                     'chat_id' => $chatId,
-                    'error' => $result['error'] ?? 'Unknown error'
+                    'error' => $result['error'] ?? 'Unknown error',
+                    'result' => $result
                 ]);
             }
         } catch (\Exception $e) {
             Log::error('Error in handleMyOrders: ' . $e->getMessage(), [
                 'chat_id' => $chatId,
-                'exception' => $e
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             $this->telegramService->sendMessage($chatId, 'Kechirasiz, xatolik yuz berdi.');
         }
