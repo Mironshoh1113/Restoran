@@ -49,6 +49,7 @@ class MenuItemController extends Controller
 
         $data = [
             'category_id' => $category->id,
+            'restaurant_id' => $restaurant->id,
             'name' => $request->name,
             'description' => $request->description,
             'price' => $request->price,

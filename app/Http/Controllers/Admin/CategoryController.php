@@ -46,6 +46,7 @@ class CategoryController extends Controller
 
         $category = Category::create([
             'project_id' => $project->id,
+            'restaurant_id' => $restaurant->id,
             'name' => $request->name,
             'description' => $request->description,
             'sort_order' => $request->sort_order ?? 0,
