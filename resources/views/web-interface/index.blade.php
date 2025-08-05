@@ -313,9 +313,27 @@
     </div>
     
     <script>
-        let tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        // Initialize Telegram Web App
+        let tg = null;
+        
+        // Check if we're in Telegram Web App
+        if (window.Telegram && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+        } else {
+            // We're not in Telegram, create a mock object for testing
+            tg = {
+                ready: function() {},
+                expand: function() {},
+                sendData: function(data) {
+                    console.log('Mock Telegram sendData:', data);
+                },
+                close: function() {
+                    console.log('Mock Telegram close');
+                }
+            };
+        }
         
         let cart = {};
         let selectedPaymentMethod = 'cash';
@@ -390,14 +408,21 @@
                 payment_method: selectedPaymentMethod
             };
             
-                         fetch(`/web-interface/{{ $token }}/order`, {
-                 method: 'POST',
-                 headers: {
-                     'Content-Type': 'application/json',
-                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                 },
-                 body: JSON.stringify(orderData)
-             })
+            // Get the current URL to determine the endpoint
+            const currentUrl = window.location.pathname;
+            const token = currentUrl.split('/').pop();
+            const endpoint = token && token !== 'web-interface' ? 
+                `/web-interface/${token}/order` : 
+                '/web-interface/{{ $token ?? "test" }}/order';
+            
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(orderData)
+            })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
