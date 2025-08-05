@@ -842,8 +842,8 @@ class TelegramController extends Controller
             // Get orders for this user from this restaurant
             $orders = Order::where('telegram_chat_id', $chatId)
                 ->where('restaurant_id', $restaurant->id)
-                ->orderBy('created_at', 'desc')
-                ->get();
+            ->orderBy('created_at', 'desc')
+            ->get();
 
             Log::info('Found orders for user', [
                 'chat_id' => $chatId,
@@ -852,27 +852,27 @@ class TelegramController extends Controller
                 'orders' => $orders->pluck('id', 'order_number')->toArray()
             ]);
 
-            if ($orders->isEmpty()) {
-                $this->telegramService->sendMessage($chatId, 'Sizda hali buyurtmalar yo\'q.');
-                return;
-            }
+        if ($orders->isEmpty()) {
+            $this->telegramService->sendMessage($chatId, 'Sizda hali buyurtmalar yo\'q.');
+            return;
+        }
 
-            $message = "📊 Buyurtmalaringiz:\n\n";
-            
-            foreach ($orders as $order) {
-                $status = [
+        $message = "📊 Buyurtmalaringiz:\n\n";
+        
+        foreach ($orders as $order) {
+            $status = [
                     'pending' => '⏳ Yangi',
-                    'preparing' => '👨‍🍳 Tayyorlanmoqda',
-                    'on_way' => '🚚 Yolda',
-                    'delivered' => '✅ Yetkazildi',
-                    'cancelled' => '❌ Bekor'
-                ][$order->status] ?? 'Nomalum';
+                'preparing' => '👨‍🍳 Tayyorlanmoqda',
+                'on_way' => '🚚 Yolda',
+                'delivered' => '✅ Yetkazildi',
+                'cancelled' => '❌ Bekor'
+            ][$order->status] ?? 'Nomalum';
 
-                $message .= "📦 #{$order->order_number}\n";
+            $message .= "📦 #{$order->order_number}\n";
                 $message .= "💰 " . number_format($order->total_amount ?? $order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
-                $message .= "📅 {$order->created_at->format('d.m.Y H:i')}\n";
-                $message .= "📊 {$status}\n\n";
-            }
+            $message .= "📅 {$order->created_at->format('d.m.Y H:i')}\n";
+            $message .= "📊 {$status}\n\n";
+        }
 
             Log::info('Sending my orders message', [
                 'chat_id' => $chatId,
