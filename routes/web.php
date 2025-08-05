@@ -135,6 +135,44 @@ Route::get('/debug-web-interface', function (Request $request) {
     ]);
 });
 
+// Test order creation endpoint
+Route::post('/test-order', function (Request $request) {
+    try {
+        $restaurant = \App\Models\Restaurant::first();
+        if (!$restaurant) {
+            return response()->json(['error' => 'No restaurant found'], 404);
+        }
+        
+        $order = \App\Models\Order::create([
+            'order_number' => 'TEST-' . time(),
+            'restaurant_id' => $restaurant->id,
+            'user_id' => null,
+            'project_id' => null,
+            'status' => 'new',
+            'total_price' => 1000,
+            'payment_type' => 'cash',
+            'address' => 'Test address',
+            'customer_name' => 'Test Customer',
+            'customer_phone' => '123456789',
+            'total_amount' => 1000,
+            'delivery_address' => 'Test address',
+            'payment_method' => 'cash',
+            'items' => json_encode([])
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'message' => 'Test order created successfully'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Test order creation failed: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
 // Git Webhook Route for Auto Deployment
 Route::post('/webhook', function () {
     // Set error reporting

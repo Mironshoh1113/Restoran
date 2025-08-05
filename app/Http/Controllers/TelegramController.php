@@ -467,6 +467,12 @@ class TelegramController extends Controller
     public function placeOrderWithoutToken(Request $request)
     {
         try {
+            // Log the incoming request for debugging
+            Log::info('Order placement request received', [
+                'request_data' => $request->all(),
+                'headers' => $request->headers->all()
+            ]);
+            
             // Get restaurant from query parameter or use first available
             $restaurantId = $request->get('restaurant_id');
             
@@ -477,8 +483,11 @@ class TelegramController extends Controller
             }
             
             if (!$restaurant) {
+                Log::error('Restaurant not found for order placement');
                 return response()->json(['error' => 'Restaurant not found'], 404);
             }
+            
+            Log::info('Restaurant found', ['restaurant_id' => $restaurant->id, 'restaurant_name' => $restaurant->name]);
             
             // Validate request
             $validated = $request->validate([
@@ -492,6 +501,8 @@ class TelegramController extends Controller
                 'telegram_chat_id' => 'nullable|string'
             ]);
             
+            Log::info('Request validation passed', ['validated_data' => $validated]);
+            
             // Calculate total
             $total = 0;
             $orderItems = [];
@@ -499,6 +510,7 @@ class TelegramController extends Controller
             foreach ($request->items as $item) {
                 $menuItem = MenuItem::find($item['id']);
                 if (!$menuItem) {
+                    Log::error('Menu item not found', ['item_id' => $item['id']]);
                     return response()->json(['error' => 'Menu item not found: ' . $item['id']], 404);
                 }
                 $subtotal = $menuItem->price * $item['quantity'];
@@ -513,8 +525,13 @@ class TelegramController extends Controller
                 ];
             }
             
-            // Create order
-            $order = Order::create([
+            Log::info('Order calculation completed', [
+                'total' => $total,
+                'items_count' => count($orderItems)
+            ]);
+            
+            // Prepare order data
+            $orderData = [
                 'restaurant_id' => $restaurant->id,
                 'user_id' => null,
                 'project_id' => null,
@@ -525,12 +542,23 @@ class TelegramController extends Controller
                 'status' => 'pending',
                 'items' => json_encode($orderItems),
                 'customer_name' => $request->customer_name,
-                'customer_phone' => $request->customer_phone
-            ]);
+                'customer_phone' => $request->customer_phone,
+                // Add required fields from original schema
+                'order_number' => 'WEB-' . time(),
+                'total_price' => $total,
+                'payment_type' => $request->payment_method,
+                'address' => $request->delivery_address
+            ];
+            
+            Log::info('Order data prepared', ['order_data' => $orderData]);
+            
+            // Create order
+            $order = Order::create($orderData);
             
             // Log successful order
             Log::info('Order placed successfully', [
                 'order_id' => $order->id,
+                'order_number' => $order->order_number,
                 'restaurant_id' => $restaurant->id,
                 'total' => $total,
                 'customer_name' => $request->customer_name
@@ -539,17 +567,23 @@ class TelegramController extends Controller
             return response()->json([
                 'success' => true,
                 'order_id' => $order->id,
+                'order_number' => $order->order_number,
                 'message' => 'Buyurtma qabul qilindi!'
             ]);
             
         } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Order validation error', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
             return response()->json([
                 'error' => 'Validation error: ' . implode(', ', $e->errors())
             ], 422);
         } catch (\Exception $e) {
             Log::error('Order placement error', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
             ]);
             
             return response()->json([
@@ -563,81 +597,145 @@ class TelegramController extends Controller
      */
     public function placeOrder(Request $request, $token)
     {
-        $sessionData = Cache::get("web_session_{$token}");
-        
-        if (!$sessionData) {
-            return response()->json(['error' => 'Session expired'], 404);
-        }
-        
-        $restaurant = Restaurant::find($sessionData['restaurant_id']);
-        $user = \App\Models\User::find($sessionData['user_id']);
-        
-        if (!$restaurant || !$user) {
-            return response()->json(['error' => 'Invalid session'], 404);
-        }
-        
-        // Validate request
-        $request->validate([
-            'items' => 'required|array',
-            'items.*.id' => 'required|exists:menu_items,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'delivery_address' => 'required|string',
-            'payment_method' => 'required|in:cash,card',
-            'customer_name' => 'required|string',
-            'customer_phone' => 'required|string'
-        ]);
-        
-        // Calculate total
-        $total = 0;
-        $orderItems = [];
-        
-        foreach ($request->items as $item) {
-            $menuItem = MenuItem::find($item['id']);
-            $subtotal = $menuItem->price * $item['quantity'];
-            $total += $subtotal;
+        try {
+            Log::info('Order placement with token request received', [
+                'token' => $token,
+                'request_data' => $request->all()
+            ]);
             
-            $orderItems[] = [
-                'menu_item_id' => $item['id'],
-                'name' => $menuItem->name,
-                'price' => $menuItem->price,
-                'quantity' => $item['quantity'],
-                'subtotal' => $subtotal
-            ];
-        }
-        
-        // Create order
-        $order = Order::create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $user->id,
-            'telegram_chat_id' => $sessionData['chat_id'],
-            'total_amount' => $total,
-            'delivery_address' => $request->delivery_address,
-            'payment_method' => $request->payment_method,
-            'status' => 'pending',
-            'items' => json_encode($orderItems),
-            'customer_name' => $request->customer_name,
-            'customer_phone' => $request->customer_phone
-        ]);
-        
-        // Send confirmation to Telegram
-        $this->handleOrderPlaced($sessionData['chat_id'], [
-            'order' => [
-                'id' => $order->id,
+            $sessionData = Cache::get("web_session_{$token}");
+            
+            if (!$sessionData) {
+                Log::error('Session expired for order placement', ['token' => $token]);
+                return response()->json(['error' => 'Session expired'], 404);
+            }
+            
+            $restaurant = Restaurant::find($sessionData['restaurant_id']);
+            $user = \App\Models\User::find($sessionData['user_id']);
+            
+            if (!$restaurant || !$user) {
+                Log::error('Invalid session data for order placement', [
+                    'session_data' => $sessionData,
+                    'restaurant_found' => !!$restaurant,
+                    'user_found' => !!$user
+                ]);
+                return response()->json(['error' => 'Invalid session'], 404);
+            }
+            
+            Log::info('Session validation passed', [
+                'restaurant_id' => $restaurant->id,
+                'user_id' => $user->id
+            ]);
+            
+            // Validate request
+            $validated = $request->validate([
+                'items' => 'required|array',
+                'items.*.id' => 'required|exists:menu_items,id',
+                'items.*.quantity' => 'required|integer|min:1',
+                'delivery_address' => 'required|string',
+                'payment_method' => 'required|in:cash,card',
+                'customer_name' => 'required|string',
+                'customer_phone' => 'required|string'
+            ]);
+            
+            Log::info('Request validation passed', ['validated_data' => $validated]);
+            
+            // Calculate total
+            $total = 0;
+            $orderItems = [];
+            
+            foreach ($request->items as $item) {
+                $menuItem = MenuItem::find($item['id']);
+                if (!$menuItem) {
+                    Log::error('Menu item not found', ['item_id' => $item['id']]);
+                    return response()->json(['error' => 'Menu item not found: ' . $item['id']], 404);
+                }
+                $subtotal = $menuItem->price * $item['quantity'];
+                $total += $subtotal;
+                
+                $orderItems[] = [
+                    'menu_item_id' => $item['id'],
+                    'name' => $menuItem->name,
+                    'price' => $menuItem->price,
+                    'quantity' => $item['quantity'],
+                    'subtotal' => $subtotal
+                ];
+            }
+            
+            Log::info('Order calculation completed', [
                 'total' => $total,
-                'address' => $request->delivery_address,
+                'items_count' => count($orderItems)
+            ]);
+            
+            // Prepare order data
+            $orderData = [
+                'restaurant_id' => $restaurant->id,
+                'user_id' => $user->id,
+                'telegram_chat_id' => $sessionData['chat_id'],
+                'total_amount' => $total,
+                'delivery_address' => $request->delivery_address,
                 'payment_method' => $request->payment_method,
+                'status' => 'pending',
+                'items' => json_encode($orderItems),
                 'customer_name' => $request->customer_name,
                 'customer_phone' => $request->customer_phone,
-                'items' => $orderItems
-            ],
-            'user_id' => $user->id
-        ]);
-        
-        return response()->json([
-            'success' => true,
-            'order_id' => $order->id,
-            'message' => 'Buyurtma qabul qilindi!'
-        ]);
+                // Add required fields from original schema
+                'order_number' => 'WEB-' . time(),
+                'total_price' => $total,
+                'payment_type' => $request->payment_method,
+                'address' => $request->delivery_address
+            ];
+            
+            Log::info('Order data prepared', ['order_data' => $orderData]);
+            
+            // Create order
+            $order = Order::create($orderData);
+            
+            Log::info('Order created successfully', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number
+            ]);
+            
+            // Send confirmation to Telegram
+            $this->handleOrderPlaced($sessionData['chat_id'], [
+                'order' => [
+                    'id' => $order->id,
+                    'total' => $total,
+                    'address' => $request->delivery_address,
+                    'payment_method' => $request->payment_method,
+                    'customer_name' => $request->customer_name,
+                    'customer_phone' => $request->customer_phone,
+                    'items' => $orderItems
+                ],
+                'user_id' => $user->id
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'message' => 'Buyurtma qabul qilindi!'
+            ]);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Order validation error', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            return response()->json([
+                'error' => 'Validation error: ' . implode(', ', $e->errors())
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Order placement error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+            
+            return response()->json([
+                'error' => 'Server error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

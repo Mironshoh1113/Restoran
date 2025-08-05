@@ -658,9 +658,15 @@
                     errorMessage += 'Sahifa topilmadi. Iltimos, qaytadan urinib ko\'ring.';
                 } else if (error.message.includes('500')) {
                     errorMessage += 'Server xatosi. Iltimos, keyinroq urinib ko\'ring.';
+                } else if (error.message.includes('422')) {
+                    errorMessage += 'Ma\'lumotlar noto\'g\'ri. Iltimos, barcha maydonlarni to\'ldiring.';
                 } else {
                     errorMessage += error.message;
                 }
+                
+                // Log additional details for debugging
+                console.log('Order data that failed:', orderData);
+                console.log('Endpoint that failed:', endpoint);
                 
                 alert(errorMessage);
             });
