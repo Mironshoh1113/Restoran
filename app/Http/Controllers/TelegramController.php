@@ -807,8 +807,20 @@ class TelegramController extends Controller
      */
     protected function handleMyOrders($chatId)
     {
-        $orders = Order::where('customer_telegram_id', $chatId)
-            ->with(['project.restaurant'])
+        // Get current bot token
+        $botToken = $this->telegramService->getBotToken();
+        
+        // Find restaurant by bot token
+        $restaurant = Restaurant::where('bot_token', $botToken)->first();
+        
+        if (!$restaurant) {
+            $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
+            return;
+        }
+
+        // Get orders for this user from this restaurant
+        $orders = Order::where('telegram_chat_id', $chatId)
+            ->where('restaurant_id', $restaurant->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -821,7 +833,7 @@ class TelegramController extends Controller
         
         foreach ($orders as $order) {
             $status = [
-                'new' => '🆕 Yangi',
+                'pending' => '⏳ Yangi',
                 'preparing' => '👨‍🍳 Tayyorlanmoqda',
                 'on_way' => '🚚 Yolda',
                 'delivered' => '✅ Yetkazildi',
@@ -829,8 +841,7 @@ class TelegramController extends Controller
             ][$order->status] ?? 'Nomalum';
 
             $message .= "📦 #{$order->order_number}\n";
-            $message .= "📍 {$order->project->restaurant->name}\n";
-            $message .= "💰 " . number_format($order->total_amount, 0, ',', ' ') . " so'm\n";
+            $message .= "💰 " . number_format($order->total_amount ?? $order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
             $message .= "📅 {$order->created_at->format('d.m.Y H:i')}\n";
             $message .= "📊 {$status}\n\n";
         }

@@ -8,6 +8,7 @@ use App\Models\Restaurant;
 use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class OrderController extends Controller
@@ -80,31 +81,37 @@ class OrderController extends Controller
 
     protected function sendOrderStatusNotification(Order $order, $oldStatus)
     {
-        if (!$order->telegram_chat_id) {
+        if (!$order->telegram_chat_id || !$order->restaurant) {
             return;
         }
 
-        $telegramService = new TelegramService();
-        $telegramService->setBotToken($order->restaurant->bot_token);
+        try {
+            $telegramService = new TelegramService();
+            $telegramService->setBotToken($order->restaurant->bot_token);
 
-        $statusMessages = [
-            'pending' => '⏳ Buyurtma qabul qilindi',
-            'preparing' => '👨‍🍳 Buyurtma tayyorlanmoqda',
-            'on_way' => '�� Buyurtma yo\'lda',
-            'delivered' => '✅ Buyurtma yetkazildi',
-            'cancelled' => '❌ Buyurtma bekor qilindi'
-        ];
+            $statusMessages = [
+                'pending' => '⏳ Buyurtma qabul qilindi',
+                'preparing' => '👨‍🍳 Buyurtma tayyorlanmoqda',
+                'on_way' => '🚚 Buyurtma yo\'lda',
+                'delivered' => '✅ Buyurtma yetkazildi',
+                'cancelled' => '❌ Buyurtma bekor qilindi'
+            ];
 
-        $message = "📋 *Buyurtma #{$order->order_number}*\n\n";
-        $message .= "🏪 Restoran: *{$order->restaurant->name}*\n";
-        $message .= "👤 Mijoz: *{$order->customer_name}*\n";
-        $message .= "📞 Telefon: *{$order->customer_phone}*\n";
-        $message .= "📍 Manzil: *{$order->delivery_address}*\n";
-        $message .= "💰 Jami: *{$order->total_amount} so'm*\n\n";
-        $message .= "🔄 *Holat o'zgartirildi:*\n";
-        $message .= "`{$oldStatus}` → `{$order->status}`\n\n";
-        $message .= "📝 *Yangilangan holat:* " . ($statusMessages[$order->status] ?? $order->status);
+            $message = "📋 *Buyurtma #{$order->order_number}*\n\n";
+            $message .= "🏪 Restoran: *{$order->restaurant->name}*\n";
+            $message .= "👤 Mijoz: *{$order->customer_name}*\n";
+            $message .= "📞 Telefon: *{$order->customer_phone}*\n";
+            if ($order->delivery_address) {
+                $message .= "📍 Manzil: *{$order->delivery_address}*\n";
+            }
+            $message .= "💰 Jami: *" . number_format($order->total_amount ?? $order->total_price ?? 0, 0, ',', ' ') . " so'm*\n\n";
+            $message .= "🔄 *Holat o'zgartirildi:*\n";
+            $message .= "`{$oldStatus}` → `{$order->status}`\n\n";
+            $message .= "📝 *Yangilangan holat:* " . ($statusMessages[$order->status] ?? $order->status);
 
-        $telegramService->sendMessage($order->telegram_chat_id, $message);
+            $telegramService->sendMessage($order->telegram_chat_id, $message);
+        } catch (\Exception $e) {
+            Log::error('Telegram notification error: ' . $e->getMessage());
+        }
     }
 } 
