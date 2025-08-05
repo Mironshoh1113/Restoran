@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TelegramUser extends Model
 {
@@ -34,6 +35,27 @@ class TelegramUser extends Model
     public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(TelegramMessage::class);
+    }
+
+    /**
+     * Get unread messages count
+     */
+    public function getUnreadMessagesCountAttribute(): int
+    {
+        return $this->messages()->unread()->count();
+    }
+
+    /**
+     * Get last message
+     */
+    public function getLastMessageAttribute()
+    {
+        return $this->messages()->latest()->first();
     }
 
     /**

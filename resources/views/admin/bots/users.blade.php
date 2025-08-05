@@ -176,12 +176,19 @@
                                     {{ $user->last_activity ? $user->last_activity->diffForHumans() : 'Noma\'lum' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ route('admin.bots.conversation', [$restaurant, $user]) }}" 
+                                       class="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300 mr-3"
+                                       title="Xabar almashinuvi">
+                                        <i class="fas fa-comments"></i>
+                                    </a>
                                     <button onclick="sendMessageToUser({{ $user->telegram_id }})" 
-                                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3">
+                                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3"
+                                            title="Xabar yuborish">
                                         <i class="fas fa-paper-plane"></i>
                                     </button>
                                     <button onclick="viewUserDetails({{ $user->id }})" 
-                                            class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                                            class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                                            title="Ma'lumotlar">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </td>

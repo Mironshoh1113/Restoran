@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Storage;
+use App\Models\TelegramUser;
 
 class BotController extends Controller
 {
@@ -483,5 +484,89 @@ class BotController extends Controller
         ];
         
         return response()->json(['success' => true, 'stats' => $stats]);
+    }
+
+    /**
+     * Show conversation with specific user
+     */
+    public function conversation(Restaurant $restaurant, TelegramUser $telegramUser)
+    {
+        $this->authorize('view', $restaurant);
+        
+        $messages = $telegramUser->messages()
+            ->orderBy('created_at', 'asc')
+            ->paginate(50);
+        
+        return view('admin.bots.conversation', compact('restaurant', 'telegramUser', 'messages'));
+    }
+
+    /**
+     * Send message to specific user
+     */
+    public function sendMessageToUser(Request $request, Restaurant $restaurant, TelegramUser $telegramUser)
+    {
+        $this->authorize('update', $restaurant);
+        
+        $request->validate([
+            'message' => 'required|string|max:4096'
+        ]);
+
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            $telegramService = new TelegramService($restaurant->bot_token);
+            $result = $telegramService->sendMessage($telegramUser->telegram_id, $request->message);
+            
+            if ($result['ok']) {
+                // Save outgoing message
+                $telegramService->saveOutgoingMessage($telegramUser, $request->message, $result['result']['message_id'] ?? null);
+                
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Xabar muvaffaqiyatli yuborildi',
+                    'message_data' => [
+                        'text' => $request->message,
+                        'direction' => 'outgoing',
+                        'created_at' => now()->format('Y-m-d H:i:s')
+                    ]
+                ]);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Xabar yuborishda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get new messages for real-time updates
+     */
+    public function getNewMessages(Restaurant $restaurant, TelegramUser $telegramUser)
+    {
+        $this->authorize('view', $restaurant);
+        
+        $messages = $telegramUser->messages()
+            ->where('created_at', '>', request('last_message_time', now()->subMinutes(5)))
+            ->orderBy('created_at', 'asc')
+            ->get();
+        
+        return response()->json(['success' => true, 'messages' => $messages]);
+    }
+
+    /**
+     * Mark messages as read
+     */
+    public function markMessagesAsRead(Restaurant $restaurant, TelegramUser $telegramUser)
+    {
+        $this->authorize('update', $restaurant);
+        
+        $telegramUser->messages()
+            ->where('direction', 'incoming')
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+        
+        return response()->json(['success' => true, 'message' => 'Xabarlar o\'qildi deb belgilandi']);
     }
 } 

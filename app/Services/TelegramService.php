@@ -484,6 +484,9 @@ class TelegramService
                 if ($result['ok']) {
                     $successCount++;
                     $user->updateActivity();
+                    
+                    // Save outgoing message
+                    $this->saveOutgoingMessage($user, $message, $result['result']['message_id'] ?? null);
                 } else {
                     $errorCount++;
                 }
@@ -501,5 +504,51 @@ class TelegramService
             'error_count' => $errorCount,
             'total_users' => $users->count()
         ];
+    }
+
+    /**
+     * Save incoming message
+     */
+    public function saveIncomingMessage($telegramUser, $messageText, $messageId = null, $messageData = null)
+    {
+        return \App\Models\TelegramMessage::create([
+            'restaurant_id' => $telegramUser->restaurant_id,
+            'telegram_user_id' => $telegramUser->id,
+            'message_id' => $messageId,
+            'direction' => 'incoming',
+            'message_text' => $messageText,
+            'message_data' => $messageData,
+            'message_type' => 'text',
+            'is_read' => false,
+        ]);
+    }
+
+    /**
+     * Save outgoing message
+     */
+    public function saveOutgoingMessage($telegramUser, $messageText, $messageId = null, $messageData = null)
+    {
+        return \App\Models\TelegramMessage::create([
+            'restaurant_id' => $telegramUser->restaurant_id,
+            'telegram_user_id' => $telegramUser->id,
+            'message_id' => $messageId,
+            'direction' => 'outgoing',
+            'message_text' => $messageText,
+            'message_data' => $messageData,
+            'message_type' => 'text',
+            'is_read' => true,
+        ]);
+    }
+
+    /**
+     * Get conversation between user and bot
+     */
+    public function getConversation($telegramUser, $limit = 50)
+    {
+        return $telegramUser->messages()
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get()
+            ->reverse();
     }
 } 

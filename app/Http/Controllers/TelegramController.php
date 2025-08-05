@@ -62,7 +62,12 @@ class TelegramController extends Controller
         $contact = $message['contact'] ?? null;
 
         // Save or update telegram user
-        $this->saveTelegramUser($message['from']);
+        $telegramUser = $this->saveTelegramUser($message['from']);
+
+        // Save incoming message
+        if ($telegramUser && $text) {
+            $this->saveIncomingMessage($telegramUser, $text, $message['message_id'] ?? null, $message);
+        }
 
         // Handle contact sharing
         if ($contact) {
@@ -560,5 +565,22 @@ class TelegramController extends Controller
         );
 
         return $telegramUser;
+    }
+
+    /**
+     * Save incoming message
+     */
+    protected function saveIncomingMessage($telegramUser, $messageText, $messageId = null, $messageData = null)
+    {
+        return \App\Models\TelegramMessage::create([
+            'restaurant_id' => $telegramUser->restaurant_id,
+            'telegram_user_id' => $telegramUser->id,
+            'message_id' => $messageId,
+            'direction' => 'incoming',
+            'message_text' => $messageText,
+            'message_data' => $messageData,
+            'message_type' => 'text',
+            'is_read' => false,
+        ]);
     }
 } 
