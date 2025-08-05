@@ -310,4 +310,69 @@ class TelegramService
         $inlineKeyboard = $this->createInlineKeyboard($keyboard);
         return $this->sendMessage($chatId, $message, $inlineKeyboard);
     }
+
+    /**
+     * Set bot name
+     */
+    public function setMyName($name)
+    {
+        $data = ['name' => $name];
+        return $this->makeRequest('setMyName', $data);
+    }
+
+    /**
+     * Set bot description
+     */
+    public function setMyDescription($description)
+    {
+        $data = ['description' => $description];
+        return $this->makeRequest('setMyDescription', $data);
+    }
+
+    /**
+     * Set bot short description
+     */
+    public function setMyShortDescription($shortDescription)
+    {
+        $data = ['short_description' => $shortDescription];
+        return $this->makeRequest('setMyShortDescription', $data);
+    }
+
+    /**
+     * Set profile photo
+     */
+    public function setProfilePhoto($photo)
+    {
+        $url = $this->apiUrl . $this->botToken . '/setProfilePhoto';
+        
+        try {
+            $response = Http::timeout($this->timeout)
+                ->attach('photo', file_get_contents($photo->getPathname()), $photo->getClientOriginalName())
+                ->post($url);
+            
+            if (config('telegram.debug')) {
+                Log::info('Telegram API Request', [
+                    'method' => 'setProfilePhoto',
+                    'response' => $response->json()
+                ]);
+            }
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Telegram API Error', [
+                'method' => 'setProfilePhoto',
+                'error' => $e->getMessage()
+            ]);
+
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get bot commands
+     */
+    public function getMyCommands()
+    {
+        return $this->makeRequest('getMyCommands');
+    }
 } 
