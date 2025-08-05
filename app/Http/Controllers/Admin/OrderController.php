@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Restaurant;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -18,17 +19,15 @@ class OrderController extends Controller
         $user = Auth::user();
         
         if ($user->isSuperAdmin()) {
-            $orders = Order::with(['project.restaurant', 'courier'])
+            $orders = Order::with(['restaurant', 'courier'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
         } else {
             $restaurantIds = $user->ownedRestaurants()->pluck('id');
-            $orders = Order::whereHas('project', function($query) use ($restaurantIds) {
-                $query->whereIn('restaurant_id', $restaurantIds);
-            })
-            ->with(['project.restaurant', 'courier'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            $orders = Order::whereIn('restaurant_id', $restaurantIds)
+                ->with(['restaurant', 'courier'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
         }
         
         return view('admin.orders.index', compact('orders'));
@@ -38,7 +37,7 @@ class OrderController extends Controller
     {
         $this->authorize('view', $order);
         
-        $order->load(['orderItems.menuItem.category', 'project.restaurant', 'courier']);
+        $order->load(['restaurant', 'courier']);
         
         return view('admin.orders.show', compact('order'));
     }
@@ -48,16 +47,18 @@ class OrderController extends Controller
         $this->authorize('update', $order);
         
         $request->validate([
-            'status' => 'required|in:new,preparing,on_way,delivered,cancelled'
+            'status' => 'required|in:pending,preparing,on_way,delivered,cancelled'
         ]);
 
+        $oldStatus = $order->status;
+        
         $order->update([
             'status' => $request->status,
             'delivered_at' => $request->status === 'delivered' ? now() : null
         ]);
 
         // Send notification to customer via Telegram
-        $this->sendOrderStatusNotification($order);
+        $this->sendOrderStatusNotification($order, $oldStatus);
 
         return redirect()->back()
             ->with('success', 'Buyurtma holati yangilandi.');
@@ -77,9 +78,33 @@ class OrderController extends Controller
             ->with('success', 'Kuryer tayinlandi.');
     }
 
-    protected function sendOrderStatusNotification(Order $order)
+    protected function sendOrderStatusNotification(Order $order, $oldStatus)
     {
-        // TODO: Implement Telegram notification
-        // This would send a message to the customer about their order status
+        if (!$order->telegram_chat_id) {
+            return;
+        }
+
+        $telegramService = new TelegramService();
+        $telegramService->setBotToken($order->restaurant->bot_token);
+
+        $statusMessages = [
+            'pending' => '⏳ Buyurtma qabul qilindi',
+            'preparing' => '👨‍🍳 Buyurtma tayyorlanmoqda',
+            'on_way' => '�� Buyurtma yo\'lda',
+            'delivered' => '✅ Buyurtma yetkazildi',
+            'cancelled' => '❌ Buyurtma bekor qilindi'
+        ];
+
+        $message = "📋 *Buyurtma #{$order->order_number}*\n\n";
+        $message .= "🏪 Restoran: *{$order->restaurant->name}*\n";
+        $message .= "👤 Mijoz: *{$order->customer_name}*\n";
+        $message .= "📞 Telefon: *{$order->customer_phone}*\n";
+        $message .= "📍 Manzil: *{$order->delivery_address}*\n";
+        $message .= "💰 Jami: *{$order->total_amount} so'm*\n\n";
+        $message .= "🔄 *Holat o'zgartirildi:*\n";
+        $message .= "`{$oldStatus}` → `{$order->status}`\n\n";
+        $message .= "📝 *Yangilangan holat:* " . ($statusMessages[$order->status] ?? $order->status);
+
+        $telegramService->sendMessage($order->telegram_chat_id, $message);
     }
 } 
