@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'telegram/webhook/*',
             'webhook',
         ]);
+        
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
