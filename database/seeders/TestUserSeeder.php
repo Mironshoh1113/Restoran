@@ -14,19 +14,8 @@ class TestUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create test restaurant
-        $restaurant = Restaurant::create([
-            'name' => 'Test Restoran',
-            'owner_user_id' => 1, // Will be created below
-            'phone' => '+998901234567',
-            'address' => 'Toshkent shahri, Test ko\'chasi, 123-uy',
-            'bot_token' => 'test_bot_token_123',
-            'bot_username' => 'test_restaurant_bot',
-            'is_active' => true,
-        ]);
-
-        // Create test user (Super Admin)
-        User::create([
+        // Create test user (Super Admin) first
+        $admin = User::create([
             'name' => 'Test Admin',
             'email' => 'a@a.a',
             'password' => Hash::make('aaaa'),
@@ -35,14 +24,27 @@ class TestUserSeeder extends Seeder
         ]);
 
         // Create test restaurant manager
-        User::create([
+        $manager = User::create([
             'name' => 'Test Manager',
             'email' => 'manager@test.com',
             'password' => Hash::make('password'),
             'role' => 'restaurant_manager',
-            'restaurant_id' => $restaurant->id,
             'phone' => '+998901234568',
         ]);
+
+        // Create test restaurant
+        $restaurant = Restaurant::create([
+            'name' => 'Test Restoran',
+            'owner_user_id' => $manager->id, // Use the manager's ID
+            'phone' => '+998901234567',
+            'address' => 'Toshkent shahri, Test ko\'chasi, 123-uy',
+            'bot_token' => 'test_bot_token_123',
+            'bot_username' => 'test_restaurant_bot',
+            'is_active' => true,
+        ]);
+
+        // Update manager with restaurant_id
+        $manager->update(['restaurant_id' => $restaurant->id]);
 
         // Create test courier
         User::create([
