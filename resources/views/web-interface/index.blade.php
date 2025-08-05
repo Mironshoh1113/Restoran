@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $restaurant->name }} - Menyu</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -15,26 +16,36 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333;
+            min-height: 100vh;
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #333;
             padding: 20px;
             text-align: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
         .restaurant-name {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .restaurant-description {
-            font-size: 14px;
-            opacity: 0.9;
+            font-size: 16px;
+            color: #666;
         }
         
         .container {
@@ -43,31 +54,80 @@
             padding: 20px;
         }
         
-        .category {
-            background: white;
-            border-radius: 12px;
+        .categories-nav {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 15px 0;
             margin-bottom: 20px;
-            overflow: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .categories-nav::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .category-tab {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .category-header {
-            background: #f8f9fa;
-            padding: 15px 20px;
-            font-weight: bold;
-            font-size: 18px;
-            color: #333;
+        .category-tab.active {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .category-content {
+            display: none;
+        }
+        
+        .category-content.active {
+            display: block;
         }
         
         .menu-item {
-            display: flex;
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-            align-items: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
         
-        .menu-item:last-child {
-            border-bottom: none;
+        .menu-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .item-content {
+            display: flex;
+            padding: 20px;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            flex-shrink: 0;
         }
         
         .item-info {
@@ -76,51 +136,63 @@
         
         .item-name {
             font-weight: bold;
-            font-size: 16px;
+            font-size: 18px;
             margin-bottom: 5px;
+            color: #333;
         }
         
         .item-description {
             font-size: 14px;
             color: #666;
             margin-bottom: 8px;
+            line-height: 1.4;
         }
         
         .item-price {
             font-weight: bold;
             color: #28a745;
-            font-size: 16px;
+            font-size: 18px;
         }
         
         .item-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            flex-shrink: 0;
         }
         
         .quantity-btn {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border: none;
             border-radius: 50%;
-            background: #007bff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             font-size: 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .quantity-btn:hover {
+            transform: scale(1.1);
         }
         
         .quantity-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
+            transform: none;
         }
         
         .quantity {
             font-weight: bold;
-            min-width: 30px;
+            min-width: 40px;
             text-align: center;
+            font-size: 18px;
+            color: #333;
         }
         
         .cart {
@@ -128,10 +200,12 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
-            border-top: 1px solid #eee;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.2);
             padding: 20px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            z-index: 1000;
         }
         
         .cart-header {
@@ -143,77 +217,107 @@
         
         .cart-total {
             font-weight: bold;
-            font-size: 18px;
+            font-size: 20px;
+            color: #333;
         }
         
         .checkout-btn {
-            background: #28a745;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 15px 30px;
+            border-radius: 25px;
             font-weight: bold;
             cursor: pointer;
             font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .checkout-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
         }
         
         .checkout-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         .order-form {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
             margin: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        
+        .form-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-align: center;
+            color: #333;
         }
         
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
         .form-label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
         }
         
         .form-input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
             font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
         }
         
-        .form-select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
         .payment-methods {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 15px;
+            margin-top: 15px;
         }
         
         .payment-method {
             flex: 1;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
             text-align: center;
             cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .payment-method:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
         }
         
         .payment-method.selected {
-            border-color: #007bff;
-            background: #f8f9ff;
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
         }
         
         .hidden {
@@ -221,12 +325,43 @@
         }
         
         .success-message {
-            background: #d4edda;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
             color: #155724;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 30px;
+            border-radius: 20px;
             margin: 20px;
             text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-cart i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
         }
     </style>
 </head>
@@ -237,21 +372,36 @@
     </div>
     
     <div class="container">
+        <!-- Categories Navigation -->
+        <div class="categories-nav" id="categories-nav">
+            @foreach($categories as $category)
+                <button class="category-tab {{ $loop->first ? 'active' : '' }}" 
+                        onclick="showCategory({{ $category->id }})">
+                    {{ $category->name }}
+                </button>
+            @endforeach
+        </div>
+        
+        <!-- Menu Items by Category -->
         <div id="menu-container">
             @foreach($categories as $category)
-                <div class="category">
-                    <div class="category-header">{{ $category->name }}</div>
+                <div class="category-content {{ $loop->first ? 'active' : '' }}" id="category-{{ $category->id }}">
                     @foreach($category->menuItems as $item)
                         <div class="menu-item" data-item-id="{{ $item->id }}" data-price="{{ $item->price }}">
-                            <div class="item-info">
-                                <div class="item-name">{{ $item->name }}</div>
-                                <div class="item-description">{{ $item->description }}</div>
-                                <div class="item-price">{{ number_format($item->price) }} so'm</div>
-                            </div>
-                            <div class="item-controls">
-                                <button class="quantity-btn minus" onclick="updateQuantity({{ $item->id }}, -1)">-</button>
-                                <span class="quantity" id="qty-{{ $item->id }}">0</span>
-                                <button class="quantity-btn plus" onclick="updateQuantity({{ $item->id }}, 1)">+</button>
+                            <div class="item-content">
+                                <div class="item-image">
+                                    <i class="fas fa-utensils"></i>
+                                </div>
+                                <div class="item-info">
+                                    <div class="item-name">{{ $item->name }}</div>
+                                    <div class="item-description">{{ $item->description }}</div>
+                                    <div class="item-price">{{ number_format($item->price) }} so'm</div>
+                                </div>
+                                <div class="item-controls">
+                                    <button class="quantity-btn minus" onclick="updateQuantity({{ $item->id }}, -1)">-</button>
+                                    <span class="quantity" id="qty-{{ $item->id }}">0</span>
+                                    <button class="quantity-btn plus" onclick="updateQuantity({{ $item->id }}, 1)">+</button>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -260,7 +410,10 @@
         </div>
         
         <div id="order-form" class="order-form hidden">
-            <h3>Buyurtma ma'lumotlari</h3>
+            <button class="back-btn" onclick="showMenu()">
+                <i class="fas fa-arrow-left"></i> Orqaga
+            </button>
+            <div class="form-title">Buyurtma ma'lumotlari</div>
             <form id="checkout-form">
                 <div class="form-group">
                     <label class="form-label">Ismingiz</label>
@@ -280,34 +433,35 @@
                 <div class="form-group">
                     <label class="form-label">To'lov usuli</label>
                     <div class="payment-methods">
-                        <div class="payment-method" data-method="cash">
-                            <div>💵 Naqd pul</div>
-                        </div>
-                        <div class="payment-method" data-method="card">
-                            <div>💳 Karta</div>
-                        </div>
+                                            <div class="payment-method" data-method="cash">
+                        <div><i class="fas fa-money-bill-wave"></i> Naqd pul</div>
+                    </div>
+                    <div class="payment-method" data-method="card">
+                        <div><i class="fas fa-credit-card"></i> Karta</div>
+                    </div>
                     </div>
                     <input type="hidden" id="payment-method" value="cash">
                 </div>
                 
                 <button type="submit" class="checkout-btn" style="width: 100%; margin-top: 20px;">
-                    Buyurtma berish
+                    <i class="fas fa-shopping-cart"></i> Buyurtma berish
                 </button>
             </form>
         </div>
         
         <div id="success-message" class="success-message hidden">
-            ✅ Buyurtma qabul qilindi! Tez orada siz bilan bog'lanamiz.
+            <i class="fas fa-check-circle"></i><br>
+            <i class="fas fa-check"></i> Buyurtma qabul qilindi! Tez orada siz bilan bog'lanamiz.
         </div>
     </div>
     
     <div class="cart" id="cart">
         <div class="cart-header">
             <div class="cart-total">
-                Jami: <span id="cart-total">0</span> so'm
+                <i class="fas fa-shopping-cart"></i> Jami: <span id="cart-total">0</span> so'm
             </div>
             <button class="checkout-btn" id="checkout-btn" onclick="showOrderForm()" disabled>
-                Buyurtma berish
+                <i class="fas fa-credit-card"></i> Buyurtma berish
             </button>
         </div>
     </div>
@@ -337,6 +491,24 @@
         
         let cart = {};
         let selectedPaymentMethod = 'cash';
+        
+        function showCategory(categoryId) {
+            // Hide all category contents
+            document.querySelectorAll('.category-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected category content
+            document.getElementById(`category-${categoryId}`).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
         
         function updateQuantity(itemId, change) {
             const currentQty = cart[itemId] || 0;
