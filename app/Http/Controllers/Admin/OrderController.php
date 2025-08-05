@@ -91,11 +91,13 @@ class OrderController extends Controller
             'order_id' => $order->id,
             'telegram_chat_id' => $order->telegram_chat_id,
             'old_status' => $oldStatus,
-            'new_status' => $order->status
+            'new_status' => $order->status,
+            'customer_name' => $order->customer_name,
+            'restaurant_id' => $order->restaurant_id
         ]);
 
         if (!$order->telegram_chat_id) {
-            Log::info('Order has no telegram_chat_id', ['order_id' => $order->id]);
+            Log::info('Order has no telegram_chat_id - web interface order', ['order_id' => $order->id]);
             return;
         }
 
@@ -121,7 +123,8 @@ class OrderController extends Controller
         try {
             Log::info('Creating TelegramService with bot token', [
                 'restaurant_id' => $order->restaurant->id,
-                'bot_token' => $order->restaurant->bot_token
+                'bot_token' => $order->restaurant->bot_token,
+                'chat_id' => $order->telegram_chat_id
             ]);
 
             $telegramService = new TelegramService($order->restaurant->bot_token);

@@ -500,20 +500,20 @@ class TelegramController extends Controller
         }
         
         try {
-                    // Create order
-        $order = Order::create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => null,
-            'project_id' => null,
-            'telegram_chat_id' => null,
-            'total_amount' => $total,
-            'delivery_address' => $request->delivery_address,
-            'payment_method' => $request->payment_method,
-            'status' => 'pending',
-            'items' => json_encode($orderItems),
-            'customer_name' => $request->customer_name,
-            'customer_phone' => $request->customer_phone
-        ]);
+            // Create order
+            $order = Order::create([
+                'restaurant_id' => $restaurant->id,
+                'user_id' => null,
+                'project_id' => null,
+                'telegram_chat_id' => null, // Web interface dan kelgan buyurtmalar uchun null
+                'total_amount' => $total,
+                'delivery_address' => $request->delivery_address,
+                'payment_method' => $request->payment_method,
+                'status' => 'pending',
+                'items' => json_encode($orderItems),
+                'customer_name' => $request->customer_name,
+                'customer_phone' => $request->customer_phone
+            ]);
             
             return response()->json([
                 'success' => true,

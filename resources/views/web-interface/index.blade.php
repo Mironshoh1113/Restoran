@@ -621,6 +621,40 @@
         
         // Initialize cart total
         updateCartTotal();
+        
+        // Load saved customer data
+        loadCustomerData();
+        
+        // Save customer data when form is submitted
+        document.getElementById('checkout-form').addEventListener('submit', function(e) {
+            saveCustomerData();
+        });
+        
+        function loadCustomerData() {
+            const savedName = localStorage.getItem('customer_name');
+            const savedPhone = localStorage.getItem('customer_phone');
+            const savedAddress = localStorage.getItem('delivery_address');
+            
+            if (savedName) {
+                document.getElementById('customer-name').value = savedName;
+            }
+            if (savedPhone) {
+                document.getElementById('customer-phone').value = savedPhone;
+            }
+            if (savedAddress) {
+                document.getElementById('delivery-address').value = savedAddress;
+            }
+        }
+        
+        function saveCustomerData() {
+            const name = document.getElementById('customer-name').value;
+            const phone = document.getElementById('customer-phone').value;
+            const address = document.getElementById('delivery-address').value;
+            
+            if (name) localStorage.setItem('customer_name', name);
+            if (phone) localStorage.setItem('customer_phone', phone);
+            if (address) localStorage.setItem('delivery_address', address);
+        }
     </script>
 </body>
 </html> 
