@@ -38,7 +38,13 @@ class OrderController extends Controller
     {
         $this->authorize('view', $order);
         
-        $order->load(['restaurant', 'courier']);
+        // Load relationships
+        $order->load(['restaurant', 'courier', 'orderItems.menuItem.category']);
+        
+        // If order has items JSON (from web interface), decode it
+        if ($order->items) {
+            $order->decoded_items = json_decode($order->items, true);
+        }
         
         return view('admin.orders.show', compact('order'));
     }

@@ -130,6 +130,7 @@
         
         <div class="p-6">
             @if($order->orderItems->count() > 0)
+                <!-- Traditional order items -->
                 <div class="space-y-4">
                     @foreach($order->orderItems as $item)
                         <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
@@ -150,10 +151,35 @@
                         </div>
                     @endforeach
                 </div>
+            @elseif(isset($order->decoded_items) && count($order->decoded_items) > 0)
+                <!-- Web interface order items -->
+                <div class="space-y-4">
+                    @foreach($order->decoded_items as $item)
+                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-utensils text-gray-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-800">{{ $item['name'] ?? 'N/A' }}</h4>
+                                    <p class="text-sm text-gray-500">{{ $item['category'] ?? 'N/A' }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="text-gray-600">{{ $item['quantity'] ?? 1 }}x</span>
+                                <span class="font-medium">{{ number_format($item['price'] ?? 0, 0, ',', ' ') }} so'm</span>
+                                <span class="font-bold text-blue-600">{{ number_format(($item['quantity'] ?? 1) * ($item['price'] ?? 0), 0, ',', ' ') }} so'm</span>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             @else
                 <div class="text-center py-8">
                     <i class="fas fa-shopping-cart text-gray-400 text-4xl mb-4"></i>
                     <p class="text-gray-500">Buyurtma elementlari topilmadi</p>
+                    @if($order->items)
+                        <p class="text-sm text-gray-400 mt-2">Items JSON: {{ $order->items }}</p>
+                    @endif
                 </div>
             @endif
         </div>
