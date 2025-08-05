@@ -102,6 +102,7 @@ Route::post('/telegram/webhook/{token}', [TelegramController::class, 'webhook'])
 
 // Web interface for Telegram users
 Route::get('/web-interface/{token}', [TelegramController::class, 'webInterface'])->name('web.interface');
+Route::get('/web-interface', [TelegramController::class, 'webInterfaceFromApp'])->name('web.interface.app');
 Route::post('/web-interface/{token}/order', [TelegramController::class, 'placeOrder'])->name('web.place-order');
 Route::get('/web-interface/{token}/menu', [TelegramController::class, 'getMenu'])->name('web.get-menu');
 

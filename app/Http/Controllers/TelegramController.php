@@ -283,6 +283,95 @@ class TelegramController extends Controller
     }
 
     /**
+     * Web interface for Telegram users (from Web App)
+     */
+    public function webInterfaceFromApp(Request $request)
+    {
+        // Get init data from Telegram Web App
+        $initData = $request->get('_tgInitData');
+        
+        if (!$initData) {
+            return response('Invalid access', 403);
+        }
+        
+        // Parse init data to get user info
+        $data = [];
+        parse_str($initData, $data);
+        
+        $user = $data['user'] ?? null;
+        $chatId = $data['chat_instance'] ?? null;
+        
+        if (!$user || !$chatId) {
+            return response('Invalid user data', 403);
+        }
+        
+        // Find restaurant by bot token (from init data)
+        $botToken = $this->extractBotTokenFromInitData($initData);
+        
+        if (!$botToken) {
+            return response('Bot token not found', 403);
+        }
+        
+        $restaurant = Restaurant::where('bot_token', $botToken)->first();
+        
+        if (!$restaurant) {
+            return response('Restaurant not found', 404);
+        }
+        
+        // Get or create user
+        $dbUser = \App\Models\User::where('telegram_chat_id', $chatId)->first();
+        
+        if (!$dbUser) {
+            // Create user from Telegram data
+            $userData = json_decode($user, true);
+            $dbUser = \App\Models\User::create([
+                'name' => $userData['first_name'] ?? 'User',
+                'email' => 'telegram_' . $chatId . '@example.com',
+                'telegram_chat_id' => $chatId,
+                'password' => bcrypt(Str::random(16))
+            ]);
+        }
+        
+        // Get categories and menu items
+        $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
+        
+        return view('web-interface.index', compact('restaurant', 'user', 'categories'));
+    }
+
+    /**
+     * Extract bot token from Telegram init data
+     */
+    protected function extractBotTokenFromInitData($initData)
+    {
+        // This is a simplified version. In production, you should verify the hash
+        $data = [];
+        parse_str($initData, $data);
+        
+        // Try to get bot token from various sources
+        $botToken = $data['bot_token'] ?? null;
+        
+        if (!$botToken) {
+            // Try to find bot token from restaurant that matches the user
+            $user = $data['user'] ?? null;
+            if ($user) {
+                $userData = json_decode($user, true);
+                $chatId = $userData['id'] ?? null;
+                
+                if ($chatId) {
+                    // Find restaurant by checking which bot this user is chatting with
+                    // This is a simplified approach
+                    $restaurant = Restaurant::where('admin_telegram_chat_id', $chatId)->first();
+                    if ($restaurant) {
+                        return $restaurant->bot_token;
+                    }
+                }
+            }
+        }
+        
+        return $botToken;
+    }
+
+    /**
      * Web interface for Telegram users
      */
     public function webInterface($token)
