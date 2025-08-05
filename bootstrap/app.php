@@ -16,9 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhook',
         ]);
         
-        $middleware->web(append: [
-            \App\Http\Middleware\HandleInertiaRequests::class,
-        ]);
+        // $middleware->web(append: [
+        //     \App\Http\Middleware\HandleInertiaRequests::class,
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
