@@ -19,7 +19,15 @@ class OrderPolicy
         }
 
         if ($user->isRestaurantManager()) {
-            return $order->project->restaurant->owner_user_id === $user->id;
+            // Web interface dan kelgan buyurtmalar uchun restaurant_id ishlatamiz
+            if ($order->restaurant_id && $order->restaurant) {
+                return $order->restaurant->owner_user_id === $user->id;
+            }
+            
+            // Eski buyurtmalar uchun project orqali tekshiramiz
+            if ($order->project && $order->project->restaurant) {
+                return $order->project->restaurant->owner_user_id === $user->id;
+            }
         }
 
         return false;
@@ -32,7 +40,15 @@ class OrderPolicy
         }
 
         if ($user->isRestaurantManager()) {
-            return $order->project->restaurant->owner_user_id === $user->id;
+            // Web interface dan kelgan buyurtmalar uchun restaurant_id ishlatamiz
+            if ($order->restaurant_id && $order->restaurant) {
+                return $order->restaurant->owner_user_id === $user->id;
+            }
+            
+            // Eski buyurtmalar uchun project orqali tekshiramiz
+            if ($order->project && $order->project->restaurant) {
+                return $order->project->restaurant->owner_user_id === $user->id;
+            }
         }
 
         return false;
