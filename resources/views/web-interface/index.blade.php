@@ -469,12 +469,18 @@
     <script>
         // Initialize Telegram Web App
         let tg = null;
+        let telegramChatId = null;
         
         // Check if we're in Telegram Web App
         if (window.Telegram && window.Telegram.WebApp) {
             tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
+            
+            // Get chat ID from Telegram Web App
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                telegramChatId = tg.initDataUnsafe.user.id;
+            }
         } else {
             // We're not in Telegram, create a mock object for testing
             tg = {
@@ -577,7 +583,8 @@
                 customer_name: document.getElementById('customer-name').value,
                 customer_phone: document.getElementById('customer-phone').value,
                 delivery_address: document.getElementById('delivery-address').value,
-                payment_method: selectedPaymentMethod
+                payment_method: selectedPaymentMethod,
+                telegram_chat_id: telegramChatId
             };
             
             // Get the current URL to determine the endpoint

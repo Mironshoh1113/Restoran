@@ -106,24 +106,15 @@ class OrderController extends Controller
             return;
         }
 
-        $statusMessages = [
-            'pending' => '⏳ Buyurtma qabul qilindi',
-            'preparing' => '👨‍🍳 Buyurtma tayyorlanmoqda',
-            'on_way' => '🚚 Buyurtma yo\'lda',
-            'delivered' => '✅ Buyurtma yetkazildi',
-            'cancelled' => '❌ Buyurtma bekor qilindi'
-        ];
-
         // If order has telegram_chat_id, send via Telegram
         if ($order->telegram_chat_id) {
-            $this->sendTelegramNotification($order, $oldStatus, $statusMessages);
+            $this->sendTelegramNotification($order, $oldStatus);
         } else {
-            // Web interface order - send SMS notification
-            $this->sendSMSNotification($order, $oldStatus, $statusMessages);
+            Log::info('Order has no telegram_chat_id - cannot send notification', ['order_id' => $order->id]);
         }
     }
 
-    protected function sendTelegramNotification($order, $oldStatus, $statusMessages)
+    protected function sendTelegramNotification($order, $oldStatus)
     {
         if (!$order->restaurant->bot_token) {
             Log::error('Restaurant has no bot token', [
@@ -142,6 +133,14 @@ class OrderController extends Controller
             ]);
 
             $telegramService = new TelegramService($order->restaurant->bot_token);
+
+            $statusMessages = [
+                'pending' => '⏳ Buyurtma qabul qilindi',
+                'preparing' => '👨‍🍳 Buyurtma tayyorlanmoqda',
+                'on_way' => '🚚 Buyurtma yo\'lda',
+                'delivered' => '✅ Buyurtma yetkazildi',
+                'cancelled' => '❌ Buyurtma bekor qilindi'
+            ];
 
             $message = "📋 *Buyurtma #{$order->order_number}*\n\n";
             $message .= "🏪 Restoran: *{$order->restaurant->name}*\n";
@@ -188,40 +187,5 @@ class OrderController extends Controller
         }
     }
 
-    protected function sendSMSNotification($order, $oldStatus, $statusMessages)
-    {
-        try {
-            // Here you can integrate with SMS service like Twilio, Nexmo, etc.
-            // For now, we'll just log the SMS notification
-            
-            $message = "Buyurtma #{$order->order_number}\n";
-            $message .= "Restoran: {$order->restaurant->name}\n";
-            $message .= "Mijoz: {$order->customer_name}\n";
-            $message .= "Telefon: {$order->customer_phone}\n";
-            if ($order->delivery_address) {
-                $message .= "Manzil: {$order->delivery_address}\n";
-            }
-            $message .= "Jami: " . number_format($order->total_amount ?? $order->total_price ?? 0, 0, ',', ' ') . " so'm\n\n";
-            $message .= "Holat o'zgartirildi: {$oldStatus} → {$order->status}\n";
-            $message .= "Yangilangan holat: " . ($statusMessages[$order->status] ?? $order->status);
 
-            Log::info('SMS notification would be sent', [
-                'order_id' => $order->id,
-                'customer_phone' => $order->customer_phone,
-                'message' => $message,
-                'status' => $order->status
-            ]);
-
-            // TODO: Integrate with SMS service here
-            // Example: $smsService->send($order->customer_phone, $message);
-            
-        } catch (\Exception $e) {
-            Log::error('SMS notification exception', [
-                'order_id' => $order->id,
-                'customer_phone' => $order->customer_phone,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
-    }
 } 
