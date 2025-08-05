@@ -807,46 +807,77 @@ class TelegramController extends Controller
      */
     protected function handleMyOrders($chatId)
     {
-        // Get current bot token
-        $botToken = $this->telegramService->getBotToken();
-        
-        // Find restaurant by bot token
-        $restaurant = Restaurant::where('bot_token', $botToken)->first();
-        
-        if (!$restaurant) {
-            $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
-            return;
+        try {
+            // Get current bot token
+            $botToken = $this->telegramService->getBotToken();
+            
+            if (!$botToken) {
+                Log::error('Bot token not set in handleMyOrders', ['chat_id' => $chatId]);
+                $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
+                return;
+            }
+            
+            // Find restaurant by bot token
+            $restaurant = Restaurant::where('bot_token', $botToken)->first();
+            
+            if (!$restaurant) {
+                Log::error('Restaurant not found for bot token', [
+                    'chat_id' => $chatId,
+                    'bot_token' => $botToken
+                ]);
+                $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
+                return;
+            }
+
+            // Get orders for this user from this restaurant
+            $orders = Order::where('telegram_chat_id', $chatId)
+                ->where('restaurant_id', $restaurant->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            Log::info('Found orders for user', [
+                'chat_id' => $chatId,
+                'restaurant_id' => $restaurant->id,
+                'orders_count' => $orders->count()
+            ]);
+
+            if ($orders->isEmpty()) {
+                $this->telegramService->sendMessage($chatId, 'Sizda hali buyurtmalar yo\'q.');
+                return;
+            }
+
+            $message = "📊 Buyurtmalaringiz:\n\n";
+            
+            foreach ($orders as $order) {
+                $status = [
+                    'pending' => '⏳ Yangi',
+                    'preparing' => '👨‍🍳 Tayyorlanmoqda',
+                    'on_way' => '🚚 Yolda',
+                    'delivered' => '✅ Yetkazildi',
+                    'cancelled' => '❌ Bekor'
+                ][$order->status] ?? 'Nomalum';
+
+                $message .= "📦 #{$order->order_number}\n";
+                $message .= "💰 " . number_format($order->total_amount ?? $order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
+                $message .= "📅 {$order->created_at->format('d.m.Y H:i')}\n";
+                $message .= "📊 {$status}\n\n";
+            }
+
+            $result = $this->telegramService->sendMessage($chatId, $message);
+            
+            if (!$result['ok']) {
+                Log::error('Failed to send my orders message', [
+                    'chat_id' => $chatId,
+                    'error' => $result['error'] ?? 'Unknown error'
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error in handleMyOrders: ' . $e->getMessage(), [
+                'chat_id' => $chatId,
+                'exception' => $e
+            ]);
+            $this->telegramService->sendMessage($chatId, 'Kechirasiz, xatolik yuz berdi.');
         }
-
-        // Get orders for this user from this restaurant
-        $orders = Order::where('telegram_chat_id', $chatId)
-            ->where('restaurant_id', $restaurant->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        if ($orders->isEmpty()) {
-            $this->telegramService->sendMessage($chatId, 'Sizda hali buyurtmalar yo\'q.');
-            return;
-        }
-
-        $message = "📊 Buyurtmalaringiz:\n\n";
-        
-        foreach ($orders as $order) {
-            $status = [
-                'pending' => '⏳ Yangi',
-                'preparing' => '👨‍🍳 Tayyorlanmoqda',
-                'on_way' => '🚚 Yolda',
-                'delivered' => '✅ Yetkazildi',
-                'cancelled' => '❌ Bekor'
-            ][$order->status] ?? 'Nomalum';
-
-            $message .= "📦 #{$order->order_number}\n";
-            $message .= "💰 " . number_format($order->total_amount ?? $order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
-            $message .= "📅 {$order->created_at->format('d.m.Y H:i')}\n";
-            $message .= "📊 {$status}\n\n";
-        }
-
-        $this->telegramService->sendMessage($chatId, $message);
     }
 
     /**

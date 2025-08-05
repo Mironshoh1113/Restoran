@@ -81,7 +81,21 @@ class OrderController extends Controller
 
     protected function sendOrderStatusNotification(Order $order, $oldStatus)
     {
-        if (!$order->telegram_chat_id || !$order->restaurant) {
+        if (!$order->telegram_chat_id) {
+            Log::info('Order has no telegram_chat_id', ['order_id' => $order->id]);
+            return;
+        }
+
+        if (!$order->restaurant) {
+            Log::error('Order has no restaurant', ['order_id' => $order->id]);
+            return;
+        }
+
+        if (!$order->restaurant->bot_token) {
+            Log::error('Restaurant has no bot token', [
+                'order_id' => $order->id,
+                'restaurant_id' => $order->restaurant->id
+            ]);
             return;
         }
 
@@ -109,9 +123,27 @@ class OrderController extends Controller
             $message .= "`{$oldStatus}` → `{$order->status}`\n\n";
             $message .= "📝 *Yangilangan holat:* " . ($statusMessages[$order->status] ?? $order->status);
 
-            $telegramService->sendMessage($order->telegram_chat_id, $message);
+            $result = $telegramService->sendMessage($order->telegram_chat_id, $message);
+            
+            if ($result['ok']) {
+                Log::info('Order status notification sent successfully', [
+                    'order_id' => $order->id,
+                    'chat_id' => $order->telegram_chat_id,
+                    'status' => $order->status
+                ]);
+            } else {
+                Log::error('Failed to send order status notification', [
+                    'order_id' => $order->id,
+                    'chat_id' => $order->telegram_chat_id,
+                    'error' => $result['error'] ?? 'Unknown error'
+                ]);
+            }
         } catch (\Exception $e) {
-            Log::error('Telegram notification error: ' . $e->getMessage());
+            Log::error('Telegram notification error: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'chat_id' => $order->telegram_chat_id,
+                'exception' => $e
+            ]);
         }
     }
 } 

@@ -42,6 +42,11 @@ class TelegramService
      */
     public function sendMessage($chatId, $text, $keyboard = null, $parseMode = 'HTML')
     {
+        if (!$this->botToken) {
+            Log::error('Telegram bot token not set');
+            return ['ok' => false, 'error' => 'Bot token not set'];
+        }
+
         $data = [
             'chat_id' => $chatId,
             'text' => $text,
@@ -52,7 +57,17 @@ class TelegramService
             $data['reply_markup'] = json_encode($keyboard);
         }
 
-        return $this->makeRequest('sendMessage', $data);
+        $result = $this->makeRequest('sendMessage', $data);
+        
+        if (!$result['ok']) {
+            Log::error('Telegram sendMessage failed', [
+                'chat_id' => $chatId,
+                'error' => $result['error'] ?? 'Unknown error',
+                'bot_token' => $this->botToken
+            ]);
+        }
+
+        return $result;
     }
 
     /**
