@@ -346,18 +346,42 @@ class TelegramService
         $url = $this->apiUrl . $this->botToken . '/setProfilePhoto';
         
         try {
-            $response = Http::timeout($this->timeout)
-                ->attach('photo', file_get_contents($photo->getPathname()), $photo->getClientOriginalName())
-                ->post($url);
+            // Get file contents and create a temporary file
+            $fileContents = file_get_contents($photo->getPathname());
+            $tempFile = tempnam(sys_get_temp_dir(), 'telegram_photo_');
+            file_put_contents($tempFile, $fileContents);
+            
+            // Use cURL for file upload
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+            
+            // Create multipart form data
+            $postData = [
+                'photo' => new \CURLFile($tempFile, $photo->getMimeType(), $photo->getClientOriginalName())
+            ];
+            
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            // Clean up temporary file
+            unlink($tempFile);
+            
+            $result = json_decode($response, true);
             
             if (config('telegram.debug')) {
                 Log::info('Telegram API Request', [
                     'method' => 'setProfilePhoto',
-                    'response' => $response->json()
+                    'response' => $result
                 ]);
             }
 
-            return $response->json();
+            return $result ?: ['ok' => false, 'error' => 'Invalid response'];
         } catch (\Exception $e) {
             Log::error('Telegram API Error', [
                 'method' => 'setProfilePhoto',

@@ -341,9 +341,9 @@
             <!-- Webhook URL -->
             <div>
                 <label for="webhook_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Webhook URL</label>
-                <input type="url" id="webhook_url" name="webhook_url" value="{{ old('webhook_url', url('/telegram/webhook/' . ($restaurant->bot_token ? hash('sha256', $restaurant->bot_token) : ''))) }}"
+                <input type="url" id="webhook_url" name="webhook_url" value="{{ old('webhook_url', url('/telegram-webhook/' . ($restaurant->bot_token ?? ''))) }}"
                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                       placeholder="https://example.com/telegram/webhook/token">
+                       placeholder="https://example.com/telegram-webhook/token">
                 @error('webhook_url')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror

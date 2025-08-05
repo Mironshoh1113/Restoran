@@ -62,12 +62,19 @@
 
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div class="flex items-center space-x-2">
+                        <a href="{{ route('admin.bots.users', $restaurant) }}" 
+                           class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" 
+                           title="Foydalanuvchilar">
+                            <i class="fas fa-users"></i>
+                        </a>
                         <a href="{{ route('admin.bots.show', $restaurant) }}" 
-                           class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                           class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                           title="Sozlamalar">
                             <i class="fas fa-cog"></i>
                         </a>
                         <button onclick="testBot({{ $restaurant->id }})" 
-                                class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                                class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                title="Test qilish">
                             <i class="fas fa-play"></i>
                         </button>
                     </div>
