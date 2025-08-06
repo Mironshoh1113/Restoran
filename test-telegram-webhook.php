@@ -7,9 +7,9 @@
 
 // Test sozlamalari
 $testConfig = [
-    'webhook_url' => 'https://yourdomain.com/telegram-webhook/YOUR_BOT_TOKEN',
-    'bot_token' => 'YOUR_BOT_TOKEN',
-    'chat_id' => 'YOUR_CHAT_ID'
+    'webhook_url' => 'https://simpsons.uz/telegram-webhook/8169180454:AAGgWk8LV1--nxZIDxLo0MSjxTzV0968EcQ',
+    'bot_token' => '8169180454:AAGgWk8LV1--nxZIDxLo0MSjxTzV0968EcQ',
+    'chat_id' => '123456789' // O'zingizning chat ID nizni kiriting
 ];
 
 // Test payload yaratish

@@ -20,6 +20,7 @@ use App\Models\TelegramMessage;
 use App\Services\TelegramService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 try {
     // Bootstrap Laravel
@@ -74,6 +75,34 @@ try {
         "restaurant_name" => $restaurant->name
     ]);
 
+    // Check if required tables exist
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        
+        // Check if telegram_users table exists
+        $tables = \Illuminate\Support\Facades\DB::select('SHOW TABLES LIKE "telegram_users"');
+        if (empty($tables)) {
+            Log::error("telegram_users table does not exist");
+            http_response_code(500);
+            exit("Database table missing");
+        }
+        
+        // Check if telegram_messages table exists
+        $tables = \Illuminate\Support\Facades\DB::select('SHOW TABLES LIKE "telegram_messages"');
+        if (empty($tables)) {
+            Log::error("telegram_messages table does not exist");
+            http_response_code(500);
+            exit("Database table missing");
+        }
+        
+    } catch (\Exception $e) {
+        Log::error("Database connection error", [
+            "error" => $e->getMessage()
+        ]);
+        http_response_code(500);
+        exit("Database connection failed");
+    }
+
     // Initialize TelegramService
     $telegramService = new TelegramService($token);
 
@@ -94,20 +123,41 @@ try {
         // Save or update telegram user
         $telegramUser = null;
         if ($userData) {
-            $telegramUser = TelegramUser::updateOrCreate(
-                [
+            try {
+                // Check database connection first
+                \Illuminate\Support\Facades\DB::connection()->getPdo();
+                
+                $telegramUser = TelegramUser::updateOrCreate(
+                    [
+                        "restaurant_id" => $restaurant->id,
+                        "telegram_id" => $userData["id"]
+                    ],
+                    [
+                        "username" => $userData["username"] ?? null,
+                        "first_name" => $userData["first_name"] ?? null,
+                        "last_name" => $userData["last_name"] ?? null,
+                        "language_code" => $userData["language_code"] ?? "uz",
+                        "is_bot" => $userData["is_bot"] ?? false,
+                        "last_activity" => now(),
+                    ]
+                );
+                
+                Log::info("Telegram user saved/updated", [
+                    "telegram_id" => $userData["id"],
                     "restaurant_id" => $restaurant->id,
-                    "telegram_id" => $userData["id"]
-                ],
-                [
-                    "username" => $userData["username"] ?? null,
-                    "first_name" => $userData["first_name"] ?? null,
-                    "last_name" => $userData["last_name"] ?? null,
-                    "language_code" => $userData["language_code"] ?? "uz",
-                    "is_bot" => $userData["is_bot"] ?? false,
-                    "last_activity" => now(),
-                ]
-            );
+                    "user_id" => $telegramUser->id ?? null
+                ]);
+                
+            } catch (\Exception $e) {
+                Log::error("Error saving telegram user", [
+                    "error" => $e->getMessage(),
+                    "telegram_id" => $userData["id"] ?? null,
+                    "restaurant_id" => $restaurant->id ?? null
+                ]);
+                
+                // Continue without saving user if there's an error
+                $telegramUser = null;
+            }
         }
 
         // Save incoming message to database
@@ -267,12 +317,20 @@ try {
         $result = $telegramService->sendMessage($chatId, $responseMessage);
         
         // Save outgoing message to database if user exists
-        $telegramUser = TelegramUser::where("restaurant_id", $restaurant->id)
-            ->where("telegram_id", $chatId)
-            ->first();
-        
-        if ($telegramUser && $result["ok"]) {
-            $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result["result"]["message_id"] ?? null, $result);
+        try {
+            $telegramUser = TelegramUser::where("restaurant_id", $restaurant->id)
+                ->where("telegram_id", $chatId)
+                ->first();
+            
+            if ($telegramUser && $result["ok"]) {
+                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result["result"]["message_id"] ?? null, $result);
+            }
+        } catch (\Exception $e) {
+            Log::error("Error saving callback message", [
+                "error" => $e->getMessage(),
+                "chat_id" => $chatId,
+                "restaurant_id" => $restaurant->id ?? null
+            ]);
         }
     }
 
