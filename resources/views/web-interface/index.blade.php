@@ -24,49 +24,44 @@
         }
         
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            color: #333;
-            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 16px;
             text-align: center;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
         .restaurant-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
         }
         
         .restaurant-description {
             font-size: 14px;
-            color: #666;
+            opacity: 0.9;
         }
         
         .container {
-            max-width: 100%;
+            max-width: 600px;
             margin: 0 auto;
-            padding: 15px;
-            padding-bottom: 120px; /* Space for cart */
+            padding: 0 16px 120px 16px;
+            background: #f9fafb;
+            min-height: 100vh;
         }
         
         .categories-nav {
             display: flex;
-            overflow-x: auto;
             gap: 8px;
-            padding: 10px 0;
-            margin-bottom: 15px;
+            padding: 12px 16px;
+            overflow-x: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
-            -webkit-overflow-scrolling: touch;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
         }
         
         .categories-nav::-webkit-scrollbar {
@@ -74,65 +69,94 @@
         }
         
         .category-tab {
-            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 16px;
+            background: #f3f4f6;
             border: none;
-            padding: 10px 16px;
             border-radius: 20px;
-            font-weight: 600;
-            font-size: 13px;
-            color: #666;
-            cursor: pointer;
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 500;
             white-space: nowrap;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
             flex-shrink: 0;
         }
         
         .category-tab.active {
-            background: #667eea;
+            background: #3b82f6;
             color: white;
-            transform: scale(1.05);
+        }
+        
+        .category-tab:hover {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .category-tab.active:hover {
+            background: #2563eb;
+            color: white;
         }
         
         .category-content {
             display: none;
+            padding: 16px 0;
         }
         
         .category-content.active {
             display: block;
         }
         
+        /* Smooth scrolling for categories */
+        .categories-nav {
+            scroll-behavior: smooth;
+        }
+        
+        /* Better touch scrolling */
+        .categories-nav {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Hide scrollbar but keep functionality */
+        .categories-nav::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .categories-nav {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
         .menu-item {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
             margin-bottom: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             transition: all 0.3s ease;
+            border: 1px solid #f3f4f6;
         }
         
         .menu-item:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
             transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(0,0,0,0.15);
         }
         
         .item-content {
             display: flex;
-            padding: 15px;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
         }
         
         .item-image {
-            width: 60px;
-            height: 60px;
-            border-radius: 10px;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 20px;
+            font-size: 24px;
             flex-shrink: 0;
             overflow: hidden;
             position: relative;
@@ -142,7 +166,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 10px;
+            border-radius: 12px;
             position: absolute;
             top: 0;
             left: 0;
@@ -161,21 +185,21 @@
         
         .item-info {
             flex: 1;
-            min-width: 0; /* Allow text to shrink */
+            min-width: 0;
         }
         
         .item-name {
-            font-weight: bold;
             font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
             margin-bottom: 4px;
-            color: #333;
             line-height: 1.3;
         }
         
         .item-description {
             font-size: 13px;
-            color: #666;
-            margin-bottom: 6px;
+            color: #6b7280;
+            margin-bottom: 8px;
             line-height: 1.4;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -184,51 +208,50 @@
         }
         
         .item-price {
-            font-weight: bold;
-            color: #28a745;
             font-size: 16px;
+            font-weight: 700;
+            color: #059669;
         }
         
         .item-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             flex-shrink: 0;
         }
         
         .quantity-btn {
-            width: 32px;
-            height: 32px;
-            border: none;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            background: #3b82f6;
             color: white;
-            font-size: 16px;
+            font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
         }
         
         .quantity-btn:hover {
+            background: #2563eb;
             transform: scale(1.1);
         }
         
-        .quantity-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
+        .quantity-btn:active {
+            transform: scale(0.95);
         }
         
         .quantity {
-            font-weight: bold;
-            min-width: 30px;
+            min-width: 40px;
             text-align: center;
             font-size: 16px;
-            color: #333;
+            font-weight: 600;
+            color: #1f2937;
         }
         
         .cart {
@@ -236,12 +259,10 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.2);
-            padding: 15px 20px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            background: white;
+            padding: 16px;
+            border-top: 2px solid #e5e7eb;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
             z-index: 1000;
         }
         
@@ -253,28 +274,34 @@
         }
         
         .cart-total {
-            font-weight: bold;
             font-size: 18px;
-            color: #333;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 12px;
+            text-align: center;
         }
         
         .checkout-btn {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 20px;
-            font-weight: bold;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 14px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
         
-        .checkout-btn:hover:not(:disabled) {
+        .checkout-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+        
+        .checkout-btn:active {
+            transform: translateY(0);
         }
         
         .checkout-btn:disabled {
@@ -529,7 +556,7 @@
         <div class="categories-nav" id="categories-nav">
             @foreach($categories as $category)
                 <button class="category-tab {{ $loop->first ? 'active' : '' }}" 
-                        onclick="showCategory({{ $category->id }})">
+                        onclick="switchCategory({{ $category->id }})">
                     {{ $category->name }}
                 </button>
             @endforeach
@@ -680,7 +707,8 @@
         let cart = {};
         let selectedPaymentMethod = 'cash';
         
-        function showCategory(categoryId) {
+        // Category switching
+        function switchCategory(categoryId) {
             // Hide all category contents
             document.querySelectorAll('.category-content').forEach(content => {
                 content.classList.remove('active');
@@ -692,11 +720,50 @@
             });
             
             // Show selected category content
-            document.getElementById(`category-${categoryId}`).classList.add('active');
+            document.getElementById('category-' + categoryId).classList.add('active');
             
             // Add active class to clicked tab
             event.target.classList.add('active');
+            
+            // Scroll to active tab if needed
+            const activeTab = event.target;
+            const nav = document.querySelector('.categories-nav');
+            const navRect = nav.getBoundingClientRect();
+            const tabRect = activeTab.getBoundingClientRect();
+            
+            if (tabRect.left < navRect.left || tabRect.right > navRect.right) {
+                activeTab.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
+            }
         }
+        
+        // Touch scrolling for categories
+        let isScrolling = false;
+        let startX = 0;
+        let scrollLeft = 0;
+        
+        const categoriesNav = document.querySelector('.categories-nav');
+        
+        categoriesNav.addEventListener('touchstart', (e) => {
+            isScrolling = true;
+            startX = e.touches[0].pageX - categoriesNav.offsetLeft;
+            scrollLeft = categoriesNav.scrollLeft;
+        });
+        
+        categoriesNav.addEventListener('touchmove', (e) => {
+            if (!isScrolling) return;
+            e.preventDefault();
+            const x = e.touches[0].pageX - categoriesNav.offsetLeft;
+            const walk = (x - startX) * 2;
+            categoriesNav.scrollLeft = scrollLeft - walk;
+        });
+        
+        categoriesNav.addEventListener('touchend', () => {
+            isScrolling = false;
+        });
         
         function updateQuantity(itemId, change) {
             const currentQty = cart[itemId] || 0;
