@@ -82,6 +82,8 @@ class TelegramController extends Controller
         }
 
         // Handle text commands
+        Log::info('Handling text command', ['text' => $text, 'chat_id' => $chatId]);
+        
         switch ($text) {
             case '/start':
                 $this->handleStart($chatId);
@@ -96,6 +98,7 @@ class TelegramController extends Controller
                 $this->handleOrder($chatId);
                 break;
             case '📊 Buyurtmalarim':
+                Log::info('Buyurtmalarim button pressed', ['chat_id' => $chatId]);
                 $this->handleMyOrders($chatId);
                 break;
             case 'ℹ️ Yordam':
@@ -951,6 +954,9 @@ class TelegramController extends Controller
         try {
             Log::info('Starting handleMyOrders', ['chat_id' => $chatId]);
             
+            // Send initial message
+            $this->telegramService->sendMessage($chatId, '📊 Buyurtmalaringiz...');
+            
             // Get current bot token
             $botToken = $this->telegramService->getBotToken();
             
@@ -1000,6 +1006,14 @@ class TelegramController extends Controller
                     ];
                 })->toArray()
             ]);
+
+            if ($orders->isEmpty()) {
+                Log::info('No orders found for user', ['chat_id' => $chatId]);
+                $this->telegramService->sendMessage($chatId, 'Sizda hali buyurtmalar yo\'q.');
+                return;
+            }
+
+            Log::info('Found orders, building message', ['orders_count' => $orders->count()]);
 
             Log::info('Found orders for user', [
                 'chat_id' => $chatId,
