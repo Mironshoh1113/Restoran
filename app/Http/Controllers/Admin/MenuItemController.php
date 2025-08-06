@@ -87,19 +87,30 @@ class MenuItemController extends Controller
                     throw new \Exception('Faqat rasm fayllari qabul qilinadi (JPEG, PNG, GIF)');
                 }
                 
-                // Check storage directory
+                // Ensure storage directory exists
                 $storagePath = storage_path('app/public/menu-items');
                 if (!is_dir($storagePath)) {
                     mkdir($storagePath, 0755, true);
                     \Log::info('Created storage directory', ['path' => $storagePath]);
                 }
                 
-                $imagePath = $file->store('menu-items', 'public');
+                // Generate unique filename
+                $extension = $file->getClientOriginalExtension();
+                $filename = uniqid() . '_' . time() . '.' . $extension;
+                $imagePath = 'menu-items/' . $filename;
+                
+                // Save file using Storage facade
+                $saved = Storage::disk('public')->put($imagePath, file_get_contents($file->getRealPath()));
+                
+                if (!$saved) {
+                    throw new \Exception('Fayl saqlashda xatolik yuz berdi');
+                }
+                
                 $data['image'] = $imagePath;
                 
                 // Verify file was saved
                 if (!Storage::disk('public')->exists($imagePath)) {
-                    throw new \Exception('Rasm saqlashda xatolik yuz berdi');
+                    throw new \Exception('Rasm saqlashda xatolik yuz berdi - fayl topilmadi');
                 }
                 
                 // Log successful upload
@@ -110,7 +121,8 @@ class MenuItemController extends Controller
                     'file_size' => $file->getSize(),
                     'mime_type' => $file->getMimeType(),
                     'exists' => Storage::disk('public')->exists($imagePath),
-                    'url' => Storage::url($imagePath)
+                    'url' => Storage::url($imagePath),
+                    'saved' => $saved
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to upload menu item image', [
@@ -199,7 +211,7 @@ class MenuItemController extends Controller
                     throw new \Exception('Faqat rasm fayllari qabul qilinadi (JPEG, PNG, GIF)');
                 }
                 
-                // Check storage directory
+                // Ensure storage directory exists
                 $storagePath = storage_path('app/public/menu-items');
                 if (!is_dir($storagePath)) {
                     mkdir($storagePath, 0755, true);
@@ -212,12 +224,23 @@ class MenuItemController extends Controller
                     \Log::info('Old menu item image deleted', ['old_path' => $menuItem->image]);
                 }
                 
-                $imagePath = $file->store('menu-items', 'public');
+                // Generate unique filename
+                $extension = $file->getClientOriginalExtension();
+                $filename = uniqid() . '_' . time() . '.' . $extension;
+                $imagePath = 'menu-items/' . $filename;
+                
+                // Save file using Storage facade
+                $saved = Storage::disk('public')->put($imagePath, file_get_contents($file->getRealPath()));
+                
+                if (!$saved) {
+                    throw new \Exception('Fayl saqlashda xatolik yuz berdi');
+                }
+                
                 $data['image'] = $imagePath;
                 
                 // Verify file was saved
                 if (!Storage::disk('public')->exists($imagePath)) {
-                    throw new \Exception('Rasm saqlashda xatolik yuz berdi');
+                    throw new \Exception('Rasm saqlashda xatolik yuz berdi - fayl topilmadi');
                 }
                 
                 // Log successful upload
@@ -228,7 +251,8 @@ class MenuItemController extends Controller
                     'file_size' => $file->getSize(),
                     'mime_type' => $file->getMimeType(),
                     'exists' => Storage::disk('public')->exists($imagePath),
-                    'url' => Storage::url($imagePath)
+                    'url' => Storage::url($imagePath),
+                    'saved' => $saved
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to update menu item image', [
