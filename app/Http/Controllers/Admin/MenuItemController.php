@@ -38,6 +38,13 @@ class MenuItemController extends Controller
     {
         $this->authorize('update', $restaurant);
         
+        // Debug: Log request information
+        \Log::info('Menu item store request', [
+            'has_file' => $request->hasFile('image'),
+            'all_files' => $request->allFiles(),
+            'request_data' => $request->all()
+        ]);
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -68,7 +75,9 @@ class MenuItemController extends Controller
                     'mime_type' => $file->getMimeType(),
                     'is_valid' => $file->isValid(),
                     'error' => $file->getError(),
-                    'error_message' => $file->getErrorMessage()
+                    'error_message' => $file->getErrorMessage(),
+                    'real_path' => $file->getRealPath(),
+                    'temporary_path' => $file->getPathname()
                 ]);
                 
                 // Validate file
@@ -100,7 +109,8 @@ class MenuItemController extends Controller
                 $imagePath = 'menu-items/' . $filename;
                 
                 // Save file using Storage facade
-                $saved = Storage::disk('public')->put($imagePath, file_get_contents($file->getRealPath()));
+                $fileContent = file_get_contents($file->getRealPath());
+                $saved = Storage::disk('public')->put($imagePath, $fileContent);
                 
                 if (!$saved) {
                     throw new \Exception('Fayl saqlashda xatolik yuz berdi');
@@ -122,7 +132,8 @@ class MenuItemController extends Controller
                     'mime_type' => $file->getMimeType(),
                     'exists' => Storage::disk('public')->exists($imagePath),
                     'url' => Storage::url($imagePath),
-                    'saved' => $saved
+                    'saved' => $saved,
+                    'content_length' => strlen($fileContent)
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to upload menu item image', [
@@ -140,7 +151,12 @@ class MenuItemController extends Controller
             }
         }
 
-        MenuItem::create($data);
+        $menuItem = MenuItem::create($data);
+        
+        \Log::info('Menu item created successfully', [
+            'menu_item_id' => $menuItem->id,
+            'image_path' => $menuItem->image ?? 'none'
+        ]);
 
         return redirect()->route('admin.menu-items.index', [$restaurant, $project, $category])
             ->with('success', 'Taom muvaffaqiyatli yaratildi.');
@@ -163,6 +179,14 @@ class MenuItemController extends Controller
     public function update(Request $request, Restaurant $restaurant, Project $project, Category $category, MenuItem $menuItem)
     {
         $this->authorize('update', $restaurant);
+        
+        // Debug: Log request information
+        \Log::info('Menu item update request', [
+            'has_file' => $request->hasFile('image'),
+            'all_files' => $request->allFiles(),
+            'request_data' => $request->all(),
+            'menu_item_id' => $menuItem->id
+        ]);
         
         $request->validate([
             'name' => 'required|string|max:255',
@@ -192,7 +216,9 @@ class MenuItemController extends Controller
                     'mime_type' => $file->getMimeType(),
                     'is_valid' => $file->isValid(),
                     'error' => $file->getError(),
-                    'error_message' => $file->getErrorMessage()
+                    'error_message' => $file->getErrorMessage(),
+                    'real_path' => $file->getRealPath(),
+                    'temporary_path' => $file->getPathname()
                 ]);
                 
                 // Validate file
@@ -230,7 +256,8 @@ class MenuItemController extends Controller
                 $imagePath = 'menu-items/' . $filename;
                 
                 // Save file using Storage facade
-                $saved = Storage::disk('public')->put($imagePath, file_get_contents($file->getRealPath()));
+                $fileContent = file_get_contents($file->getRealPath());
+                $saved = Storage::disk('public')->put($imagePath, $fileContent);
                 
                 if (!$saved) {
                     throw new \Exception('Fayl saqlashda xatolik yuz berdi');
@@ -252,7 +279,8 @@ class MenuItemController extends Controller
                     'mime_type' => $file->getMimeType(),
                     'exists' => Storage::disk('public')->exists($imagePath),
                     'url' => Storage::url($imagePath),
-                    'saved' => $saved
+                    'saved' => $saved,
+                    'content_length' => strlen($fileContent)
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to update menu item image', [
@@ -271,6 +299,11 @@ class MenuItemController extends Controller
         }
 
         $menuItem->update($data);
+        
+        \Log::info('Menu item updated successfully', [
+            'menu_item_id' => $menuItem->id,
+            'image_path' => $menuItem->image ?? 'none'
+        ]);
 
         return redirect()->route('admin.menu-items.index', [$restaurant, $project, $category])
             ->with('success', 'Taom muvaffaqiyatli yangilandi.');

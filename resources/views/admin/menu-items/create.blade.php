@@ -103,7 +103,12 @@
                                name="image" 
                                accept="image/*"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <p class="text-xs text-gray-500">Rasm yuklash uchun fayl tanlang</p>
+                        <p class="text-xs text-gray-500">Rasm yuklash uchun fayl tanlang (JPEG, PNG, GIF, maksimal 2MB)</p>
+                        <div id="file-info" class="text-xs text-gray-600 hidden">
+                            <p>Fayl nomi: <span id="file-name"></span></p>
+                            <p>Fayl hajmi: <span id="file-size"></span></p>
+                            <p>Fayl turi: <span id="file-type"></span></p>
+                        </div>
                     </div>
                     @error('image')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -157,6 +162,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageInput = document.getElementById('image');
     const imagePreview = document.getElementById('image-preview');
     const previewImg = imagePreview.querySelector('img');
+    const fileInfoDiv = document.getElementById('file-info');
+    const fileNameSpan = document.getElementById('file-name');
+    const fileSizeSpan = document.getElementById('file-size');
+    const fileTypeSpan = document.getElementById('file-type');
     const form = document.getElementById('menu-item-form');
     
     imageInput.addEventListener('change', function(e) {
@@ -171,10 +180,17 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             reader.readAsDataURL(file);
             
+            // Display file info
+            fileNameSpan.textContent = file.name;
+            fileSizeSpan.textContent = (file.size / 1024).toFixed(2) + ' KB';
+            fileTypeSpan.textContent = file.type;
+            fileInfoDiv.classList.remove('hidden');
+
             console.log('Image selected:', file.name, 'Size:', file.size, 'bytes', 'Type:', file.type);
         } else {
-            // Hide preview
+            // Hide preview and file info
             imagePreview.classList.add('hidden');
+            fileInfoDiv.classList.add('hidden');
         }
     });
     
