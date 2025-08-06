@@ -82,7 +82,10 @@ class TelegramController extends Controller
         }
 
         // Handle text commands
+        Log::info('Message received', ['text' => $text, 'chat_id' => $chatId]);
+        
         if ($text === '📊 Buyurtmalarim') {
+            Log::info('Buyurtmalarim detected, calling handleMyOrders', ['chat_id' => $chatId]);
             $this->handleMyOrders($chatId);
             return;
         }
@@ -952,6 +955,9 @@ class TelegramController extends Controller
     {
         try {
             Log::info('Starting handleMyOrders', ['chat_id' => $chatId]);
+            
+            // Send immediate response
+            $this->telegramService->sendMessage($chatId, '🔍 Buyurtmalaringiz qidirilmoqda...');
             
             // Get current bot token
             $botToken = $this->telegramService->getBotToken();
