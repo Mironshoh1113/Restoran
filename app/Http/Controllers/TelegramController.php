@@ -82,10 +82,18 @@ class TelegramController extends Controller
         }
 
         // Handle text commands
-        Log::info('Message received', ['text' => $text, 'chat_id' => $chatId]);
+        Log::info('Message received', ['text' => $text, 'chat_id' => $chatId, 'text_length' => strlen($text)]);
         
+        // Debug: Check exact text match
         if ($text === '📊 Buyurtmalarim') {
             Log::info('Buyurtmalarim detected, calling handleMyOrders', ['chat_id' => $chatId]);
+            $this->handleMyOrders($chatId);
+            return;
+        }
+        
+        // Debug: Check if text contains Buyurtmalarim
+        if (strpos($text, 'Buyurtmalarim') !== false) {
+            Log::info('Buyurtmalarim found in text', ['text' => $text, 'chat_id' => $chatId]);
             $this->handleMyOrders($chatId);
             return;
         }
