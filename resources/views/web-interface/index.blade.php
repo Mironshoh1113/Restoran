@@ -543,19 +543,20 @@
                         @php
                             $hasImage = $item->hasImage();
                             $imageUrl = $item->image_url;
-                            \Log::info('Rendering menu item', [
+                            \Log::info('Rendering menu item in web interface', [
                                 'item_id' => $item->id,
                                 'item_name' => $item->name,
                                 'has_image' => $hasImage,
                                 'image_path' => $item->image,
-                                'image_url' => $imageUrl
+                                'image_url' => $imageUrl,
+                                'full_server_path' => storage_path('app/public/' . $item->image)
                             ]);
                         @endphp
                         <div class="menu-item" data-item-id="{{ $item->id }}" data-price="{{ $item->price }}">
                             <div class="item-content">
                                 <div class="item-image">
-                                    @if($item->hasImage())
-                                        <img src="{{ $item->image_url }}" alt="{{ $item->name }}" 
+                                    @if($hasImage)
+                                        <img src="{{ $imageUrl }}" alt="{{ $item->name }}" 
                                              onerror="console.log('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';"
                                              onload="console.log('Image loaded successfully:', this.src);">
                                         <i class="fas fa-utensils" style="display: none;"></i>

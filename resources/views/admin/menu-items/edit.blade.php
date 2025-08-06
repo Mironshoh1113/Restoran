@@ -100,8 +100,7 @@
                                 <img src="{{ $menuItem->image_url }}" 
                                      alt="{{ $menuItem->name }}"
                                      class="w-32 h-32 object-cover rounded-lg border border-gray-300"
-                                     id="current-image"
-                                     onerror="console.log('Edit form image failed to load:', this.src); this.style.display='none';">
+                                     id="current-image">
                                 <p class="text-xs text-gray-500 mt-1">Joriy rasm</p>
                             </div>
                         @endif

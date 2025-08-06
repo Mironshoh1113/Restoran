@@ -73,7 +73,10 @@
                     <img src="{{ $menuItem->image_url }}" 
                          alt="{{ $menuItem->name }}"
                          class="w-full h-48 object-cover rounded-lg"
-                         onerror="console.log('Admin image failed to load:', this.src); this.style.display='none';">
+                         onerror="console.log('Admin panel image failed to load:', this.src);"
+                         onload="console.log('Admin panel image loaded successfully:', this.src);">
+                    <p class="text-xs text-gray-500 mt-1">Rasm yo'li: {{ $menuItem->image }}</p>
+                    <p class="text-xs text-gray-500">URL: {{ $menuItem->image_url }}</p>
                 </div>
                 @endif
                 
