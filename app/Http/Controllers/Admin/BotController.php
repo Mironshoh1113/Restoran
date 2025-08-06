@@ -427,13 +427,53 @@ class BotController extends Controller
         }
 
         try {
+            // Create TelegramService with restaurant's bot token
             $telegramService = new TelegramService($restaurant->bot_token);
-            $result = $telegramService->sendMessageToUsers($request->user_ids, $request->message);
+            
+            // Test bot connection first
+            $botInfo = $telegramService->getMe();
+            if (!$botInfo['ok']) {
+                return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
+            }
+            
+            // Get selected users for this restaurant
+            $users = TelegramUser::where('restaurant_id', $restaurant->id)
+                ->whereIn('id', $request->user_ids)
+                ->get();
+            
+            $successCount = 0;
+            $errorCount = 0;
+            
+            foreach ($users as $user) {
+                $result = $telegramService->sendMessage($user->telegram_id, $request->message);
+                
+                if ($result['ok']) {
+                    $successCount++;
+                    
+                    // Save outgoing message to database
+                    \App\Models\TelegramMessage::create([
+                        'restaurant_id' => $restaurant->id,
+                        'telegram_user_id' => $user->id,
+                        'message_id' => $result['result']['message_id'] ?? null,
+                        'direction' => 'outgoing',
+                        'message_text' => $request->message,
+                        'message_data' => $result['result'] ?? null,
+                        'message_type' => 'text',
+                        'is_read' => false,
+                    ]);
+                } else {
+                    $errorCount++;
+                }
+            }
             
             return response()->json([
                 'success' => true,
-                'message' => "Xabar {$result['success_count']} ta foydalanuvchiga yuborildi. {$result['error_count']} ta xatolik yuz berdi.",
-                'result' => $result
+                'message' => "Xabar {$successCount} ta foydalanuvchiga yuborildi. {$errorCount} ta xatolik yuz berdi.",
+                'result' => [
+                    'success_count' => $successCount,
+                    'error_count' => $errorCount,
+                    'total_users' => $users->count()
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
@@ -456,13 +496,51 @@ class BotController extends Controller
         }
 
         try {
+            // Create TelegramService with restaurant's bot token
             $telegramService = new TelegramService($restaurant->bot_token);
-            $result = $telegramService->sendMessageToAllUsers($restaurant, $request->message);
+            
+            // Test bot connection first
+            $botInfo = $telegramService->getMe();
+            if (!$botInfo['ok']) {
+                return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
+            }
+            
+            // Get all telegram users for this restaurant
+            $users = TelegramUser::where('restaurant_id', $restaurant->id)->get();
+            
+            $successCount = 0;
+            $errorCount = 0;
+            
+            foreach ($users as $user) {
+                $result = $telegramService->sendMessage($user->telegram_id, $request->message);
+                
+                if ($result['ok']) {
+                    $successCount++;
+                    
+                    // Save outgoing message to database
+                    \App\Models\TelegramMessage::create([
+                        'restaurant_id' => $restaurant->id,
+                        'telegram_user_id' => $user->id,
+                        'message_id' => $result['result']['message_id'] ?? null,
+                        'direction' => 'outgoing',
+                        'message_text' => $request->message,
+                        'message_data' => $result['result'] ?? null,
+                        'message_type' => 'text',
+                        'is_read' => false,
+                    ]);
+                } else {
+                    $errorCount++;
+                }
+            }
             
             return response()->json([
                 'success' => true,
-                'message' => "Xabar {$result['success_count']} ta foydalanuvchiga yuborildi. {$result['error_count']} ta xatolik yuz berdi.",
-                'result' => $result
+                'message' => "Xabar {$successCount} ta foydalanuvchiga yuborildi. {$errorCount} ta xatolik yuz berdi.",
+                'result' => [
+                    'success_count' => $successCount,
+                    'error_count' => $errorCount,
+                    'total_users' => $users->count()
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
@@ -516,12 +594,29 @@ class BotController extends Controller
         }
 
         try {
+            // Create TelegramService with restaurant's bot token
             $telegramService = new TelegramService($restaurant->bot_token);
+            
+            // Test bot connection first
+            $botInfo = $telegramService->getMe();
+            if (!$botInfo['ok']) {
+                return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
+            }
+            
             $result = $telegramService->sendMessage($telegramUser->telegram_id, $request->message);
             
             if ($result['ok']) {
-                // Save outgoing message
-                $telegramService->saveOutgoingMessage($telegramUser, $request->message, $result['result']['message_id'] ?? null);
+                // Save outgoing message to database
+                \App\Models\TelegramMessage::create([
+                    'restaurant_id' => $restaurant->id,
+                    'telegram_user_id' => $telegramUser->id,
+                    'message_id' => $result['result']['message_id'] ?? null,
+                    'direction' => 'outgoing',
+                    'message_text' => $request->message,
+                    'message_data' => $result['result'] ?? null,
+                    'message_type' => 'text',
+                    'is_read' => false,
+                ]);
                 
                 return response()->json([
                     'success' => true, 

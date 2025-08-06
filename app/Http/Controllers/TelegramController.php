@@ -1432,7 +1432,8 @@ class TelegramController extends Controller
         $restaurant = Restaurant::where('bot_token', $botToken)->first();
         
         if (!$restaurant) {
-            return;
+            Log::error('Restaurant not found for bot token: ' . $botToken);
+            return null;
         }
 
         // Save or update telegram user
@@ -1451,6 +1452,13 @@ class TelegramController extends Controller
             ]
         );
 
+        Log::info('Telegram user saved/updated', [
+            'restaurant_id' => $restaurant->id,
+            'restaurant_name' => $restaurant->name,
+            'telegram_id' => $userData['id'],
+            'username' => $userData['username'] ?? null
+        ]);
+
         return $telegramUser;
     }
 
@@ -1459,7 +1467,12 @@ class TelegramController extends Controller
      */
     protected function saveIncomingMessage($telegramUser, $messageText, $messageId = null, $messageData = null)
     {
-        return \App\Models\TelegramMessage::create([
+        if (!$telegramUser) {
+            Log::error('Cannot save message: telegram user is null');
+            return null;
+        }
+
+        $message = \App\Models\TelegramMessage::create([
             'restaurant_id' => $telegramUser->restaurant_id,
             'telegram_user_id' => $telegramUser->id,
             'message_id' => $messageId,
@@ -1469,5 +1482,14 @@ class TelegramController extends Controller
             'message_type' => 'text',
             'is_read' => false,
         ]);
+
+        Log::info('Incoming message saved', [
+            'restaurant_id' => $telegramUser->restaurant_id,
+            'telegram_user_id' => $telegramUser->id,
+            'message_text' => $messageText,
+            'message_id' => $messageId
+        ]);
+
+        return $message;
     }
 } 
