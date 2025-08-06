@@ -85,10 +85,30 @@ class RestaurantController extends Controller
             'bot_username' => 'nullable|string',
         ]);
 
-        $restaurant->update($request->all());
+        try {
+            $restaurant->update($request->all());
 
-        return redirect()->route('admin.restaurants.index')
-            ->with('success', 'Restoran muvaffaqiyatli yangilandi.');
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Restoran muvaffaqiyatli yangilandi.'
+                ]);
+            }
+
+            return redirect()->route('admin.restaurants.index')
+                ->with('success', 'Restoran muvaffaqiyatli yangilandi.');
+                
+        } catch (\Exception $e) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Restoran yangilashda xatolik yuz berdi: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('admin.restaurants.index')
+                ->with('error', 'Restoran yangilashda xatolik yuz berdi: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Restaurant $restaurant)

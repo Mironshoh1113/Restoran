@@ -285,6 +285,29 @@ function saveRestaurant() {
     const form = document.getElementById('restaurantForm');
     const formData = new FormData(form);
     
+    // Validate required fields
+    const name = document.getElementById('restaurantName').value.trim();
+    const phone = document.getElementById('restaurantPhone').value.trim();
+    const address = document.getElementById('restaurantAddress').value.trim();
+    
+    if (!name) {
+        alert('Restoran nomini kiriting');
+        document.getElementById('restaurantName').focus();
+        return;
+    }
+    
+    if (!phone) {
+        alert('Telefon raqamini kiriting');
+        document.getElementById('restaurantPhone').focus();
+        return;
+    }
+    
+    if (!address) {
+        alert('Manzilni kiriting');
+        document.getElementById('restaurantAddress').focus();
+        return;
+    }
+    
     const url = currentRestaurantId 
         ? `/admin/restaurants/${currentRestaurantId}` 
         : '/admin/restaurants';
@@ -295,6 +318,16 @@ function saveRestaurant() {
     formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
     if (currentRestaurantId) {
         formData.append('_method', 'PUT');
+    }
+    
+    // Handle is_active checkbox properly
+    const isActive = document.getElementById('restaurantActive').checked;
+    formData.set('is_active', isActive ? '1' : '0');
+    
+    // Debug: Log form data
+    console.log('Form data being sent:');
+    for (let [key, value] of formData.entries()) {
+        console.log(key + ': ' + value);
     }
     
     // Show loading state
@@ -308,22 +341,31 @@ function saveRestaurant() {
         body: formData,
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
     .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
         if (response.redirected) {
             window.location.href = response.url;
             return;
         }
         
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            return response.text().then(text => {
+                console.log('Error response text:', text);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            });
         }
         
         return response.json();
     })
     .then(data => {
+        console.log('Response data:', data);
+        
         if (data && data.success) {
             closeModal();
             location.reload();
@@ -331,9 +373,13 @@ function saveRestaurant() {
             // Show validation errors
             let errorMessage = 'Ma\'lumotlarni to\'g\'ri kiriting:\n';
             for (let field in data.errors) {
-                errorMessage += `- ${data.errors[field].join(', ')}\n`;
+                errorMessage += `- ${field}: ${data.errors[field].join(', ')}\n`;
             }
             alert(errorMessage);
+        } else if (data && data.message) {
+            alert(data.message);
+            closeModal();
+            location.reload();
         } else {
             // Success - page will reload
             closeModal();
