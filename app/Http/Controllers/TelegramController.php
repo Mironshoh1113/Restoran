@@ -82,7 +82,10 @@ class TelegramController extends Controller
         }
 
         // Handle text commands
-        Log::info('Handling text command', ['text' => $text, 'chat_id' => $chatId]);
+        if ($text === '📊 Buyurtmalarim') {
+            $this->handleMyOrders($chatId);
+            return;
+        }
         
         switch ($text) {
             case '/start':
@@ -96,10 +99,6 @@ class TelegramController extends Controller
                 break;
             case '📞 Buyurtma qilish':
                 $this->handleOrder($chatId);
-                break;
-            case '📊 Buyurtmalarim':
-                Log::info('Buyurtmalarim button pressed', ['chat_id' => $chatId]);
-                $this->handleMyOrders($chatId);
                 break;
             case 'ℹ️ Yordam':
                 $this->handleHelp($chatId);
@@ -954,66 +953,33 @@ class TelegramController extends Controller
         try {
             Log::info('Starting handleMyOrders', ['chat_id' => $chatId]);
             
-            // Send initial message
-            $this->telegramService->sendMessage($chatId, '📊 Buyurtmalaringiz...');
-            
             // Get current bot token
             $botToken = $this->telegramService->getBotToken();
             
             if (!$botToken) {
-                Log::error('Bot token not set in handleMyOrders', ['chat_id' => $chatId]);
                 $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
                 return;
             }
-            
-            Log::info('Found bot token', ['chat_id' => $chatId, 'bot_token' => $botToken]);
             
             // Find restaurant by bot token
             $restaurant = Restaurant::where('bot_token', $botToken)->first();
             
             if (!$restaurant) {
-                Log::error('Restaurant not found for bot token', [
-                    'chat_id' => $chatId,
-                    'bot_token' => $botToken
-                ]);
                 $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
                 return;
             }
-
-            Log::info('Found restaurant', [
-                'chat_id' => $chatId,
-                'restaurant_id' => $restaurant->id,
-                'restaurant_name' => $restaurant->name
-            ]);
 
             // Get orders for this user from this restaurant
             $orders = Order::where('telegram_chat_id', $chatId)
                 ->where('restaurant_id', $restaurant->id)
                 ->orderBy('created_at', 'desc')
-                ->limit(10) // Limit to last 10 orders
+                ->limit(10)
                 ->get();
 
-            Log::info('Orders query result', [
-                'chat_id' => $chatId,
-                'restaurant_id' => $restaurant->id,
-                'orders_count' => $orders->count(),
-                'orders' => $orders->map(function($order) {
-                    return [
-                        'id' => $order->id,
-                        'order_number' => $order->order_number,
-                        'status' => $order->status,
-                        'total_price' => $order->total_price
-                    ];
-                })->toArray()
-            ]);
-
             if ($orders->isEmpty()) {
-                Log::info('No orders found for user', ['chat_id' => $chatId]);
                 $this->telegramService->sendMessage($chatId, 'Sizda hali buyurtmalar yo\'q.');
                 return;
             }
-
-            Log::info('Found orders, building message', ['orders_count' => $orders->count()]);
 
             Log::info('Found orders for user', [
                 'chat_id' => $chatId,
@@ -1041,40 +1007,10 @@ class TelegramController extends Controller
                 $message .= "📦 *#{$order->order_number}*\n";
                 $message .= "💰 " . number_format($order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
                 $message .= "📅 {$order->created_at->format('d.m.Y H:i')}\n";
-                $message .= "📊 {$status}\n";
-                
-                // Add order details button
-                $message .= "📋 Batafsil ma'lumot uchun tugmani bosing\n\n";
+                $message .= "📊 {$status}\n\n";
             }
 
-            // Create inline keyboard for order details
-            $keyboard = [];
-            foreach ($orders as $order) {
-                $keyboard[] = [['text' => "📋 #{$order->order_number} batafsil", 'callback_data' => "order_details_{$order->id}"]];
-            }
-
-            $inlineKeyboard = $this->telegramService->createInlineKeyboard($keyboard);
-
-            Log::info('Sending my orders message', [
-                'chat_id' => $chatId,
-                'message_length' => strlen($message),
-                'orders_count' => $orders->count()
-            ]);
-
-            $result = $this->telegramService->sendMessage($chatId, $message, $inlineKeyboard);
-            
-            if ($result['ok']) {
-                Log::info('My orders message sent successfully', [
-                    'chat_id' => $chatId,
-                    'message_id' => $result['result']['message_id'] ?? null
-                ]);
-            } else {
-                Log::error('Failed to send my orders message', [
-                    'chat_id' => $chatId,
-                    'error' => $result['error'] ?? 'Unknown error',
-                    'result' => $result
-                ]);
-            }
+            $this->telegramService->sendMessage($chatId, $message);
         } catch (\Exception $e) {
             Log::error('Error in handleMyOrders: ' . $e->getMessage(), [
                 'chat_id' => $chatId,
@@ -1290,15 +1226,6 @@ class TelegramController extends Controller
      */
     protected function handleUnknownCommand($chatId, $text)
     {
-        Log::info('Unknown command received', ['text' => $text, 'chat_id' => $chatId]);
-        
-        // Check if it's the Buyurtmalarim command
-        if ($text === '📊 Buyurtmalarim') {
-            Log::info('Buyurtmalarim command detected in unknown command handler', ['chat_id' => $chatId]);
-            $this->handleMyOrders($chatId);
-            return;
-        }
-        
         $this->telegramService->sendMessage($chatId, "Kechirasiz, \"{$text}\" buyrug'i tushunilmadi. Menyudan tanlang.");
     }
 
