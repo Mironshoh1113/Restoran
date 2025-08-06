@@ -34,17 +34,64 @@ class RestaurantController extends Controller
 
     public function store(Request $request)
     {
-        $restaurant = Restaurant::create([
-            'name' => $request->name,
-            'owner_user_id' => Auth::id(),
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'bot_token' => $request->bot_token,
-            'bot_username' => $request->bot_username,
-        ]);
+        try {
+            $data = $request->only([
+                'name',
+                'phone',
+                'address', 
+                'bot_token',
+                'bot_username',
+                'bot_name',
+                'bot_description',
+                'is_active'
+            ]);
+            
+            // Add owner user ID
+            $data['owner_user_id'] = Auth::id();
+            
+            // Handle checkbox properly
+            $data['is_active'] = $request->has('is_active');
+            
+            // Log the creation attempt
+            \Log::info('Restaurant creation attempt', [
+                'data' => $data,
+                'user_id' => auth()->id()
+            ]);
+            
+            $restaurant = Restaurant::create($data);
+            
+            \Log::info('Restaurant created successfully', [
+                'restaurant_id' => $restaurant->id,
+                'created_data' => $restaurant->toArray()
+            ]);
 
-        return redirect()->route('admin.restaurants.index')
-            ->with('success', 'Restoran muvaffaqiyatli yaratildi.');
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Restoran muvaffaqiyatli yaratildi.',
+                    'restaurant_id' => $restaurant->id
+                ]);
+            }
+
+            return redirect()->route('admin.restaurants.index')
+                ->with('success', 'Restoran muvaffaqiyatli yaratildi.');
+                
+        } catch (\Exception $e) {
+            \Log::error('Restaurant creation failed', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+            
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Restoran yaratishda xatolik yuz berdi: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('admin.restaurants.index')
+                ->with('error', 'Restoran yaratishda xatolik yuz berdi: ' . $e->getMessage());
+        }
     }
 
     public function show(Restaurant $restaurant)
@@ -70,7 +117,34 @@ class RestaurantController extends Controller
         $this->authorize('update', $restaurant);
         
         try {
-            $restaurant->update($request->all());
+            // Only update fillable fields
+            $data = $request->only([
+                'name',
+                'phone', 
+                'address',
+                'bot_token',
+                'bot_username',
+                'bot_name',
+                'bot_description',
+                'is_active'
+            ]);
+            
+            // Handle checkbox properly
+            $data['is_active'] = $request->has('is_active');
+            
+            // Log the update attempt
+            \Log::info('Restaurant update attempt', [
+                'restaurant_id' => $restaurant->id,
+                'data' => $data,
+                'user_id' => auth()->id()
+            ]);
+            
+            $restaurant->update($data);
+            
+            \Log::info('Restaurant updated successfully', [
+                'restaurant_id' => $restaurant->id,
+                'updated_data' => $restaurant->fresh()->toArray()
+            ]);
 
             if (request()->expectsJson()) {
                 return response()->json([
@@ -83,6 +157,12 @@ class RestaurantController extends Controller
                 ->with('success', 'Restoran muvaffaqiyatli yangilandi.');
                 
         } catch (\Exception $e) {
+            \Log::error('Restaurant update failed', [
+                'restaurant_id' => $restaurant->id,
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+            
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => false,

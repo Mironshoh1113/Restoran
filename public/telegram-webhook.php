@@ -135,7 +135,7 @@ if (isset($update['message'])) {
             
             foreach ($orders as $order) {
                 $status = [
-                    'new' => '⏳ Yangi',
+                    'new' => '🆕 Yangi',
                     'preparing' => '👨‍🍳 Tayyorlanmoqda',
                     'on_way' => '🚚 Yolda',
                     'delivered' => '✅ Yetkazildi',

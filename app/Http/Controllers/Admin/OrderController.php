@@ -135,9 +135,9 @@ class OrderController extends Controller
             $telegramService = new TelegramService($order->restaurant->bot_token);
 
             $statusMessages = [
-                'pending' => '⏳ Buyurtma qabul qilindi',
+                'new' => '🆕 Yangi buyurtma qabul qilindi',
                 'preparing' => '👨‍🍳 Buyurtma tayyorlanmoqda',
-                'on_way' => '🚚 Buyurtma yo\'lda',
+                'on_way' => '🚚 Buyurtma yolda',
                 'delivered' => '✅ Buyurtma yetkazildi',
                 'cancelled' => '❌ Buyurtma bekor qilindi'
             ];

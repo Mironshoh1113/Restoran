@@ -18,11 +18,11 @@
             </div>
             <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option value="">Barcha holatlar</option>
-                <option value="pending">Yangi</option>
-                <option value="preparing">Tayyorlanmoqda</option>
-                <option value="on_way">Yolda</option>
-                <option value="delivered">Yetkazildi</option>
-                <option value="cancelled">Bekor qilindi</option>
+                <option value="new">🆕 Yangi</option>
+                <option value="preparing">👨‍🍳 Tayyorlanmoqda</option>
+                <option value="on_way">🚚 Yolda</option>
+                <option value="delivered">✅ Yetkazildi</option>
+                <option value="cancelled">❌ Bekor qilindi</option>
             </select>
         </div>
     </div>
@@ -45,7 +45,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-yellow-100 text-xs font-medium">Yangi</p>
-                    <p class="text-xl font-bold">{{ $orders->where('status', 'pending')->count() }}</p>
+                    <p class="text-xl font-bold">{{ $orders->where('status', 'new')->count() }}</p>
                 </div>
                 <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-clock text-sm"></i>
@@ -132,11 +132,11 @@
                                     'cancelled' => 'bg-red-100 text-red-800 border-red-200',
                                 ];
                                 $statusTexts = [
-                                    'pending' => 'Yangi',
-                                    'preparing' => 'Tayyorlanmoqda',
-                                    'on_way' => 'Yolda',
-                                    'delivered' => 'Yetkazildi',
-                                    'cancelled' => 'Bekor qilindi',
+                                    'new' => '🆕 Yangi',
+                                    'preparing' => '👨‍🍳 Tayyorlanmoqda',
+                                    'on_way' => '🚚 Yolda',
+                                    'delivered' => '✅ Yetkazildi',
+                                    'cancelled' => '❌ Bekor qilindi',
                                 ];
                             @endphp
                             <span class="px-3 py-1 text-xs font-semibold rounded-full border {{ $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800 border-gray-200' }}">

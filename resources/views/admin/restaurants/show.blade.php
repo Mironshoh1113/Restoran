@@ -255,9 +255,10 @@
                                     @elseif($order->status === 'preparing') bg-yellow-100 text-yellow-800
                                     @elseif($order->status === 'on_way') bg-purple-100 text-purple-800
                                     @elseif($order->status === 'delivered') bg-green-100 text-green-800
-                                    @else bg-red-100 text-red-800
+                                    @elseif($order->status === 'cancelled') bg-red-100 text-red-800
+                                    @else bg-gray-100 text-gray-800
                                     @endif">
-                                    {{ ucfirst($order->status) }}
+                                    {{ $order->status_with_emoji }}
                                 </span>
                                 <span class="text-sm text-gray-500">{{ $order->created_at->format('d.m.Y H:i') }}</span>
                             </div>

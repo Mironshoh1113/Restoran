@@ -287,8 +287,9 @@ class TelegramService
         ];
 
         $message = $statusMessages[$order->status] ?? 'Buyurtma holati yangilandi';
-        $message .= "\n\nBuyurtma #{$order->order_number}";
-        $message .= "\nJami: " . number_format($order->total_amount, 0, ',', ' ') . " so'm";
+        $message .= "\n\n📦 Buyurtma #{$order->order_number}";
+        $message .= "\n💰 Jami: " . number_format($order->total_amount, 0, ',', ' ') . " so'm";
+        $message .= "\n📅 Sana: " . $order->created_at->format('d.m.Y H:i');
 
         return $this->sendMessage($order->customer_telegram_id, $message);
     }

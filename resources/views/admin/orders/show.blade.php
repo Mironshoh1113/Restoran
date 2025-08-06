@@ -31,9 +31,10 @@
                 @elseif($order->status === 'preparing') bg-yellow-100 text-yellow-800
                 @elseif($order->status === 'on_way') bg-purple-100 text-purple-800
                 @elseif($order->status === 'delivered') bg-green-100 text-green-800
-                @else bg-red-100 text-red-800
+                @elseif($order->status === 'cancelled') bg-red-100 text-red-800
+                @else bg-gray-100 text-gray-800
                 @endif">
-                {{ ucfirst($order->status) }}
+                {{ $order->status_with_emoji }}
             </span>
         </div>
         
@@ -42,11 +43,11 @@
             @method('PATCH')
             <div class="flex items-center space-x-3">
                 <select name="status" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <option value="new" {{ $order->status === 'new' ? 'selected' : '' }}>Yangi</option>
-                    <option value="preparing" {{ $order->status === 'preparing' ? 'selected' : '' }}>Tayyorlanmoqda</option>
-                    <option value="on_way" {{ $order->status === 'on_way' ? 'selected' : '' }}>Yolda</option>
-                    <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>Yetkazildi</option>
-                    <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Bekor qilindi</option>
+                    <option value="new" {{ $order->status === 'new' ? 'selected' : '' }}>🆕 Yangi</option>
+                    <option value="preparing" {{ $order->status === 'preparing' ? 'selected' : '' }}>👨‍🍳 Tayyorlanmoqda</option>
+                    <option value="on_way" {{ $order->status === 'on_way' ? 'selected' : '' }}>🚚 Yolda</option>
+                    <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>✅ Yetkazildi</option>
+                    <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>❌ Bekor qilindi</option>
                 </select>
                 <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
                     Yangilash

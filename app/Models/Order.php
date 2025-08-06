@@ -72,4 +72,36 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+    
+    /**
+     * Get status name in Uzbek
+     */
+    public function getStatusNameAttribute()
+    {
+        $statusNames = [
+            'new' => 'Yangi',
+            'preparing' => 'Tayyorlanmoqda',
+            'on_way' => 'Yolda',
+            'delivered' => 'Yetkazildi',
+            'cancelled' => 'Bekor'
+        ];
+        
+        return $statusNames[$this->status] ?? $this->status;
+    }
+    
+    /**
+     * Get status name with emoji
+     */
+    public function getStatusWithEmojiAttribute()
+    {
+        $statusWithEmoji = [
+            'new' => '🆕 Yangi',
+            'preparing' => '👨‍🍳 Tayyorlanmoqda',
+            'on_way' => '🚚 Yolda',
+            'delivered' => '✅ Yetkazildi',
+            'cancelled' => '❌ Bekor'
+        ];
+        
+        return $statusWithEmoji[$this->status] ?? $this->status;
+    }
 } 
