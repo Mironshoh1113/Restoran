@@ -209,11 +209,12 @@ class TelegramController extends Controller
             'chat_id' => $chatId,
             'restaurant_id' => $restaurant->id,
             'user_id' => $user->id,
+            'bot_token' => $restaurant->bot_token,
             'created_at' => now()
         ], 3600); // 1 hour
 
-        // Create web interface URL
-        $webUrl = url("/web-interface/{$sessionToken}");
+        // Create web interface URL with bot token
+        $webUrl = url("/web-interface?bot_token={$restaurant->bot_token}");
         
         $message = "🍽 *{$restaurant->name}*\n\n";
         $message .= "Xush kelibsiz! Restoran menyusini ko'rish uchun quyidagi tugmani bosing:\n\n";
@@ -320,82 +321,92 @@ class TelegramController extends Controller
         // Get init data from Telegram Web App
         $initData = $request->get('_tgInitData') ?? $request->get('tgInitData');
         
-        // For testing purposes, allow access without init data
-        if (!$initData) {
-            // Try to get restaurant from query parameter or use first available
-            $restaurantId = $request->get('restaurant_id');
-            
-            if ($restaurantId) {
-                $restaurant = Restaurant::find($restaurantId);
-            } else {
-                // Use first available restaurant for testing
-                $restaurant = Restaurant::first();
+        // Get bot token from query parameter or init data
+        $botToken = $request->get('bot_token');
+        
+        if (!$botToken && $initData) {
+            $botToken = $this->extractBotTokenFromInitData($initData);
+        }
+        
+        // If no bot token provided, try to get from referer or use first restaurant
+        if (!$botToken) {
+            $referer = $request->header('Referer');
+            if ($referer) {
+                // Try to extract bot token from referer URL
+                if (preg_match('/bot_token=([^&]+)/', $referer, $matches)) {
+                    $botToken = $matches[1];
+                }
             }
+        }
+        
+        // Find restaurant by bot token
+        if ($botToken) {
+            $restaurant = Restaurant::where('bot_token', $botToken)->first();
+        } else {
+            // Fallback to first restaurant for testing
+            $restaurant = Restaurant::first();
+        }
+        
+        if (!$restaurant) {
+            Log::error('No restaurant available for web interface', ['bot_token' => $botToken]);
+            return response('No restaurant available', 404);
+        }
+        
+        Log::info('Restaurant found for web interface', [
+            'restaurant_id' => $restaurant->id,
+            'restaurant_name' => $restaurant->name,
+            'bot_token' => $botToken
+        ]);
+        
+        // Parse init data to get user info if available
+        $user = null;
+        $chatId = null;
+        
+        if ($initData) {
+            $data = [];
+            parse_str($initData, $data);
             
-            if (!$restaurant) {
-                Log::error('No restaurant available for web interface');
-                return response('No restaurant available', 404);
-            }
-            
-            // Create a test user
+            $user = $data['user'] ?? null;
+            $chatId = $data['chat_instance'] ?? null;
+        }
+        
+        // If no user data from init, create a test user
+        if (!$user) {
             $user = (object) [
                 'id' => 123456789,
                 'first_name' => 'Test User',
                 'username' => 'testuser'
             ];
+        }
+        
+        // Get or create user in database
+        $dbUser = null;
+        if ($chatId) {
+            $dbUser = \App\Models\User::where('telegram_chat_id', $chatId)->first();
             
-            $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
-            
-            Log::info('Web interface loaded successfully', [
-                'restaurant_id' => $restaurant->id,
-                'categories_count' => $categories->count()
-            ]);
-            
-            return view('web-interface.index', compact('restaurant', 'user', 'categories'));
+            if (!$dbUser && $user) {
+                // Create user from Telegram data
+                $userData = is_string($user) ? json_decode($user, true) : (array) $user;
+                $dbUser = \App\Models\User::create([
+                    'name' => $userData['first_name'] ?? 'User',
+                    'email' => 'telegram_' . $chatId . '@example.com',
+                    'telegram_chat_id' => $chatId,
+                    'password' => bcrypt(Str::random(16))
+                ]);
+            }
         }
         
-        // Parse init data to get user info
-        $data = [];
-        parse_str($initData, $data);
-        
-        $user = $data['user'] ?? null;
-        $chatId = $data['chat_instance'] ?? null;
-        
-        if (!$user || !$chatId) {
-            return response('Invalid user data', 403);
-        }
-        
-        // Find restaurant by bot token (from init data)
-        $botToken = $this->extractBotTokenFromInitData($initData);
-        
-        if (!$botToken) {
-            return response('Bot token not found', 403);
-        }
-        
-        $restaurant = Restaurant::where('bot_token', $botToken)->first();
-        
-        if (!$restaurant) {
-            return response('Restaurant not found', 404);
-        }
-        
-        // Get or create user
-        $dbUser = \App\Models\User::where('telegram_chat_id', $chatId)->first();
-        
-        if (!$dbUser) {
-            // Create user from Telegram data
-            $userData = json_decode($user, true);
-            $dbUser = \App\Models\User::create([
-                'name' => $userData['first_name'] ?? 'User',
-                'email' => 'telegram_' . $chatId . '@example.com',
-                'telegram_chat_id' => $chatId,
-                'password' => bcrypt(Str::random(16))
-            ]);
-        }
-        
-        // Get categories and menu items
+        // Get categories and menu items for this specific restaurant
         $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
         
-        return view('web-interface.index', compact('restaurant', 'user', 'categories'));
+        Log::info('Web interface loaded successfully', [
+            'restaurant_id' => $restaurant->id,
+            'restaurant_name' => $restaurant->name,
+            'categories_count' => $categories->count(),
+            'bot_token' => $botToken
+        ]);
+        
+        return view('web-interface.index', compact('restaurant', 'user', 'categories', 'botToken'));
     }
 
     /**
@@ -450,10 +461,43 @@ class TelegramController extends Controller
             return response('Invalid session', 404);
         }
         
-        // Get categories and menu items
+        // Get categories and menu items for this specific restaurant
         $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
         
-        return view('web-interface.index', compact('restaurant', 'user', 'categories', 'token'));
+        // Pass bot token to view for debugging
+        $botToken = $sessionData['bot_token'] ?? $restaurant->bot_token;
+        
+        return view('web-interface.index', compact('restaurant', 'user', 'categories', 'token', 'botToken'));
+    }
+
+    /**
+     * Get menu data for web interface without token
+     */
+    public function getMenuWithoutToken(Request $request)
+    {
+        // Get bot token from request
+        $botToken = $request->get('bot_token');
+        
+        if (!$botToken) {
+            return response()->json(['error' => 'Bot token required'], 400);
+        }
+        
+        $restaurant = Restaurant::where('bot_token', $botToken)->first();
+        
+        if (!$restaurant) {
+            return response()->json(['error' => 'Restaurant not found'], 404);
+        }
+        
+        $categories = Category::where('restaurant_id', $restaurant->id)
+            ->with(['menuItems' => function($query) {
+                $query->where('is_active', true);
+            }])
+            ->get();
+        
+        return response()->json([
+            'restaurant' => $restaurant,
+            'categories' => $categories
+        ]);
     }
 
     /**
@@ -497,21 +541,27 @@ class TelegramController extends Controller
                 'headers' => $request->headers->all()
             ]);
             
-            // Get restaurant from query parameter or use first available
-            $restaurantId = $request->get('restaurant_id');
+            // Get bot token from request
+            $botToken = $request->get('bot_token');
             
-            if ($restaurantId) {
-                $restaurant = Restaurant::find($restaurantId);
+            // Find restaurant by bot token
+            if ($botToken) {
+                $restaurant = Restaurant::where('bot_token', $botToken)->first();
             } else {
+                // Fallback to first restaurant for testing
                 $restaurant = Restaurant::first();
             }
             
             if (!$restaurant) {
-                Log::error('Restaurant not found for order placement');
+                Log::error('Restaurant not found for order placement', ['bot_token' => $botToken]);
                 return response()->json(['error' => 'Restaurant not found'], 404);
             }
             
-            Log::info('Restaurant found', ['restaurant_id' => $restaurant->id, 'restaurant_name' => $restaurant->name]);
+            Log::info('Restaurant found for order placement', [
+                'restaurant_id' => $restaurant->id,
+                'restaurant_name' => $restaurant->name,
+                'bot_token' => $botToken
+            ]);
             
             // Validate request
             $validated = $request->validate([
@@ -537,6 +587,17 @@ class TelegramController extends Controller
                     Log::error('Menu item not found', ['item_id' => $item['id']]);
                     return response()->json(['error' => 'Menu item not found: ' . $item['id']], 404);
                 }
+                
+                // Verify menu item belongs to the correct restaurant
+                if ($menuItem->restaurant_id != $restaurant->id) {
+                    Log::error('Menu item does not belong to restaurant', [
+                        'menu_item_id' => $item['id'],
+                        'menu_item_restaurant_id' => $menuItem->restaurant_id,
+                        'order_restaurant_id' => $restaurant->id
+                    ]);
+                    return response()->json(['error' => 'Invalid menu item for this restaurant'], 400);
+                }
+                
                 $subtotal = $menuItem->price * $item['quantity'];
                 $total += $subtotal;
                 
@@ -554,8 +615,8 @@ class TelegramController extends Controller
                 'items_count' => count($orderItems)
             ]);
             
-            // Prepare order data
-            $orderData = [
+            // Create order
+            $order = Order::create([
                 'restaurant_id' => $restaurant->id,
                 'user_id' => null,
                 'project_id' => null,
@@ -567,51 +628,34 @@ class TelegramController extends Controller
                 'items' => json_encode($orderItems),
                 'customer_name' => $request->customer_name,
                 'customer_phone' => $request->customer_phone,
-                // Add required fields from original schema
                 'order_number' => 'WEB-' . time(),
                 'total_price' => $total,
                 'payment_type' => $request->payment_method,
                 'address' => $request->delivery_address
-            ];
+            ]);
             
-            Log::info('Order data prepared', ['order_data' => $orderData]);
-            
-            // Create order
-            $order = Order::create($orderData);
-            
-            // Log successful order
-            Log::info('Order placed successfully', [
+            Log::info('Order created successfully', [
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'restaurant_id' => $restaurant->id,
-                'total' => $total,
-                'customer_name' => $request->customer_name
+                'restaurant_id' => $restaurant->id
             ]);
+            
+            // Notify admin about new order
+            $this->notifyAdminAboutOrder($order);
             
             return response()->json([
                 'success' => true,
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'message' => 'Buyurtma qabul qilindi!'
+                'message' => 'Order placed successfully'
             ]);
-            
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Order validation error', [
-                'errors' => $e->errors(),
-                'request_data' => $request->all()
-            ]);
-            return response()->json([
-                'error' => 'Validation error: ' . implode(', ', $e->errors())
-            ], 422);
         } catch (\Exception $e) {
-            Log::error('Order placement error', [
+            Log::error('Order placement failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
+                'trace' => $e->getTraceAsString()
             ]);
-            
             return response()->json([
-                'error' => 'Server error: ' . $e->getMessage()
+                'error' => 'Order placement failed: ' . $e->getMessage()
             ], 500);
         }
     }

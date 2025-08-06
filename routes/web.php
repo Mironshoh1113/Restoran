@@ -107,12 +107,37 @@ Route::get('/web-interface', [TelegramController::class, 'webInterfaceFromApp'])
 Route::post('/web-interface/{token}/order', [TelegramController::class, 'placeOrder'])->name('web.place-order');
 Route::post('/web-interface/order', [TelegramController::class, 'placeOrderWithoutToken'])->name('web.place-order-no-token');
 Route::get('/web-interface/{token}/menu', [TelegramController::class, 'getMenu'])->name('web.get-menu');
+Route::get('/web-interface/menu', [TelegramController::class, 'getMenuWithoutToken'])->name('web.get-menu-no-token');
 
 // Test endpoint for debugging
 Route::get('/test-api', function () {
     return response()->json([
         'status' => 'success',
         'message' => 'API is working correctly',
+        'timestamp' => now()
+    ]);
+});
+
+// Test web interface with different bot tokens
+Route::get('/test-web-interface', function (Request $request) {
+    $restaurants = \App\Models\Restaurant::all();
+    $results = [];
+    
+    foreach ($restaurants as $restaurant) {
+        $results[] = [
+            'restaurant_id' => $restaurant->id,
+            'restaurant_name' => $restaurant->name,
+            'bot_token' => $restaurant->bot_token,
+            'web_interface_url' => url("/web-interface?bot_token={$restaurant->bot_token}"),
+            'categories_count' => \App\Models\Category::where('restaurant_id', $restaurant->id)->count(),
+            'menu_items_count' => \App\Models\MenuItem::where('restaurant_id', $restaurant->id)->count()
+        ];
+    }
+    
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Web interface test results',
+        'restaurants' => $results,
         'timestamp' => now()
     ]);
 });

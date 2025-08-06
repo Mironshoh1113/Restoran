@@ -548,7 +548,10 @@
 <body>
     <div class="header">
         <div class="restaurant-name">{{ $restaurant->name }}</div>
-        <div class="restaurant-description">{{ $restaurant->description ?? 'Menyu va buyurtma berish' }}</div>
+        <div class="restaurant-description">{{ $restaurant->description ?? 'Restoran menyusi' }}</div>
+        @if(isset($botToken))
+            <div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">Bot Token: {{ substr($botToken, 0, 10) }}...</div>
+        @endif
     </div>
     
     <div class="container">
@@ -836,12 +839,22 @@
                 telegram_chat_id: telegramChatId
             };
             
+            // Get bot token from URL parameters or use the current token
+            const urlParams = new URLSearchParams(window.location.search);
+            const botToken = urlParams.get('bot_token');
+            
             // Get the current URL to determine the endpoint
             const currentUrl = window.location.pathname;
             const token = currentUrl.split('/').pop();
-            const endpoint = token && token !== 'web-interface' ? 
+            let endpoint = token && token !== 'web-interface' ? 
                 `/web-interface/${token}/order` : 
                 '/web-interface/order';
+            
+            // If we have a bot token, use the no-token endpoint with bot_token parameter
+            if (botToken) {
+                endpoint = '/web-interface/order';
+                orderData.bot_token = botToken;
+            }
             
             console.log('Submitting order to endpoint:', endpoint);
                 
