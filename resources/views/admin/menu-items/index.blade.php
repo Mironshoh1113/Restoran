@@ -72,7 +72,8 @@
                 <div class="mb-4">
                     <img src="{{ $menuItem->image_url }}" 
                          alt="{{ $menuItem->name }}"
-                         class="w-full h-48 object-cover rounded-lg">
+                         class="w-full h-48 object-cover rounded-lg"
+                         onerror="console.log('Admin image failed to load:', this.src); this.style.display='none';">
                 </div>
                 @endif
                 

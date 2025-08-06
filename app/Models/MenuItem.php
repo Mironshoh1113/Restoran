@@ -44,7 +44,8 @@ class MenuItem extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-            $url = Storage::url($this->image);
+            // For server environment, use direct URL
+            $url = '/storage/' . $this->image;
             $fullPath = storage_path('app/public/' . $this->image);
             
             \Log::info('Menu item image URL generated', [
@@ -53,7 +54,8 @@ class MenuItem extends Model
                 'image_url' => $url,
                 'full_path' => $fullPath,
                 'exists' => file_exists($fullPath),
-                'file_size' => file_exists($fullPath) ? filesize($fullPath) : 0
+                'file_size' => file_exists($fullPath) ? filesize($fullPath) : 0,
+                'server_url' => request()->getSchemeAndHttpHost() . $url
             ]);
             return $url;
         }

@@ -554,8 +554,8 @@
                         <div class="menu-item" data-item-id="{{ $item->id }}" data-price="{{ $item->price }}">
                             <div class="item-content">
                                 <div class="item-image">
-                                    @if($hasImage)
-                                        <img src="{{ $imageUrl }}" alt="{{ $item->name }}" 
+                                    @if($item->hasImage())
+                                        <img src="{{ $item->image_url }}" alt="{{ $item->name }}" 
                                              onerror="console.log('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';"
                                              onload="console.log('Image loaded successfully:', this.src);">
                                         <i class="fas fa-utensils" style="display: none;"></i>
