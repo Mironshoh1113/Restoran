@@ -59,19 +59,47 @@ class MenuItemController extends Controller
 
         if ($request->hasFile('image')) {
             try {
-                $imagePath = $request->file('image')->store('menu-items', 'public');
+                $file = $request->file('image');
+                
+                // Validate file
+                if (!$file->isValid()) {
+                    throw new \Exception('Fayl yuklashda xatolik yuz berdi');
+                }
+                
+                // Check file size (max 2MB)
+                if ($file->getSize() > 2 * 1024 * 1024) {
+                    throw new \Exception('Fayl hajmi 2MB dan katta bo\'lishi mumkin emas');
+                }
+                
+                // Check file type
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
+                if (!in_array($file->getMimeType(), $allowedTypes)) {
+                    throw new \Exception('Faqat rasm fayllari qabul qilinadi (JPEG, PNG, GIF)');
+                }
+                
+                $imagePath = $file->store('menu-items', 'public');
                 $data['image'] = $imagePath;
+                
+                // Verify file was saved
+                if (!Storage::disk('public')->exists($imagePath)) {
+                    throw new \Exception('Rasm saqlashda xatolik yuz berdi');
+                }
                 
                 // Log successful upload
                 \Log::info('Menu item image uploaded successfully', [
+                    'original_name' => $file->getClientOriginalName(),
                     'image_path' => $imagePath,
                     'full_path' => storage_path('app/public/' . $imagePath),
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
                     'exists' => Storage::disk('public')->exists($imagePath)
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to upload menu item image', [
                     'error' => $e->getMessage(),
-                    'file' => $request->file('image')->getClientOriginalName()
+                    'file' => $request->file('image')->getClientOriginalName(),
+                    'file_size' => $request->file('image')->getSize(),
+                    'mime_type' => $request->file('image')->getMimeType()
                 ]);
                 
                 return redirect()->back()
@@ -123,24 +151,53 @@ class MenuItemController extends Controller
 
         if ($request->hasFile('image')) {
             try {
+                $file = $request->file('image');
+                
+                // Validate file
+                if (!$file->isValid()) {
+                    throw new \Exception('Fayl yuklashda xatolik yuz berdi');
+                }
+                
+                // Check file size (max 2MB)
+                if ($file->getSize() > 2 * 1024 * 1024) {
+                    throw new \Exception('Fayl hajmi 2MB dan katta bo\'lishi mumkin emas');
+                }
+                
+                // Check file type
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
+                if (!in_array($file->getMimeType(), $allowedTypes)) {
+                    throw new \Exception('Faqat rasm fayllari qabul qilinadi (JPEG, PNG, GIF)');
+                }
+                
                 // Delete old image
                 if ($menuItem->image && Storage::disk('public')->exists($menuItem->image)) {
                     Storage::disk('public')->delete($menuItem->image);
+                    \Log::info('Old menu item image deleted', ['old_path' => $menuItem->image]);
                 }
                 
-                $imagePath = $request->file('image')->store('menu-items', 'public');
+                $imagePath = $file->store('menu-items', 'public');
                 $data['image'] = $imagePath;
+                
+                // Verify file was saved
+                if (!Storage::disk('public')->exists($imagePath)) {
+                    throw new \Exception('Rasm saqlashda xatolik yuz berdi');
+                }
                 
                 // Log successful upload
                 \Log::info('Menu item image updated successfully', [
+                    'original_name' => $file->getClientOriginalName(),
                     'image_path' => $imagePath,
                     'full_path' => storage_path('app/public/' . $imagePath),
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
                     'exists' => Storage::disk('public')->exists($imagePath)
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to update menu item image', [
                     'error' => $e->getMessage(),
-                    'file' => $request->file('image')->getClientOriginalName()
+                    'file' => $request->file('image')->getClientOriginalName(),
+                    'file_size' => $request->file('image')->getSize(),
+                    'mime_type' => $request->file('image')->getMimeType()
                 ]);
                 
                 return redirect()->back()

@@ -82,18 +82,27 @@
                     <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
                         Rasm
                     </label>
-                    @if($menuItem->image)
-                        <div class="mb-2">
-                            <img src="{{ Storage::url($menuItem->image) }}" 
-                                 alt="{{ $menuItem->name }}"
-                                 class="w-32 h-32 object-cover rounded-lg">
+                    <div class="space-y-2">
+                        @if($menuItem->hasImage())
+                            <div class="mb-2">
+                                <img src="{{ $menuItem->image_url }}" 
+                                     alt="{{ $menuItem->name }}"
+                                     class="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                                     id="current-image">
+                                <p class="text-xs text-gray-500 mt-1">Joriy rasm</p>
+                            </div>
+                        @endif
+                        <div id="image-preview" class="hidden">
+                            <img src="" alt="Preview" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                            <p class="text-xs text-gray-500 mt-1">Yangi rasm</p>
                         </div>
-                    @endif
-                    <input type="file" 
-                           id="image" 
-                           name="image" 
-                           accept="image/*"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <input type="file" 
+                               id="image" 
+                               name="image" 
+                               accept="image/*"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-xs text-gray-500">Rasm yuklash uchun fayl tanlang</p>
+                    </div>
                     @error('image')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -140,4 +149,48 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('image-preview');
+    const previewImg = imagePreview.querySelector('img');
+    const currentImage = document.getElementById('current-image');
+    
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file) {
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                imagePreview.classList.remove('hidden');
+                
+                // Hide current image if exists
+                if (currentImage) {
+                    currentImage.parentElement.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+            
+            console.log('Image selected:', file.name, 'Size:', file.size, 'bytes');
+        } else {
+            // Hide preview
+            imagePreview.classList.add('hidden');
+            
+            // Show current image if exists
+            if (currentImage) {
+                currentImage.parentElement.style.display = 'block';
+            }
+        }
+    });
+    
+    // Debug: Log current image info
+    if (currentImage) {
+        console.log('Current image src:', currentImage.src);
+        console.log('Current image exists:', currentImage.complete && currentImage.naturalHeight !== 0);
+    }
+});
+</script>
 @endsection 
