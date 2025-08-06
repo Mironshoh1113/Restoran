@@ -45,11 +45,15 @@ class MenuItem extends Model
     {
         if ($this->image) {
             $url = Storage::url($this->image);
+            $fullPath = storage_path('app/public/' . $this->image);
+            
             \Log::info('Menu item image URL generated', [
                 'item_id' => $this->id,
                 'image_path' => $this->image,
                 'image_url' => $url,
-                'exists' => Storage::disk('public')->exists($this->image)
+                'full_path' => $fullPath,
+                'exists' => file_exists($fullPath),
+                'file_size' => file_exists($fullPath) ? filesize($fullPath) : 0
             ]);
             return $url;
         }
@@ -65,13 +69,19 @@ class MenuItem extends Model
             return false;
         }
         
-        $exists = Storage::disk('public')->exists($this->image);
+        $fullPath = storage_path('app/public/' . $this->image);
+        $exists = file_exists($fullPath);
+        $fileSize = $exists ? filesize($fullPath) : 0;
+        
         \Log::info('Menu item image check', [
             'item_id' => $this->id,
             'image_path' => $this->image,
-            'exists' => $exists
+            'full_path' => $fullPath,
+            'exists' => $exists,
+            'file_size' => $fileSize,
+            'is_valid' => $exists && $fileSize > 0
         ]);
         
-        return $exists;
+        return $exists && $fileSize > 0;
     }
 } 

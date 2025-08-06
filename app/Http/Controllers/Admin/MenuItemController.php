@@ -96,44 +96,98 @@ class MenuItemController extends Controller
                     throw new \Exception('Faqat rasm fayllari qabul qilinadi (JPEG, PNG, GIF)');
                 }
                 
-                // Ensure storage directory exists
+                // Ensure storage directory exists with proper permissions
                 $storagePath = storage_path('app/public/menu-items');
                 if (!is_dir($storagePath)) {
-                    mkdir($storagePath, 0755, true);
+                    if (!mkdir($storagePath, 0755, true)) {
+                        throw new \Exception('Storage papkasini yaratishda xatolik yuz berdi');
+                    }
                     \Log::info('Created storage directory', ['path' => $storagePath]);
                 }
                 
-                // Generate unique filename
-                $extension = $file->getClientOriginalExtension();
+                // Check if directory is writable
+                if (!is_writable($storagePath)) {
+                    throw new \Exception('Storage papkasi yozish uchun ochiq emas');
+                }
+                
+                // Generate unique filename with timestamp
+                $extension = strtolower($file->getClientOriginalExtension());
                 $filename = uniqid() . '_' . time() . '.' . $extension;
                 $imagePath = 'menu-items/' . $filename;
+                $fullPath = storage_path('app/public/' . $imagePath);
                 
-                // Save file using Storage facade
-                $fileContent = file_get_contents($file->getRealPath());
-                $saved = Storage::disk('public')->put($imagePath, $fileContent);
+                // Multiple save attempts with different methods
+                $saved = false;
+                $error = '';
+                
+                // Method 1: Using Storage facade
+                try {
+                    $fileContent = file_get_contents($file->getRealPath());
+                    if ($fileContent === false) {
+                        throw new \Exception('Fayl o\'qishda xatolik');
+                    }
+                    
+                    $saved = Storage::disk('public')->put($imagePath, $fileContent);
+                    if ($saved) {
+                        \Log::info('File saved using Storage facade', ['path' => $imagePath]);
+                    }
+                } catch (\Exception $e) {
+                    $error .= 'Storage facade error: ' . $e->getMessage() . '; ';
+                }
+                
+                // Method 2: Direct file copy if Storage failed
+                if (!$saved) {
+                    try {
+                        $saved = copy($file->getRealPath(), $fullPath);
+                        if ($saved) {
+                            \Log::info('File saved using direct copy', ['path' => $fullPath]);
+                        }
+                    } catch (\Exception $e) {
+                        $error .= 'Direct copy error: ' . $e->getMessage() . '; ';
+                    }
+                }
+                
+                // Method 3: Using move_uploaded_file if still failed
+                if (!$saved) {
+                    try {
+                        $saved = move_uploaded_file($file->getRealPath(), $fullPath);
+                        if ($saved) {
+                            \Log::info('File saved using move_uploaded_file', ['path' => $fullPath]);
+                        }
+                    } catch (\Exception $e) {
+                        $error .= 'Move uploaded file error: ' . $e->getMessage() . '; ';
+                    }
+                }
                 
                 if (!$saved) {
-                    throw new \Exception('Fayl saqlashda xatolik yuz berdi');
+                    throw new \Exception('Fayl saqlashda xatolik yuz berdi. Xatoliklar: ' . $error);
                 }
                 
                 $data['image'] = $imagePath;
                 
                 // Verify file was saved
-                if (!Storage::disk('public')->exists($imagePath)) {
+                if (!file_exists($fullPath)) {
                     throw new \Exception('Rasm saqlashda xatolik yuz berdi - fayl topilmadi');
+                }
+                
+                // Check file size after save
+                $savedFileSize = filesize($fullPath);
+                if ($savedFileSize === 0) {
+                    throw new \Exception('Saqlangan fayl bo\'sh');
                 }
                 
                 // Log successful upload
                 \Log::info('Menu item image uploaded successfully', [
                     'original_name' => $file->getClientOriginalName(),
                     'image_path' => $imagePath,
-                    'full_path' => storage_path('app/public/' . $imagePath),
+                    'full_path' => $fullPath,
                     'file_size' => $file->getSize(),
+                    'saved_file_size' => $savedFileSize,
                     'mime_type' => $file->getMimeType(),
-                    'exists' => Storage::disk('public')->exists($imagePath),
+                    'exists' => file_exists($fullPath),
                     'url' => Storage::url($imagePath),
                     'saved' => $saved,
-                    'content_length' => strlen($fileContent)
+                    'content_length' => strlen($fileContent ?? '')
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to upload menu item image', [
@@ -237,50 +291,110 @@ class MenuItemController extends Controller
                     throw new \Exception('Faqat rasm fayllari qabul qilinadi (JPEG, PNG, GIF)');
                 }
                 
-                // Ensure storage directory exists
+                // Ensure storage directory exists with proper permissions
                 $storagePath = storage_path('app/public/menu-items');
                 if (!is_dir($storagePath)) {
-                    mkdir($storagePath, 0755, true);
+                    if (!mkdir($storagePath, 0755, true)) {
+                        throw new \Exception('Storage papkasini yaratishda xatolik yuz berdi');
+                    }
                     \Log::info('Created storage directory', ['path' => $storagePath]);
                 }
                 
-                // Delete old image
-                if ($menuItem->image && Storage::disk('public')->exists($menuItem->image)) {
-                    Storage::disk('public')->delete($menuItem->image);
-                    \Log::info('Old menu item image deleted', ['old_path' => $menuItem->image]);
+                // Check if directory is writable
+                if (!is_writable($storagePath)) {
+                    throw new \Exception('Storage papkasi yozish uchun ochiq emas');
                 }
                 
-                // Generate unique filename
-                $extension = $file->getClientOriginalExtension();
+                // Delete old image
+                if ($menuItem->image) {
+                    $oldPath = storage_path('app/public/' . $menuItem->image);
+                    if (file_exists($oldPath)) {
+                        if (unlink($oldPath)) {
+                            \Log::info('Old menu item image deleted', ['old_path' => $menuItem->image]);
+                        } else {
+                            \Log::warning('Failed to delete old image', ['old_path' => $menuItem->image]);
+                        }
+                    }
+                }
+                
+                // Generate unique filename with timestamp
+                $extension = strtolower($file->getClientOriginalExtension());
                 $filename = uniqid() . '_' . time() . '.' . $extension;
                 $imagePath = 'menu-items/' . $filename;
+                $fullPath = storage_path('app/public/' . $imagePath);
                 
-                // Save file using Storage facade
-                $fileContent = file_get_contents($file->getRealPath());
-                $saved = Storage::disk('public')->put($imagePath, $fileContent);
+                // Multiple save attempts with different methods
+                $saved = false;
+                $error = '';
+                
+                // Method 1: Using Storage facade
+                try {
+                    $fileContent = file_get_contents($file->getRealPath());
+                    if ($fileContent === false) {
+                        throw new \Exception('Fayl o\'qishda xatolik');
+                    }
+                    
+                    $saved = Storage::disk('public')->put($imagePath, $fileContent);
+                    if ($saved) {
+                        \Log::info('File saved using Storage facade', ['path' => $imagePath]);
+                    }
+                } catch (\Exception $e) {
+                    $error .= 'Storage facade error: ' . $e->getMessage() . '; ';
+                }
+                
+                // Method 2: Direct file copy if Storage failed
+                if (!$saved) {
+                    try {
+                        $saved = copy($file->getRealPath(), $fullPath);
+                        if ($saved) {
+                            \Log::info('File saved using direct copy', ['path' => $fullPath]);
+                        }
+                    } catch (\Exception $e) {
+                        $error .= 'Direct copy error: ' . $e->getMessage() . '; ';
+                    }
+                }
+                
+                // Method 3: Using move_uploaded_file if still failed
+                if (!$saved) {
+                    try {
+                        $saved = move_uploaded_file($file->getRealPath(), $fullPath);
+                        if ($saved) {
+                            \Log::info('File saved using move_uploaded_file', ['path' => $fullPath]);
+                        }
+                    } catch (\Exception $e) {
+                        $error .= 'Move uploaded file error: ' . $e->getMessage() . '; ';
+                    }
+                }
                 
                 if (!$saved) {
-                    throw new \Exception('Fayl saqlashda xatolik yuz berdi');
+                    throw new \Exception('Fayl saqlashda xatolik yuz berdi. Xatoliklar: ' . $error);
                 }
                 
                 $data['image'] = $imagePath;
                 
                 // Verify file was saved
-                if (!Storage::disk('public')->exists($imagePath)) {
+                if (!file_exists($fullPath)) {
                     throw new \Exception('Rasm saqlashda xatolik yuz berdi - fayl topilmadi');
+                }
+                
+                // Check file size after save
+                $savedFileSize = filesize($fullPath);
+                if ($savedFileSize === 0) {
+                    throw new \Exception('Saqlangan fayl bo\'sh');
                 }
                 
                 // Log successful upload
                 \Log::info('Menu item image updated successfully', [
                     'original_name' => $file->getClientOriginalName(),
                     'image_path' => $imagePath,
-                    'full_path' => storage_path('app/public/' . $imagePath),
+                    'full_path' => $fullPath,
                     'file_size' => $file->getSize(),
+                    'saved_file_size' => $savedFileSize,
                     'mime_type' => $file->getMimeType(),
-                    'exists' => Storage::disk('public')->exists($imagePath),
+                    'exists' => file_exists($fullPath),
                     'url' => Storage::url($imagePath),
                     'saved' => $saved,
-                    'content_length' => strlen($fileContent)
+                    'content_length' => strlen($fileContent ?? '')
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to update menu item image', [
