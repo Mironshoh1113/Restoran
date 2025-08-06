@@ -58,8 +58,26 @@ class MenuItemController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('menu-items', 'public');
-            $data['image'] = $imagePath;
+            try {
+                $imagePath = $request->file('image')->store('menu-items', 'public');
+                $data['image'] = $imagePath;
+                
+                // Log successful upload
+                \Log::info('Menu item image uploaded successfully', [
+                    'image_path' => $imagePath,
+                    'full_path' => storage_path('app/public/' . $imagePath),
+                    'exists' => Storage::disk('public')->exists($imagePath)
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to upload menu item image', [
+                    'error' => $e->getMessage(),
+                    'file' => $request->file('image')->getClientOriginalName()
+                ]);
+                
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['image' => 'Rasm yuklashda xatolik yuz berdi: ' . $e->getMessage()]);
+            }
         }
 
         MenuItem::create($data);
@@ -104,13 +122,31 @@ class MenuItemController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            // Delete old image
-            if ($menuItem->image) {
-                Storage::disk('public')->delete($menuItem->image);
+            try {
+                // Delete old image
+                if ($menuItem->image && Storage::disk('public')->exists($menuItem->image)) {
+                    Storage::disk('public')->delete($menuItem->image);
+                }
+                
+                $imagePath = $request->file('image')->store('menu-items', 'public');
+                $data['image'] = $imagePath;
+                
+                // Log successful upload
+                \Log::info('Menu item image updated successfully', [
+                    'image_path' => $imagePath,
+                    'full_path' => storage_path('app/public/' . $imagePath),
+                    'exists' => Storage::disk('public')->exists($imagePath)
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to update menu item image', [
+                    'error' => $e->getMessage(),
+                    'file' => $request->file('image')->getClientOriginalName()
+                ]);
+                
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['image' => 'Rasm yangilashda xatolik yuz berdi: ' . $e->getMessage()]);
             }
-            
-            $imagePath = $request->file('image')->store('menu-items', 'public');
-            $data['image'] = $imagePath;
         }
 
         $menuItem->update($data);

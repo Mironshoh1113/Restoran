@@ -44,7 +44,14 @@ class MenuItem extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-            return Storage::url($this->image);
+            $url = Storage::url($this->image);
+            \Log::info('Menu item image URL generated', [
+                'item_id' => $this->id,
+                'image_path' => $this->image,
+                'image_url' => $url,
+                'exists' => Storage::disk('public')->exists($this->image)
+            ]);
+            return $url;
         }
         return null;
     }
@@ -54,6 +61,17 @@ class MenuItem extends Model
      */
     public function hasImage()
     {
-        return !empty($this->image) && Storage::disk('public')->exists($this->image);
+        if (empty($this->image)) {
+            return false;
+        }
+        
+        $exists = Storage::disk('public')->exists($this->image);
+        \Log::info('Menu item image check', [
+            'item_id' => $this->id,
+            'image_path' => $this->image,
+            'exists' => $exists
+        ]);
+        
+        return $exists;
     }
 } 

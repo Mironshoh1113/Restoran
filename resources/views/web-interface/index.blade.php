@@ -135,6 +135,7 @@
             font-size: 20px;
             flex-shrink: 0;
             overflow: hidden;
+            position: relative;
         }
         
         .item-image img {
@@ -142,6 +143,9 @@
             height: 100%;
             object-fit: cover;
             border-radius: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
         
         .item-image i {
@@ -150,6 +154,9 @@
             justify-content: center;
             width: 100%;
             height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
         
         .item-info {
@@ -533,12 +540,24 @@
             @foreach($categories as $category)
                 <div class="category-content {{ $loop->first ? 'active' : '' }}" id="category-{{ $category->id }}">
                     @foreach($category->menuItems as $item)
+                        @php
+                            $hasImage = $item->hasImage();
+                            $imageUrl = $item->image_url;
+                            \Log::info('Rendering menu item', [
+                                'item_id' => $item->id,
+                                'item_name' => $item->name,
+                                'has_image' => $hasImage,
+                                'image_path' => $item->image,
+                                'image_url' => $imageUrl
+                            ]);
+                        @endphp
                         <div class="menu-item" data-item-id="{{ $item->id }}" data-price="{{ $item->price }}">
                             <div class="item-content">
                                 <div class="item-image">
-                                    @if($item->hasImage())
-                                        <img src="{{ $item->image_url }}" alt="{{ $item->name }}" 
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    @if($hasImage)
+                                        <img src="{{ $imageUrl }}" alt="{{ $item->name }}" 
+                                             onerror="console.log('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                             onload="console.log('Image loaded successfully:', this.src);">
                                         <i class="fas fa-utensils" style="display: none;"></i>
                                     @else
                                         <i class="fas fa-utensils"></i>
@@ -829,6 +848,22 @@
         
         // Load saved customer data
         loadCustomerData();
+        
+        // Debug: Log menu items with images
+        console.log('Menu items loaded:', document.querySelectorAll('.menu-item').length);
+        document.querySelectorAll('.menu-item').forEach((item, index) => {
+            const itemId = item.dataset.itemId;
+            const image = item.querySelector('.item-image img');
+            const icon = item.querySelector('.item-image i');
+            
+            console.log(`Item ${index + 1}:`, {
+                id: itemId,
+                hasImage: !!image,
+                hasIcon: !!icon,
+                imageSrc: image ? image.src : 'none',
+                iconDisplay: icon ? icon.style.display : 'none'
+            });
+        });
         
         // Save customer data when form is submitted
         document.getElementById('checkout-form').addEventListener('submit', function(e) {
