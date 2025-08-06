@@ -85,6 +85,72 @@
         @endforeach
     </div>
 
+    <!-- Web Interface URLs Section -->
+    @if($restaurants->count() > 0)
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-globe text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">Web Interface URL-lar</h3>
+                    <p class="text-sm text-gray-500">Barcha botlar uchun Web App URL-lar</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <div class="space-y-4">
+                @foreach($restaurants as $restaurant)
+                    @if($restaurant->bot_token)
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <h4 class="font-medium text-gray-800">{{ $restaurant->name }}</h4>
+                                @if($restaurant->bot_username)
+                                    <span class="text-sm text-gray-500">@{{ $restaurant->bot_username }}</span>
+                                @endif
+                            </div>
+                            <button onclick="copyWebInterfaceUrl('{{ url('/web-interface?bot_token=' . $restaurant->bot_token) }}')" 
+                                    class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center space-x-1">
+                                <i class="fas fa-copy"></i>
+                                <span>Nusxalash</span>
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" 
+                                   value="{{ url('/web-interface?bot_token=' . $restaurant->bot_token) }}"
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 text-sm font-mono"
+                                   readonly>
+                            <button onclick="openWebInterface('{{ url('/web-interface?bot_token=' . $restaurant->bot_token) }}')" 
+                                    class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center space-x-1">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Ochish</span>
+                            </button>
+                        </div>
+                    </div>
+                    @endif
+                @endforeach
+            </div>
+            
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                <div class="flex items-start space-x-2">
+                    <i class="fas fa-lightbulb text-yellow-600 text-sm mt-1"></i>
+                    <div>
+                        <h4 class="text-sm font-semibold text-yellow-800 mb-1">Qanday ishlatish:</h4>
+                        <ul class="text-xs text-yellow-700 space-y-1">
+                            <li>• URL-ni nusxalab oling</li>
+                            <li>• Telegram bot sozlamalarida Web App URL sifatida qo'ying</li>
+                            <li>• Har bir bot o'ziga tegishli restoran ma'lumotlarini ko'radi</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     @if($restaurants->count() === 0)
         <div class="text-center py-12">
             <i class="fab fa-telegram text-gray-400 text-6xl mb-4"></i>
@@ -119,6 +185,20 @@ function testBot(restaurantId) {
         console.error('Error:', error);
         alert('Xatolik yuz berdi');
     });
+}
+
+function copyWebInterfaceUrl(url) {
+    const textarea = document.createElement('textarea');
+    textarea.value = url;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    alert('URL nusxalandi!');
+}
+
+function openWebInterface(url) {
+    window.open(url, '_blank');
 }
 </script>
 @endsection 

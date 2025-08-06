@@ -264,6 +264,63 @@
         </div>
     </div>
 
+    <!-- Web Interface URL Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-globe text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Web Interface URL</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Telegram Web App uchun URL</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6 space-y-4">
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Web Interface URL:</label>
+                    <button onclick="copyWebInterfaceUrl()" 
+                            class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center space-x-1">
+                        <i class="fas fa-copy"></i>
+                        <span>Nusxalash</span>
+                    </button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="webInterfaceUrl" 
+                           value="{{ url('/web-interface?bot_token=' . $restaurant->bot_token) }}"
+                           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-mono"
+                           readonly>
+                    <button onclick="openWebInterface()" 
+                            class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center space-x-1">
+                        <i class="fas fa-external-link-alt"></i>
+                        <span>Ochish</span>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Bu URL-ni Telegram bot sozlamalarida Web App URL sifatida ishlatishingiz mumkin
+                </p>
+            </div>
+            
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <div class="flex items-start space-x-2">
+                    <i class="fas fa-lightbulb text-yellow-600 dark:text-yellow-400 text-sm mt-1"></i>
+                    <div>
+                        <h4 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-1">Qanday ishlatish:</h4>
+                        <ul class="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
+                            <li>• Bu URL-ni nusxalab oling</li>
+                            <li>• Telegram bot sozlamalarida Web App URL sifatida qo'ying</li>
+                            <li>• Foydalanuvchilar bot orqali web sahifani ochishadi</li>
+                            <li>• Har bir bot o'ziga tegishli restoran ma'lumotlarini ko'radi</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Setup Instructions -->
     <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
         <div class="flex items-start space-x-3">
@@ -755,6 +812,28 @@ function deleteWebhook() {
         console.error('Error:', error);
         showNotification('Xatolik yuz berdi', 'error');
     });
+}
+
+function copyWebInterfaceUrl() {
+    const urlInput = document.getElementById('webInterfaceUrl');
+    urlInput.select();
+    urlInput.setSelectionRange(0, 99999); // For mobile devices
+
+    navigator.clipboard.writeText(urlInput.value).then(() => {
+        showNotification('URL nusxalandi!', 'success');
+    }).catch(err => {
+        console.error('Error copying text: ', err);
+        showNotification('URL nusxalashda xatolik yuz berdi', 'error');
+    });
+}
+
+function openWebInterface() {
+    const webInterfaceUrl = document.getElementById('webInterfaceUrl').value;
+    if (webInterfaceUrl) {
+        window.open(webInterfaceUrl, '_blank');
+    } else {
+        showNotification('Web Interface URL topilmadi', 'warning');
+    }
 }
 
 function showNotification(message, type = 'info') {
