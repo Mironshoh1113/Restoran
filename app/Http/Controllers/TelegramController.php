@@ -987,6 +987,20 @@ class TelegramController extends Controller
                 ->limit(10) // Limit to last 10 orders
                 ->get();
 
+            Log::info('Orders query result', [
+                'chat_id' => $chatId,
+                'restaurant_id' => $restaurant->id,
+                'orders_count' => $orders->count(),
+                'orders' => $orders->map(function($order) {
+                    return [
+                        'id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'status' => $order->status,
+                        'total_price' => $order->total_price
+                    ];
+                })->toArray()
+            ]);
+
             Log::info('Found orders for user', [
                 'chat_id' => $chatId,
                 'restaurant_id' => $restaurant->id,

@@ -72,13 +72,13 @@ class TestOrderSeeder extends Seeder
         }
 
         // Create test orders
-        $testChatIds = [123456789, 987654321, 555666777];
+        $testChatIds = [1238412611, 987654321, 555666777]; // Using actual user chat ID
         $statuses = ['new', 'preparing', 'on_way', 'delivered', 'cancelled'];
 
         foreach ($testChatIds as $index => $chatId) {
             // Create order
             $order = Order::create([
-                'order_number' => 'ORD-' . str_pad($index + 1, 6, '0', STR_PAD_LEFT),
+                'order_number' => 'ORD-' . str_pad(time() + $index, 6, '0', STR_PAD_LEFT),
                 'restaurant_id' => $restaurant->id,
                 'project_id' => $project->id,
                 'telegram_chat_id' => $chatId,
