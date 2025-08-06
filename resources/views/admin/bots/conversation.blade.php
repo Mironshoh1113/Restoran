@@ -65,19 +65,29 @@
         
         <div class="p-6">
             <div id="messagesContainer" class="space-y-4 max-h-96 overflow-y-auto">
-                @foreach($messages as $message)
-                    <div class="flex {{ $message->direction === 'incoming' ? 'justify-start' : 'justify-end' }}">
-                        <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg {{ $message->direction === 'incoming' ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200' : 'bg-blue-600 text-white' }}">
-                            <div class="text-sm">{{ $message->message_text }}</div>
-                            <div class="text-xs mt-1 {{ $message->direction === 'incoming' ? 'text-gray-500 dark:text-gray-400' : 'text-blue-100' }}">
-                                {{ $message->created_at->format('H:i') }}
-                                @if($message->direction === 'incoming' && !$message->is_read)
-                                    <span class="ml-2">●</span>
-                                @endif
+                @if($messages->count() > 0)
+                    @foreach($messages as $message)
+                        <div class="flex {{ $message->direction === 'incoming' ? 'justify-start' : 'justify-end' }}">
+                            <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg {{ $message->direction === 'incoming' ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200' : 'bg-blue-600 text-white' }}">
+                                <div class="text-sm">{{ $message->message_text }}</div>
+                                <div class="text-xs mt-1 {{ $message->direction === 'incoming' ? 'text-gray-500 dark:text-gray-400' : 'text-blue-100' }}">
+                                    {{ $message->created_at->format('H:i') }}
+                                    @if($message->direction === 'incoming' && !$message->is_read)
+                                        <span class="ml-2">●</span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
+                    @endforeach
+                @else
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-comments text-gray-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">Xabarlar yo'q</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-500">Foydalanuvchi bilan hali xabar almashinmagan</p>
                     </div>
-                @endforeach
+                @endif
             </div>
             
             <!-- Message Input -->
@@ -147,6 +157,13 @@ function sendMessage() {
 // Add message to container
 function addMessageToContainer(messageData) {
     const container = document.getElementById('messagesContainer');
+    
+    // Remove empty state if it exists
+    const emptyState = container.querySelector('.text-center');
+    if (emptyState) {
+        emptyState.remove();
+    }
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = 'flex justify-end';
     
@@ -195,6 +212,13 @@ function pollNewMessages() {
 // Add incoming message to container
 function addIncomingMessageToContainer(message) {
     const container = document.getElementById('messagesContainer');
+    
+    // Remove empty state if it exists
+    const emptyState = container.querySelector('.text-center');
+    if (emptyState) {
+        emptyState.remove();
+    }
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = 'flex justify-start';
     

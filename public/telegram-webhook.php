@@ -61,8 +61,9 @@ if (isset($update['message'])) {
     $userData = $message['from'] ?? null;
 
     // Save or update telegram user
+    $telegramUser = null;
     if ($userData) {
-        TelegramUser::updateOrCreate(
+        $telegramUser = TelegramUser::updateOrCreate(
             [
                 'restaurant_id' => $restaurant->id,
                 'telegram_id' => $userData['id']
@@ -76,6 +77,11 @@ if (isset($update['message'])) {
                 'last_activity' => now(),
             ]
         );
+    }
+
+    // Save incoming message to database
+    if ($telegramUser && $text) {
+        $telegramService->saveIncomingMessage($telegramUser, $text, $message['message_id'] ?? null, $message);
     }
 
     // Handle /start command
@@ -107,7 +113,12 @@ if (isset($update['message'])) {
             'one_time_keyboard' => false
         ];
 
-        $telegramService->sendMessage($chatId, $welcomeMessage, $replyKeyboard);
+        $result = $telegramService->sendMessage($chatId, $welcomeMessage, $replyKeyboard);
+        
+        // Save outgoing message to database
+        if ($telegramUser && $result['ok']) {
+            $telegramService->saveOutgoingMessage($telegramUser, $welcomeMessage, $result['result']['message_id'] ?? null, $result);
+        }
     }
     // Handle other commands
     elseif ($text === '📋 Menyu') {
@@ -117,16 +128,27 @@ if (isset($update['message'])) {
         })->get();
 
         if ($categories->isEmpty()) {
-            $telegramService->sendMessage($chatId, "Kechirasiz, hozircha menyu mavjud emas.");
+            $responseMessage = "Kechirasiz, hozircha menyu mavjud emas.";
+            $result = $telegramService->sendMessage($chatId, $responseMessage);
+            
+            // Save outgoing message to database
+            if ($telegramUser && $result['ok']) {
+                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
+            }
         } else {
-            $message = "🍽️ *Kategoriyalar:*\n\n";
-            $message .= "Tanlang:\n\n";
+            $responseMessage = "🍽️ *Kategoriyalar:*\n\n";
+            $responseMessage .= "Tanlang:\n\n";
             
             foreach ($categories as $category) {
-                $message .= "• {$category->name}\n";
+                $responseMessage .= "• {$category->name}\n";
             }
 
-            $telegramService->sendMessage($chatId, $message);
+            $result = $telegramService->sendMessage($chatId, $responseMessage);
+            
+            // Save outgoing message to database
+            if ($telegramUser && $result['ok']) {
+                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
+            }
         }
     }
     elseif ($text === '🛒 Savat') {
@@ -134,21 +156,32 @@ if (isset($update['message'])) {
         $cart = \Illuminate\Support\Facades\Cache::get("cart_{$chatId}", []);
         
         if (empty($cart)) {
-            $telegramService->sendMessage($chatId, "Savat bo'sh. Menyudan taom tanlang.");
+            $responseMessage = "Savat bo'sh. Menyudan taom tanlang.";
+            $result = $telegramService->sendMessage($chatId, $responseMessage);
+            
+            // Save outgoing message to database
+            if ($telegramUser && $result['ok']) {
+                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
+            }
         } else {
-            $message = "🛒 *Savat:*\n\n";
+            $responseMessage = "🛒 *Savat:*\n\n";
             $total = 0;
             
             foreach ($cart as $itemId => $item) {
                 $subtotal = $item['price'] * $item['quantity'];
                 $total += $subtotal;
                 
-                $message .= "• {$item['name']} x{$item['quantity']} = " . number_format($subtotal, 0, ',', ' ') . " so'm\n";
+                $responseMessage .= "• {$item['name']} x{$item['quantity']} = " . number_format($subtotal, 0, ',', ' ') . " so'm\n";
             }
 
-            $message .= "\n<b>Jami: " . number_format($total, 0, ',', ' ') . " so'm</b>";
+            $responseMessage .= "\n<b>Jami: " . number_format($total, 0, ',', ' ') . " so'm</b>";
 
-            $telegramService->sendMessage($chatId, $message);
+            $result = $telegramService->sendMessage($chatId, $responseMessage);
+            
+            // Save outgoing message to database
+            if ($telegramUser && $result['ok']) {
+                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
+            }
         }
     }
     elseif ($text === '📞 Buyurtma qilish') {
@@ -156,14 +189,20 @@ if (isset($update['message'])) {
         $cart = \Illuminate\Support\Facades\Cache::get("cart_{$chatId}", []);
         
         if (empty($cart)) {
-            $telegramService->sendMessage($chatId, "Savat bo'sh. Buyurtma qilish uchun avval taom tanlang.");
+            $responseMessage = "Savat bo'sh. Buyurtma qilish uchun avval taom tanlang.";
+            $result = $telegramService->sendMessage($chatId, $responseMessage);
+            
+            // Save outgoing message to database
+            if ($telegramUser && $result['ok']) {
+                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
+            }
         } else {
-            $message = "📞 *Buyurtma qilish*\n\n";
-            $message .= "Buyurtma qilish uchun quyidagi ma'lumotlarni kiriting:\n\n";
-            $message .= "1️⃣ Ismingiz\n";
-            $message .= "2️⃣ Telefon raqamingiz\n";
-            $message .= "3️⃣ Yetkazib berish manzili\n\n";
-            $message .= "Yoki web sahifani ochib buyurtma bering:";
+            $responseMessage = "📞 *Buyurtma qilish*\n\n";
+            $responseMessage .= "Buyurtma qilish uchun quyidagi ma'lumotlarni kiriting:\n\n";
+            $responseMessage .= "1️⃣ Ismingiz\n";
+            $responseMessage .= "2️⃣ Telefon raqamingiz\n";
+            $responseMessage .= "3️⃣ Yetkazib berish manzili\n\n";
+            $responseMessage .= "Yoki web sahifani ochib buyurtma bering:";
             
             // Create web interface URL
             $webUrl = "https://simpsons.uz/web-interface";
@@ -178,7 +217,12 @@ if (isset($update['message'])) {
                 'inline_keyboard' => $keyboard
             ];
             
-            $telegramService->sendMessage($chatId, $message, $inlineKeyboard);
+            $result = $telegramService->sendMessage($chatId, $responseMessage, $inlineKeyboard);
+            
+            // Save outgoing message to database
+            if ($telegramUser && $result['ok']) {
+                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
+            }
         }
     }
     elseif ($text === '📊 Buyurtmalarim') {
@@ -190,9 +234,15 @@ if (isset($update['message'])) {
             ->get();
 
         if ($orders->isEmpty()) {
-            $telegramService->sendMessage($chatId, "Sizda hali buyurtmalar yo'q.");
+            $responseMessage = "Sizda hali buyurtmalar yo'q.";
+            $result = $telegramService->sendMessage($chatId, $responseMessage);
+            
+            // Save outgoing message to database
+            if ($telegramUser && $result['ok']) {
+                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
+            }
         } else {
-            $message = "📊 *Buyurtmalaringiz:*\n\n";
+            $responseMessage = "📊 *Buyurtmalaringiz:*\n\n";
             
             foreach ($orders as $order) {
                 $status = [
@@ -203,25 +253,41 @@ if (isset($update['message'])) {
                     'cancelled' => '❌ Bekor'
                 ][$order->status] ?? 'Nomalum';
 
-                $message .= "📦 *#{$order->order_number}*\n";
-                $message .= "💰 " . number_format($order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
-                $message .= "📅 {$order->created_at->format('d.m.Y H:i')}\n";
-                $message .= "📊 {$status}\n\n";
+                $responseMessage .= "📦 *#{$order->order_number}*\n";
+                $responseMessage .= "💰 " . number_format($order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
+                $responseMessage .= "📅 {$order->created_at->format('d.m.Y H:i')}\n";
+                $responseMessage .= "📊 {$status}\n\n";
             }
 
-            $telegramService->sendMessage($chatId, $message);
+            $result = $telegramService->sendMessage($chatId, $responseMessage);
+            
+            // Save outgoing message to database
+            if ($telegramUser && $result['ok']) {
+                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
+            }
         }
     }
     elseif ($text === 'ℹ️ Yordam') {
-        $helpMessage = "Yordam kerakmi?\n\n";
-        $helpMessage .= "📞 Qo'ng'iroq: " . ($restaurant->phone ?? 'N/A') . "\n";
-        $helpMessage .= "📍 Manzil: " . ($restaurant->address ?? 'N/A') . "\n\n";
-        $helpMessage .= "Yoki restoran bilan to'g'ridan-to'g'ri bog'laning.";
+        $responseMessage = "Yordam kerakmi?\n\n";
+        $responseMessage .= "📞 Qo'ng'iroq: " . ($restaurant->phone ?? 'N/A') . "\n";
+        $responseMessage .= "📍 Manzil: " . ($restaurant->address ?? 'N/A') . "\n\n";
+        $responseMessage .= "Yoki restoran bilan to'g'ridan-to'g'ri bog'laning.";
         
-        $telegramService->sendMessage($chatId, $helpMessage);
+        $result = $telegramService->sendMessage($chatId, $responseMessage);
+        
+        // Save outgoing message to database
+        if ($telegramUser && $result['ok']) {
+            $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
+        }
     }
     else {
-        $telegramService->sendMessage($chatId, "Kechirasiz, \"{$text}\" buyrug'i tushunilmadi. Menyudan tanlang.");
+        $responseMessage = "Kechirasiz, \"{$text}\" buyrug'i tushunilmadi. Menyudan tanlang.";
+        $result = $telegramService->sendMessage($chatId, $responseMessage);
+        
+        // Save outgoing message to database
+        if ($telegramUser && $result['ok']) {
+            $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
+        }
     }
 }
 elseif (isset($update['callback_query'])) {
@@ -229,7 +295,16 @@ elseif (isset($update['callback_query'])) {
     $chatId = $callbackQuery['message']['chat']['id'];
     $data = $callbackQuery['data'];
     
-    $telegramService->sendMessage($chatId, "Callback: {$data}");
+    $result = $telegramService->sendMessage($chatId, "Callback: {$data}");
+    
+    // Save outgoing message to database if user exists
+    $telegramUser = TelegramUser::where('restaurant_id', $restaurant->id)
+        ->where('telegram_id', $chatId)
+        ->first();
+    
+    if ($telegramUser && $result['ok']) {
+        $telegramService->saveOutgoingMessage($telegramUser, "Callback: {$data}", $result['result']['message_id'] ?? null, $result);
+    }
 }
 
 // Always return OK to Telegram
