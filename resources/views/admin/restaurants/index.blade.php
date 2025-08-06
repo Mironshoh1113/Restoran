@@ -220,28 +220,65 @@ function editRestaurant(id) {
     currentRestaurantId = id;
     document.getElementById('modalTitle').textContent = 'Restoranni tahrirlash';
     
-    // Load restaurant data via AJAX
-    fetch(`/admin/restaurants/${id}/edit`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('restaurantName').value = data.name;
-            document.getElementById('restaurantPhone').value = data.phone;
-            document.getElementById('restaurantAddress').value = data.address;
-            document.getElementById('restaurantBotToken').value = data.bot_token || '';
-            document.getElementById('restaurantBotUsername').value = data.bot_username || '';
-            document.getElementById('restaurantActive').checked = data.is_active;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Ma\'lumotlarni yuklashda xatolik yuz berdi');
-        });
+    // Show loading state
+    const modal = document.getElementById('restaurantModal');
+    modal.classList.remove('hidden');
     
-    document.getElementById('restaurantModal').classList.remove('hidden');
+    // Show loading indicator
+    const form = document.getElementById('restaurantForm');
+    form.style.opacity = '0.5';
+    form.style.pointerEvents = 'none';
+    
+    // Load restaurant data via AJAX
+    fetch(`/admin/restaurants/${id}/edit`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Populate form fields
+        document.getElementById('restaurantName').value = data.name || '';
+        document.getElementById('restaurantPhone').value = data.phone || '';
+        document.getElementById('restaurantAddress').value = data.address || '';
+        document.getElementById('restaurantBotToken').value = data.bot_token || '';
+        document.getElementById('restaurantBotUsername').value = data.bot_username || '';
+        document.getElementById('restaurantActive').checked = data.is_active || false;
+        
+        // Restore form interactivity
+        form.style.opacity = '1';
+        form.style.pointerEvents = 'auto';
+    })
+    .catch(error => {
+        console.error('Error loading restaurant data:', error);
+        
+        // Show error message
+        alert('Ma\'lumotlarni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.');
+        
+        // Restore form interactivity
+        form.style.opacity = '1';
+        form.style.pointerEvents = 'auto';
+        
+        // Close modal on error
+        closeModal();
+    });
 }
 
 function closeModal() {
     document.getElementById('restaurantModal').classList.add('hidden');
     currentRestaurantId = null;
+    
+    // Reset form state
+    const form = document.getElementById('restaurantForm');
+    form.style.opacity = '1';
+    form.style.pointerEvents = 'auto';
 }
 
 function saveRestaurant() {
@@ -260,11 +297,18 @@ function saveRestaurant() {
         formData.append('_method', 'PUT');
     }
     
+    // Show loading state
+    const submitBtn = document.querySelector('button[onclick="saveRestaurant()"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saqlanmoqda...';
+    submitBtn.disabled = true;
+    
     fetch(url, {
         method: method,
         body: formData,
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
         }
     })
     .then(response => {
@@ -272,6 +316,11 @@ function saveRestaurant() {
             window.location.href = response.url;
             return;
         }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         return response.json();
     })
     .then(data => {
@@ -280,15 +329,37 @@ function saveRestaurant() {
             location.reload();
         } else if (data && data.errors) {
             // Show validation errors
-            alert('Ma\'lumotlarni to\'g\'ri kiriting');
+            let errorMessage = 'Ma\'lumotlarni to\'g\'ri kiriting:\n';
+            for (let field in data.errors) {
+                errorMessage += `- ${data.errors[field].join(', ')}\n`;
+            }
+            alert(errorMessage);
         } else {
             // Success - page will reload
             closeModal();
+            location.reload();
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Xatolik yuz berdi');
+        console.error('Error saving restaurant:', error);
+        
+        let errorMessage = 'Xatolik yuz berdi: ';
+        if (error.message.includes('422')) {
+            errorMessage += 'Ma\'lumotlarni to\'g\'ri kiriting';
+        } else if (error.message.includes('404')) {
+            errorMessage += 'Restoran topilmadi';
+        } else if (error.message.includes('500')) {
+            errorMessage += 'Server xatosi. Iltimos, keyinroq urinib ko\'ring';
+        } else {
+            errorMessage += error.message;
+        }
+        
+        alert(errorMessage);
+    })
+    .finally(() => {
+        // Restore button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     });
 }
 
@@ -306,21 +377,23 @@ function deleteRestaurant(id) {
                 window.location.href = response.url;
                 return;
             }
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             return response.json();
         })
         .then(data => {
             if (data && data.success) {
-                alert(data.message || 'Restoran muvaffaqiyatli o\'chirildi');
                 location.reload();
-            } else if (data && data.message) {
-                alert(data.message);
             } else {
-                alert('Xatolik yuz berdi');
+                alert('Restoranni o\'chirishda xatolik yuz berdi');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Restoran o\'chirishda xatolik yuz berdi');
+            console.error('Error deleting restaurant:', error);
+            alert('Xatolik yuz berdi: ' + error.message);
         });
     }
 }

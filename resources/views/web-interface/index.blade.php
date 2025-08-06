@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $restaurant->name }} - Menyu</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -19,13 +19,16 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         .header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             color: #333;
-            padding: 20px;
+            padding: 15px 20px;
             text-align: center;
             box-shadow: 0 2px 20px rgba(0,0,0,0.1);
             position: sticky;
@@ -34,9 +37,9 @@
         }
         
         .restaurant-name {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -44,24 +47,26 @@
         }
         
         .restaurant-description {
-            font-size: 16px;
+            font-size: 14px;
             color: #666;
         }
         
         .container {
-            max-width: 600px;
+            max-width: 100%;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
+            padding-bottom: 120px; /* Space for cart */
         }
         
         .categories-nav {
             display: flex;
             overflow-x: auto;
-            gap: 10px;
-            padding: 15px 0;
-            margin-bottom: 20px;
+            gap: 8px;
+            padding: 10px 0;
+            margin-bottom: 15px;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            -webkit-overflow-scrolling: touch;
         }
         
         .categories-nav::-webkit-scrollbar {
@@ -71,15 +76,16 @@
         .category-tab {
             background: rgba(255, 255, 255, 0.9);
             border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
+            padding: 10px 16px;
+            border-radius: 20px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             color: #666;
             cursor: pointer;
             white-space: nowrap;
             transition: all 0.3s ease;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
         
         .category-tab.active {
@@ -98,83 +104,90 @@
         
         .menu-item {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 16px;
-            margin-bottom: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
         }
         
         .menu-item:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.15);
         }
         
         .item-content {
             display: flex;
-            padding: 20px;
+            padding: 15px;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
         
         .item-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 12px;
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px;
+            font-size: 20px;
             flex-shrink: 0;
         }
         
         .item-info {
             flex: 1;
+            min-width: 0; /* Allow text to shrink */
         }
         
         .item-name {
             font-weight: bold;
-            font-size: 18px;
-            margin-bottom: 5px;
+            font-size: 16px;
+            margin-bottom: 4px;
             color: #333;
+            line-height: 1.3;
         }
         
         .item-description {
-            font-size: 14px;
+            font-size: 13px;
             color: #666;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         
         .item-price {
             font-weight: bold;
             color: #28a745;
-            font-size: 18px;
+            font-size: 16px;
         }
         
         .item-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex-shrink: 0;
         }
         
         .quantity-btn {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border: none;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            -webkit-tap-highlight-color: transparent;
         }
         
         .quantity-btn:hover {
@@ -189,9 +202,9 @@
         
         .quantity {
             font-weight: bold;
-            min-width: 40px;
+            min-width: 30px;
             text-align: center;
-            font-size: 18px;
+            font-size: 16px;
             color: #333;
         }
         
@@ -202,8 +215,9 @@
             right: 0;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-top: 1px solid rgba(255,255,255,0.2);
-            padding: 20px;
+            padding: 15px 20px;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
             z-index: 1000;
         }
@@ -212,12 +226,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         
         .cart-total {
             font-weight: bold;
-            font-size: 20px;
+            font-size: 18px;
             color: #333;
         }
         
@@ -225,13 +239,14 @@
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
+            padding: 12px 20px;
+            border-radius: 20px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            -webkit-tap-highlight-color: transparent;
         }
         
         .checkout-btn:hover:not(:disabled) {
@@ -249,40 +264,44 @@
         .order-form {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            margin: 20px;
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 15px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.1);
         }
         
         .form-title {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             text-align: center;
             color: #333;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .form-label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 600;
             color: #333;
-            font-size: 16px;
+            font-size: 14px;
         }
         
         .form-input {
             width: 100%;
-            padding: 15px;
+            padding: 12px;
             border: 2px solid #e1e5e9;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 16px;
             transition: all 0.3s ease;
             background: rgba(255, 255, 255, 0.9);
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
         
         .form-input:focus {
@@ -293,19 +312,20 @@
         
         .payment-methods {
             display: flex;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 10px;
+            margin-top: 10px;
         }
         
         .payment-method {
             flex: 1;
-            padding: 15px;
+            padding: 12px;
             border: 2px solid #e1e5e9;
-            border-radius: 12px;
+            border-radius: 10px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
             background: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
         }
         
         .payment-method:hover {
@@ -321,17 +341,17 @@
         }
         
         .hidden {
-            display: none;
+            display: none !important;
         }
         
         .success-message {
             background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
             color: #155724;
-            padding: 30px;
-            border-radius: 20px;
-            margin: 20px;
+            padding: 25px;
+            border-radius: 16px;
+            margin: 15px;
             text-align: center;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
         }
         
@@ -339,13 +359,14 @@
             background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 20px;
+            padding: 10px 16px;
+            border-radius: 16px;
             font-weight: 600;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.3s ease;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .back-btn:hover {
@@ -354,14 +375,123 @@
         
         .empty-cart {
             text-align: center;
-            padding: 60px 20px;
+            padding: 40px 20px;
             color: #666;
         }
         
         .empty-cart i {
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 40px;
+            margin-bottom: 15px;
             opacity: 0.5;
+        }
+        
+        /* Mobile-specific improvements */
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+                padding-bottom: 100px;
+            }
+            
+            .header {
+                padding: 12px 15px;
+            }
+            
+            .restaurant-name {
+                font-size: 20px;
+            }
+            
+            .restaurant-description {
+                font-size: 12px;
+            }
+            
+            .item-content {
+                padding: 12px;
+                gap: 10px;
+            }
+            
+            .item-image {
+                width: 50px;
+                height: 50px;
+                font-size: 18px;
+            }
+            
+            .item-name {
+                font-size: 14px;
+            }
+            
+            .item-description {
+                font-size: 12px;
+            }
+            
+            .item-price {
+                font-size: 14px;
+            }
+            
+            .quantity-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+            
+            .quantity {
+                min-width: 25px;
+                font-size: 14px;
+            }
+            
+            .cart {
+                padding: 12px 15px;
+            }
+            
+            .cart-total {
+                font-size: 16px;
+            }
+            
+            .checkout-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+            
+            .order-form {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .form-title {
+                font-size: 18px;
+            }
+            
+            .form-input {
+                padding: 10px;
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
+            
+            .payment-methods {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .payment-method {
+                padding: 10px;
+                font-size: 12px;
+            }
+        }
+        
+        /* Prevent text selection on buttons */
+        button {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Improve touch targets */
+        button, input, textarea {
+            min-height: 44px;
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
         }
     </style>
 </head>
@@ -433,17 +563,17 @@
                 <div class="form-group">
                     <label class="form-label">To'lov usuli</label>
                     <div class="payment-methods">
-                                            <div class="payment-method" data-method="cash">
-                        <div><i class="fas fa-money-bill-wave"></i> Naqd pul</div>
-                    </div>
-                    <div class="payment-method" data-method="card">
-                        <div><i class="fas fa-credit-card"></i> Karta</div>
-                    </div>
+                        <div class="payment-method" data-method="cash">
+                            <div><i class="fas fa-money-bill-wave"></i> Naqd pul</div>
+                        </div>
+                        <div class="payment-method" data-method="card">
+                            <div><i class="fas fa-credit-card"></i> Karta</div>
+                        </div>
                     </div>
                     <input type="hidden" id="payment-method" value="cash">
                 </div>
                 
-                <button type="submit" class="checkout-btn" style="width: 100%; margin-top: 20px;">
+                <button type="submit" class="checkout-btn" style="width: 100%; margin-top: 15px;">
                     <i class="fas fa-shopping-cart"></i> Buyurtma berish
                 </button>
             </form>
@@ -597,15 +727,15 @@
                 telegram_chat_id: telegramChatId
             };
             
-                    // Get the current URL to determine the endpoint
-        const currentUrl = window.location.pathname;
-        const token = currentUrl.split('/').pop();
-        const endpoint = token && token !== 'web-interface' ? 
-            `/web-interface/${token}/order` : 
-            '/web-interface/order';
-        
-        console.log('Submitting order to endpoint:', endpoint);
+            // Get the current URL to determine the endpoint
+            const currentUrl = window.location.pathname;
+            const token = currentUrl.split('/').pop();
+            const endpoint = token && token !== 'web-interface' ? 
+                `/web-interface/${token}/order` : 
+                '/web-interface/order';
             
+            console.log('Submitting order to endpoint:', endpoint);
+                
             // Get CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             
@@ -659,7 +789,7 @@
                 } else if (error.message.includes('500')) {
                     errorMessage += 'Server xatosi. Iltimos, keyinroq urinib ko\'ring.';
                 } else if (error.message.includes('422')) {
-                    errorMessage += 'Ma\'lumotlar noto\'g\'ri. Iltimos, barcha maydonlarni to\'ldiring.';
+                    errorMessage += 'Ma\'lumotlarni to\'g\'ri kiriting. Iltimos, barcha maydonlarni to\'ldiring.';
                 } else {
                     errorMessage += error.message;
                 }
