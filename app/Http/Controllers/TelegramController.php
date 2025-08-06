@@ -154,17 +154,23 @@ class TelegramController extends Controller
                 $orderId = $parts[2] ?? null;
                 $this->handleCancelOrder($chatId, $orderId);
                 break;
-            case 'order':
-                if ($parts[1] === 'details') {
-                    $orderId = $parts[2] ?? null;
-                    $this->handleOrderDetails($chatId, $orderId);
-                }
-                break;
-            case 'back':
-                if ($parts[1] === 'to' && $parts[2] === 'orders') {
-                    $this->handleMyOrders($chatId);
-                }
-                break;
+                         case 'order':
+                 if ($parts[1] === 'details') {
+                     $orderId = $parts[2] ?? null;
+                     $this->handleOrderDetails($chatId, $orderId);
+                 }
+                 break;
+             case 'back':
+                 if ($parts[1] === 'to' && $parts[2] === 'orders') {
+                     $this->handleMyOrders($chatId);
+                 }
+                 break;
+             case 'refresh_orders':
+                 $this->handleMyOrders($chatId);
+                 break;
+             case 'contact_admin':
+                 $this->handleContact($chatId, null);
+                 break;
         }
     }
 
@@ -1027,12 +1033,22 @@ class TelegramController extends Controller
                 return;
             }
 
-            // Get orders for this user from this restaurant
-            $orders = Order::where('telegram_chat_id', $chatId)
-                ->where('restaurant_id', $restaurant->id)
-                ->orderBy('created_at', 'desc')
-                ->limit(10)
-                ->get();
+                         // Get active orders for this user from this restaurant (last 5 orders)
+             $orders = Order::where('telegram_chat_id', $chatId)
+                 ->where('restaurant_id', $restaurant->id)
+                 ->whereNotIn('status', ['delivered', 'cancelled'])
+                 ->orderBy('created_at', 'desc')
+                 ->limit(5)
+                 ->get();
+             
+             // If no active orders, show recent completed orders
+             if ($orders->isEmpty()) {
+                 $orders = Order::where('telegram_chat_id', $chatId)
+                     ->where('restaurant_id', $restaurant->id)
+                     ->orderBy('created_at', 'desc')
+                     ->limit(3)
+                     ->get();
+             }
 
             if ($orders->isEmpty()) {
                 $this->telegramService->sendMessage($chatId, 'Sizda hali buyurtmalar yo\'q.');
@@ -1051,24 +1067,60 @@ class TelegramController extends Controller
                 return;
             }
 
-            $message = "📊 *Buyurtmalaringiz:*\n\n";
-            
-            foreach ($orders as $order) {
-                $status = [
-                    'new' => '⏳ Yangi',
-                    'preparing' => '👨‍🍳 Tayyorlanmoqda',
-                    'on_way' => '🚚 Yolda',
-                    'delivered' => '✅ Yetkazildi',
-                    'cancelled' => '❌ Bekor'
-                ][$order->status] ?? 'Nomalum';
-
-                $message .= "📦 *#{$order->order_number}*\n";
-                $message .= "💰 " . number_format($order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
-                $message .= "📅 {$order->created_at->format('d.m.Y H:i')}\n";
-                $message .= "📊 {$status}\n\n";
-            }
-
-            $this->telegramService->sendMessage($chatId, $message);
+                         // Check if we have active orders
+             $activeOrders = Order::where('telegram_chat_id', $chatId)
+                 ->where('restaurant_id', $restaurant->id)
+                 ->whereNotIn('status', ['delivered', 'cancelled'])
+                 ->count();
+             
+             if ($activeOrders > 0) {
+                 $message = "📊 *Faol buyurtmalar:*\n\n";
+             } else {
+                 $message = "📊 *So'nggi buyurtmalar:*\n\n";
+             }
+             
+             foreach ($orders as $order) {
+                 $status = [
+                     'new' => '⏳',
+                     'preparing' => '👨‍🍳',
+                     'on_way' => '🚚',
+                     'delivered' => '✅',
+                     'cancelled' => '❌'
+                 ][$order->status] ?? '❓';
+ 
+                 $message .= "📦 #{$order->order_number} {$status}\n";
+                 $message .= "💰 " . number_format($order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
+                 $message .= "📅 " . $order->created_at->format('d.m.Y H:i') . "\n\n";
+             }
+             
+             // Add total orders count
+             $totalOrders = Order::where('telegram_chat_id', $chatId)
+                 ->where('restaurant_id', $restaurant->id)
+                 ->count();
+             
+                          if ($totalOrders > 5) {
+                 $message .= "📋 Jami: {$totalOrders} ta buyurtma\n";
+                 $message .= "💡 Barcha buyurtmalarni ko'rish uchun admin bilan bog'laning\n\n";
+             }
+             
+             // Add quick status summary
+             $activeCount = Order::where('telegram_chat_id', $chatId)
+                 ->where('restaurant_id', $restaurant->id)
+                 ->whereNotIn('status', ['delivered', 'cancelled'])
+                 ->count();
+             
+             if ($activeCount > 0) {
+                 $message .= "🔄 Faol buyurtmalar: {$activeCount} ta";
+             }
+ 
+             // Create inline keyboard for order actions
+             $keyboard = [
+                 [['text' => '🔄 Yangilash', 'callback_data' => 'refresh_orders']],
+                 [['text' => '📞 Admin bilan bog\'lanish', 'callback_data' => 'contact_admin']]
+             ];
+             $inlineKeyboard = $this->telegramService->createInlineKeyboard($keyboard);
+             
+             $this->telegramService->sendMessage($chatId, $message, $inlineKeyboard);
         } catch (\Exception $e) {
             Log::error('Error in handleMyOrders: ' . $e->getMessage(), [
                 'chat_id' => $chatId,

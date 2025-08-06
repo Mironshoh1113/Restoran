@@ -27,64 +27,52 @@
         </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow p-4 text-white">
+    <!-- Compact Stats Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow p-3 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-blue-100 text-xs font-medium">Jami</p>
-                    <p class="text-xl font-bold">{{ $orders->total() }}</p>
+                    <p class="text-blue-100 text-xs">Jami</p>
+                    <p class="text-lg font-bold">{{ $orders->total() }}</p>
                 </div>
-                <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-shopping-cart text-sm"></i>
+                <div class="w-6 h-6 bg-white bg-opacity-20 rounded flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-xs"></i>
                 </div>
             </div>
         </div>
 
-        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl shadow p-4 text-white">
+        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg shadow p-3 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-yellow-100 text-xs font-medium">Yangi</p>
-                    <p class="text-xl font-bold">{{ $orders->where('status', 'new')->count() }}</p>
+                    <p class="text-yellow-100 text-xs">Yangi</p>
+                    <p class="text-lg font-bold">{{ $orders->where('status', 'new')->count() }}</p>
                 </div>
-                <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-clock text-sm"></i>
+                <div class="w-6 h-6 bg-white bg-opacity-20 rounded flex items-center justify-center">
+                    <i class="fas fa-clock text-xs"></i>
                 </div>
             </div>
         </div>
 
-        <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow p-4 text-white">
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow p-3 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-orange-100 text-xs font-medium">Tayyorlanmoqda</p>
-                    <p class="text-xl font-bold">{{ $orders->where('status', 'preparing')->count() }}</p>
+                    <p class="text-orange-100 text-xs">Faol</p>
+                    <p class="text-lg font-bold">{{ $orders->whereIn('status', ['new', 'preparing', 'on_way'])->count() }}</p>
                 </div>
-                <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-utensils text-sm"></i>
+                <div class="w-6 h-6 bg-white bg-opacity-20 rounded flex items-center justify-center">
+                    <i class="fas fa-utensils text-xs"></i>
                 </div>
             </div>
         </div>
 
-        <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow p-4 text-white">
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow p-3 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-purple-100 text-xs font-medium">Yolda</p>
-                    <p class="text-xl font-bold">{{ $orders->where('status', 'on_way')->count() }}</p>
+                    <p class="text-green-100 text-xs">Bajarildi</p>
+                    <p class="text-lg font-bold">{{ $orders->where('status', 'delivered')->count() }}</p>
                 </div>
-                <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-truck text-sm"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow p-4 text-white col-span-2 lg:col-span-1">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-green-100 text-xs font-medium">Yetkazildi</p>
-                    <p class="text-xl font-bold">{{ $orders->where('status', 'delivered')->count() }}</p>
-                </div>
-                <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-check-circle text-sm"></i>
+                <div class="w-6 h-6 bg-white bg-opacity-20 rounded flex items-center justify-center">
+                    <i class="fas fa-check-circle text-xs"></i>
                 </div>
             </div>
         </div>
@@ -106,79 +94,77 @@
         
         <div class="overflow-hidden">
             @if($orders->count() > 0)
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 p-4">
                     @foreach($orders as $order)
-                    <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-200 order-item" 
+                    <div class="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all duration-200 order-item" 
                          data-status="{{ $order->status }}" 
                          data-number="{{ $order->order_number ?? $order->id }}">
                         
-                        <!-- Order Header -->
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow">
-                                    <i class="fas fa-shopping-bag text-white text-sm"></i>
+                        <!-- Compact Order Header -->
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded flex items-center justify-center shadow">
+                                    <i class="fas fa-shopping-bag text-white text-xs"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-lg font-bold text-gray-900">#{{ $order->order_number ?? $order->id }}</h4>
+                                    <h4 class="text-sm font-bold text-gray-900">#{{ $order->order_number ?? $order->id }}</h4>
                                     <p class="text-xs text-gray-500">{{ $order->created_at->format('d.m.Y H:i') }}</p>
                                 </div>
                             </div>
                             @php
                                 $statusColors = [
-                                    'pending' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                                    'preparing' => 'bg-orange-100 text-orange-800 border-orange-200',
-                                    'on_way' => 'bg-purple-100 text-purple-800 border-purple-200',
-                                    'delivered' => 'bg-green-100 text-green-800 border-green-200',
-                                    'cancelled' => 'bg-red-100 text-red-800 border-red-200',
+                                    'new' => 'bg-yellow-100 text-yellow-800',
+                                    'preparing' => 'bg-orange-100 text-orange-800',
+                                    'on_way' => 'bg-purple-100 text-purple-800',
+                                    'delivered' => 'bg-green-100 text-green-800',
+                                    'cancelled' => 'bg-red-100 text-red-800',
                                 ];
-                                $statusTexts = [
-                                    'new' => '🆕 Yangi',
-                                    'preparing' => '👨‍🍳 Tayyorlanmoqda',
-                                    'on_way' => '🚚 Yolda',
-                                    'delivered' => '✅ Yetkazildi',
-                                    'cancelled' => '❌ Bekor qilindi',
+                                $statusIcons = [
+                                    'new' => '⏳',
+                                    'preparing' => '👨‍🍳',
+                                    'on_way' => '🚚',
+                                    'delivered' => '✅',
+                                    'cancelled' => '❌',
                                 ];
                             @endphp
-                            <span class="px-3 py-1 text-xs font-semibold rounded-full border {{ $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800 border-gray-200' }}">
-                                {{ $statusTexts[$order->status] ?? 'Nomalum' }}
+                            <span class="px-2 py-1 text-xs font-semibold rounded {{ $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                {{ $statusIcons[$order->status] ?? '❓' }}
                             </span>
                         </div>
                         
-                        <!-- Customer Info -->
-                        <div class="space-y-2 mb-3">
-                            <div class="flex items-center space-x-2 text-sm">
-                                <i class="fas fa-user text-blue-500 w-4"></i>
-                                <span class="font-medium text-gray-700">{{ $order->customer_name ?? 'Nomalum' }}</span>
+                        <!-- Compact Customer Info -->
+                        <div class="space-y-1 mb-2">
+                            <div class="flex items-center space-x-1 text-xs">
+                                <i class="fas fa-user text-blue-500 w-3"></i>
+                                <span class="font-medium text-gray-700 truncate">{{ $order->customer_name ?? 'Nomalum' }}</span>
                             </div>
-                            <div class="flex items-center space-x-2 text-sm">
-                                <i class="fas fa-phone text-green-500 w-4"></i>
+                            <div class="flex items-center space-x-1 text-xs">
+                                <i class="fas fa-phone text-green-500 w-3"></i>
                                 <span class="font-medium text-gray-700">{{ $order->customer_phone ?? 'Nomalum' }}</span>
                             </div>
                             @if($order->delivery_address)
-                            <div class="flex items-center space-x-2 text-sm">
-                                <i class="fas fa-map-marker-alt text-purple-500 w-4"></i>
-                                <span class="text-gray-600 truncate">{{ $order->delivery_address }}</span>
+                            <div class="flex items-center space-x-1 text-xs">
+                                <i class="fas fa-map-marker-alt text-purple-500 w-3"></i>
+                                <span class="text-gray-600 truncate">{{ Str::limit($order->delivery_address, 30) }}</span>
                             </div>
                             @endif
                         </div>
                         
-                        <!-- Restaurant Info -->
-                        <div class="flex items-center space-x-2 text-sm mb-3">
-                            <i class="fas fa-store text-purple-500 w-4"></i>
-                            <span class="text-gray-600">
-                                @if($order->restaurant)
-                                    {{ $order->restaurant->name }}
-                                @elseif($order->project && $order->project->restaurant)
-                                    {{ $order->project->restaurant->name }}
-                                @else
-                                    Nomalum
-                                @endif
-                            </span>
-                        </div>
-                        
-                        <!-- Order Items Preview -->
-                        @if($order->items || $order->orderItems)
-                            <div class="mb-3">
+                        <!-- Compact Restaurant & Items Info -->
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-1 text-xs">
+                                <i class="fas fa-store text-purple-500 w-3"></i>
+                                <span class="text-gray-600 truncate">
+                                    @if($order->restaurant)
+                                        {{ $order->restaurant->name }}
+                                    @elseif($order->project && $order->project->restaurant)
+                                        {{ $order->project->restaurant->name }}
+                                    @else
+                                        Nomalum
+                                    @endif
+                                </span>
+                            </div>
+                            @if($order->items || $order->orderItems)
                                 @php
                                     $itemCount = 0;
                                     if ($order->items) {
@@ -188,48 +174,14 @@
                                         $itemCount = $order->orderItems->count();
                                     }
                                 @endphp
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-semibold text-gray-700">Buyurtma tarkibi:</span>
-                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ $itemCount }} ta taom</span>
-                                </div>
-                                
-                                @if($order->items)
-                                    @php $items = json_decode($order->items, true); @endphp
-                                    <div class="space-y-1">
-                                        @foreach(array_slice($items, 0, 3) as $item)
-                                            <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                                                <span class="text-xs font-medium text-gray-700">{{ $item['name'] ?? 'Nomalum' }}</span>
-                                                <span class="text-xs font-bold text-gray-800 bg-white px-2 py-0.5 rounded">{{ $item['quantity'] ?? 1 }}x</span>
-                                            </div>
-                                        @endforeach
-                                        @if(count($items) > 3)
-                                            <div class="text-center p-2 bg-blue-50 rounded-lg">
-                                                <span class="text-xs text-blue-600 font-medium">+{{ count($items) - 3 }} ta boshqa</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @elseif($order->orderItems)
-                                    <div class="space-y-1">
-                                        @foreach($order->orderItems->take(3) as $item)
-                                            <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                                                <span class="text-xs font-medium text-gray-700">{{ $item->menuItem->name }}</span>
-                                                <span class="text-xs font-bold text-gray-800 bg-white px-2 py-0.5 rounded">{{ $item->quantity }}x</span>
-                                            </div>
-                                        @endforeach
-                                        @if($order->orderItems->count() > 3)
-                                            <div class="text-center p-2 bg-blue-50 rounded-lg">
-                                                <span class="text-xs text-blue-600 font-medium">+{{ $order->orderItems->count() - 3 }} ta boshqa</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
+                                <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{{ $itemCount }} ta</span>
+                            @endif
+                        </div>
                         
-                        <!-- Price and Actions -->
-                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                        <!-- Compact Price and Actions -->
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
                             <div class="text-right">
-                                <div class="text-lg font-bold text-gray-900">
+                                <div class="text-sm font-bold text-gray-900">
                                     {{ number_format($order->total_amount ?? $order->total_price ?? 0) }} so'm
                                 </div>
                                 @if($order->courier)
@@ -240,34 +192,34 @@
                             </div>
                             <div class="flex items-center space-x-1">
                                 <button onclick="viewOrder({{ $order->id }})" 
-                                        class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
-                                    <i class="fas fa-eye text-sm"></i>
+                                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200">
+                                    <i class="fas fa-eye text-xs"></i>
                                 </button>
                                 @if($order->status !== 'delivered' && $order->status !== 'cancelled')
                                     <div class="relative" x-data="{ open: false }">
                                         <button @click="open = !open" 
-                                                class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200">
-                                            <i class="fas fa-edit text-sm"></i>
+                                                class="p-1.5 text-green-600 hover:bg-green-50 rounded transition-all duration-200">
+                                            <i class="fas fa-edit text-xs"></i>
                                         </button>
                                         <div x-show="open" @click.away="open = false" 
-                                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                                             class="absolute right-0 mt-1 w-40 bg-white rounded shadow-lg border border-gray-200 z-50">
                                             <div class="py-1">
                                                 <button onclick="updateStatus({{ $order->id }}, 'preparing')" 
-                                                        class="block w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 transition-colors">
-                                                    <i class="fas fa-utensils mr-2"></i>Tayyorlanmoqda
+                                                        class="block w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 transition-colors">
+                                                    <i class="fas fa-utensils mr-1"></i>Tayyorlanmoqda
                                                 </button>
                                                 <button onclick="updateStatus({{ $order->id }}, 'on_way')" 
-                                                        class="block w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 transition-colors">
-                                                    <i class="fas fa-truck mr-2"></i>Yolda
+                                                        class="block w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 transition-colors">
+                                                    <i class="fas fa-truck mr-1"></i>Yolda
                                                 </button>
                                                 <button onclick="updateStatus({{ $order->id }}, 'delivered')" 
-                                                        class="block w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 transition-colors">
-                                                    <i class="fas fa-check mr-2"></i>Yetkazildi
+                                                        class="block w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 transition-colors">
+                                                    <i class="fas fa-check mr-1"></i>Yetkazildi
                                                 </button>
                                                 <hr class="my-1">
                                                 <button onclick="updateStatus({{ $order->id }}, 'cancelled')" 
-                                                        class="block w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors">
-                                                    <i class="fas fa-times mr-2"></i>Bekor qilish
+                                                        class="block w-full text-left px-2 py-1 text-xs text-red-600 hover:bg-red-50 transition-colors">
+                                                    <i class="fas fa-times mr-1"></i>Bekor qilish
                                                 </button>
                                             </div>
                                         </div>
