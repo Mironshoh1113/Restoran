@@ -67,7 +67,7 @@
             }
             
             .dark .text-gray-600 {
-                color: #9ca3af !important;
+                color: #d1d5db !important;
             }
             
             .dark .text-gray-300 {
@@ -155,7 +155,63 @@
             }
             
             .dark .bg-gray-900 {
-                background-color: #f9fafb !important;
+                background-color: #111827 !important;
+            }
+            
+            /* Footer specific override to ensure dark background */
+            .dark footer.bg-gray-900 {
+                background-color: #111827 !important;
+            }
+            
+            /* Ensure footer text is always visible */
+            footer {
+                background-color: #111827 !important;
+                color: #ffffff !important;
+            }
+            
+            /* Ensure navigation text is always visible */
+            nav {
+                background-color: rgba(31, 41, 55, 0.9) !important;
+            }
+            
+            nav .text-gray-600 {
+                color: #d1d5db !important;
+            }
+            
+            nav .text-gray-300 {
+                color: #e5e7eb !important;
+            }
+            
+            nav .text-gray-400 {
+                color: #d1d5db !important;
+            }
+            
+            nav .text-gray-500 {
+                color: #9ca3af !important;
+            }
+            
+            nav a:hover {
+                color: #fb923c !important;
+            }
+            
+            footer .text-gray-200 {
+                color: #e5e7eb !important;
+            }
+            
+            footer .text-gray-300 {
+                color: #d1d5db !important;
+            }
+            
+            footer .text-white {
+                color: #ffffff !important;
+            }
+            
+            footer .border-gray-700 {
+                border-color: #374151 !important;
+            }
+            
+            footer a:hover {
+                color: #ffffff !important;
             }
             
             .dark .border-gray-300 {
@@ -385,9 +441,9 @@
 
                         <!-- Navigation Links -->
                         <div class="hidden md:flex items-center space-x-8 ml-10">
-                            <a href="#features" class="text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">Xususiyatlar</a>
-                            <a href="#pricing" class="text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">Narxlar</a>
-                            <a href="#contact" class="text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">Aloqa</a>
+                            <a href="#features" class="text-gray-200 dark:text-gray-200 hover:text-orange-400 dark:hover:text-orange-400 transition-colors">Xususiyatlar</a>
+                            <a href="#pricing" class="text-gray-200 dark:text-gray-200 hover:text-orange-400 dark:hover:text-orange-400 transition-colors">Narxlar</a>
+                            <a href="#contact" class="text-gray-200 dark:text-gray-200 hover:text-orange-400 dark:hover:text-orange-400 transition-colors">Aloqa</a>
                         </div>
                     </div>
 
@@ -395,7 +451,7 @@
                         <!-- Dark Mode Toggle -->
                         <button id="welcomeDarkModeToggle" 
                                 class="p-2 rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all">
-                            <svg id="welcomeMoonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg id="welcomeMoonIcon" class="w-5 h-5 text-gray-200 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
                             </svg>
                             <svg id="welcomeSunIcon" class="w-5 h-5 text-yellow-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -404,7 +460,7 @@
                         </button>
 
                         @if (Route::has('login'))
-                            <a href="{{ route('login') }}" class="text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">Kirish</a>
+                            <a href="{{ route('login') }}" class="text-gray-200 dark:text-gray-200 hover:text-orange-400 dark:hover:text-orange-400 transition-colors">Kirish</a>
                             @if (Route::has('register'))
                                 <a href="{{ route('register') }}" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-lg">
                                     Ro'yxatdan o'tish
@@ -751,14 +807,14 @@
                             </div>
                             <span class="text-xl font-bold text-white">ForkNow</span>
                         </div>
-                        <p class="text-gray-300">
+                        <p class="text-gray-200">
                             Restoranlaringizni raqamlashtirish uchun zamonaviy yechimlar.
                         </p>
                     </div>
 
                     <div>
                         <h3 class="text-lg font-semibold mb-4 text-white">Mahsulot</h3>
-                        <ul class="space-y-2 text-gray-300">
+                        <ul class="space-y-2 text-gray-200">
                             <li><a href="#" class="hover:text-white transition-colors">Xususiyatlar</a></li>
                             <li><a href="#" class="hover:text-white transition-colors">Narxlar</a></li>
                             <li><a href="#" class="hover:text-white transition-colors">API</a></li>
@@ -768,7 +824,7 @@
 
                     <div>
                         <h3 class="text-lg font-semibold mb-4 text-white">Kompaniya</h3>
-                        <ul class="space-y-2 text-gray-300">
+                        <ul class="space-y-2 text-gray-200">
                             <li><a href="#" class="hover:text-white transition-colors">Haqida</a></li>
                             <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
                             <li><a href="#" class="hover:text-white transition-colors">Karyera</a></li>
@@ -778,7 +834,7 @@
 
                     <div>
                         <h3 class="text-lg font-semibold mb-4 text-white">Qo'llab-quvvatlash</h3>
-                        <ul class="space-y-2 text-gray-300">
+                        <ul class="space-y-2 text-gray-200">
                             <li><a href="#" class="hover:text-white transition-colors">Yordam markazi</a></li>
                             <li><a href="#" class="hover:text-white transition-colors">Aloqa</a></li>
                             <li><a href="#" class="hover:text-white transition-colors">Status</a></li>
@@ -787,7 +843,7 @@
                     </div>
                 </div>
 
-                <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
+                <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-200">
                     <p>&copy; 2024 ForkNow. Barcha huquqlar himoyalangan.</p>
                 </div>
             </div>
