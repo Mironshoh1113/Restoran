@@ -73,7 +73,7 @@ class TestOrderSeeder extends Seeder
 
         // Create test orders
         $testChatIds = [123456789, 987654321, 555666777];
-        $statuses = ['pending', 'preparing', 'on_way', 'delivered', 'cancelled'];
+        $statuses = ['new', 'preparing', 'on_way', 'delivered', 'cancelled'];
 
         foreach ($testChatIds as $index => $chatId) {
             // Create order
@@ -87,19 +87,7 @@ class TestOrderSeeder extends Seeder
                 'address' => 'Test Address ' . ($index + 1),
                 'payment_type' => $index % 2 === 0 ? 'cash' : 'card',
                 'status' => $statuses[$index % count($statuses)],
-                'total_price' => 0,
-                'items' => json_encode([
-                    [
-                        'name' => 'Test Item 1',
-                        'quantity' => 2,
-                        'price' => 15000
-                    ],
-                    [
-                        'name' => 'Test Item 2',
-                        'quantity' => 1,
-                        'price' => 25000
-                    ]
-                ])
+                'total_price' => 0
             ]);
 
             // Create order items
@@ -118,7 +106,7 @@ class TestOrderSeeder extends Seeder
             }
 
             // Update order total
-            $order->update(['total_amount' => $total]);
+            $order->update(['total_price' => $total]);
         }
 
         $this->command->info('Test orders created successfully!');

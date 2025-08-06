@@ -1003,7 +1003,7 @@ class TelegramController extends Controller
             
             foreach ($orders as $order) {
                 $status = [
-                    'pending' => '⏳ Yangi',
+                    'new' => '⏳ Yangi',
                     'preparing' => '👨‍🍳 Tayyorlanmoqda',
                     'on_way' => '🚚 Yolda',
                     'delivered' => '✅ Yetkazildi',
@@ -1011,7 +1011,7 @@ class TelegramController extends Controller
                 ][$order->status] ?? 'Nomalum';
 
                 $message .= "📦 *#{$order->order_number}*\n";
-                $message .= "💰 " . number_format($order->total_amount ?? $order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
+                $message .= "💰 " . number_format($order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
                 $message .= "📅 {$order->created_at->format('d.m.Y H:i')}\n";
                 $message .= "📊 {$status}\n";
                 
@@ -1109,7 +1109,7 @@ class TelegramController extends Controller
 
             // Status mapping
             $status = [
-                'pending' => '⏳ Yangi',
+                'new' => '⏳ Yangi',
                 'preparing' => '👨‍🍳 Tayyorlanmoqda',
                 'on_way' => '🚚 Yolda',
                 'delivered' => '✅ Yetkazildi',
@@ -1128,7 +1128,7 @@ class TelegramController extends Controller
             
             $message .= "📅 Sana: *{$order->created_at->format('d.m.Y H:i')}*\n";
             $message .= "📊 Holat: *{$status}*\n";
-            $message .= "💳 To'lov: *" . ($order->payment_method === 'card' ? 'Karta' : 'Naqd pul') . "*\n\n";
+            $message .= "💳 To'lov: *" . ($order->payment_type === 'card' ? 'Karta' : 'Naqd pul') . "*\n\n";
             
             // Add items
             if ($orderItems->isNotEmpty()) {
@@ -1140,18 +1140,11 @@ class TelegramController extends Controller
                 $message .= "\n";
             }
             
-            $message .= "💰 *Jami: " . number_format($order->total_amount ?? $order->total_price ?? 0, 0, ',', ' ') . " so'm*\n\n";
+            $message .= "💰 *Jami: " . number_format($order->total_price ?? 0, 0, ',', ' ') . " so'm*\n\n";
             
             // Add additional info if available
-            if ($order->items) {
-                $items = json_decode($order->items, true);
-                if (is_array($items) && !empty($items)) {
-                    $message .= "📝 *Qo'shimcha ma'lumot:*\n";
-                    foreach ($items as $item) {
-                        $message .= "• {$item['name']} x{$item['quantity']}\n";
-                    }
-                    $message .= "\n";
-                }
+            if ($order->address) {
+                $message .= "📍 *Manzil:* {$order->address}\n\n";
             }
 
             // Create back button
