@@ -97,7 +97,7 @@ class MenuItemController extends Controller
                 }
                 
                 // Ensure storage directory exists with proper permissions
-                $storagePath = storage_path('app/public/menu-items');
+                $storagePath = public_path('img/menu');
                 \Log::info('Storage path check', [
                     'storage_path' => $storagePath,
                     'exists' => is_dir($storagePath),
@@ -131,41 +131,24 @@ class MenuItemController extends Controller
                 // Generate unique filename with timestamp
                 $extension = strtolower($file->getClientOriginalExtension());
                 $filename = uniqid() . '_' . time() . '.' . $extension;
-                $imagePath = 'menu-items/' . $filename;
-                $fullPath = storage_path('app/public/' . $imagePath);
+                $imagePath = 'img/menu/' . $filename;
+                $fullPath = public_path($imagePath);
                 
                 // Multiple save attempts with different methods
                 $saved = false;
                 $error = '';
                 
-                // Method 1: Using Storage facade
+                // Method 1: Using direct file copy
                 try {
-                    $fileContent = file_get_contents($file->getRealPath());
-                    if ($fileContent === false) {
-                        throw new \Exception('Fayl o\'qishda xatolik');
-                    }
-                    
-                    $saved = Storage::disk('public')->put($imagePath, $fileContent);
+                    $saved = copy($file->getRealPath(), $fullPath);
                     if ($saved) {
-                        \Log::info('File saved using Storage facade', ['path' => $imagePath]);
+                        \Log::info('File saved using direct copy', ['path' => $fullPath]);
                     }
                 } catch (\Exception $e) {
-                    $error .= 'Storage facade error: ' . $e->getMessage() . '; ';
+                    $error .= 'Direct copy error: ' . $e->getMessage() . '; ';
                 }
                 
-                // Method 2: Direct file copy if Storage failed
-                if (!$saved) {
-                    try {
-                        $saved = copy($file->getRealPath(), $fullPath);
-                        if ($saved) {
-                            \Log::info('File saved using direct copy', ['path' => $fullPath]);
-                        }
-                    } catch (\Exception $e) {
-                        $error .= 'Direct copy error: ' . $e->getMessage() . '; ';
-                    }
-                }
-                
-                // Method 3: Using move_uploaded_file if still failed
+                // Method 2: Using move_uploaded_file if copy failed
                 if (!$saved) {
                     try {
                         $saved = move_uploaded_file($file->getRealPath(), $fullPath);
@@ -203,7 +186,7 @@ class MenuItemController extends Controller
                     'saved_file_size' => $savedFileSize,
                     'mime_type' => $file->getMimeType(),
                     'exists' => file_exists($fullPath),
-                    'url' => Storage::url($imagePath),
+                    'url' => asset($imagePath),
                     'saved' => $saved,
                     'content_length' => strlen($fileContent ?? ''),
                     'server_info' => [
@@ -318,7 +301,7 @@ class MenuItemController extends Controller
                 }
                 
                 // Ensure storage directory exists with proper permissions
-                $storagePath = storage_path('app/public/menu-items');
+                $storagePath = public_path('img/menu');
                 \Log::info('Storage path check (update)', [
                     'storage_path' => $storagePath,
                     'exists' => is_dir($storagePath),
@@ -351,7 +334,7 @@ class MenuItemController extends Controller
                 
                 // Delete old image
                 if ($menuItem->image) {
-                    $oldPath = storage_path('app/public/' . $menuItem->image);
+                    $oldPath = public_path($menuItem->image);
                     if (file_exists($oldPath)) {
                         if (unlink($oldPath)) {
                             \Log::info('Old menu item image deleted', ['old_path' => $menuItem->image]);
@@ -364,41 +347,24 @@ class MenuItemController extends Controller
                 // Generate unique filename with timestamp
                 $extension = strtolower($file->getClientOriginalExtension());
                 $filename = uniqid() . '_' . time() . '.' . $extension;
-                $imagePath = 'menu-items/' . $filename;
-                $fullPath = storage_path('app/public/' . $imagePath);
+                $imagePath = 'img/menu/' . $filename;
+                $fullPath = public_path($imagePath);
                 
                 // Multiple save attempts with different methods
                 $saved = false;
                 $error = '';
                 
-                // Method 1: Using Storage facade
+                // Method 1: Using direct file copy
                 try {
-                    $fileContent = file_get_contents($file->getRealPath());
-                    if ($fileContent === false) {
-                        throw new \Exception('Fayl o\'qishda xatolik');
-                    }
-                    
-                    $saved = Storage::disk('public')->put($imagePath, $fileContent);
+                    $saved = copy($file->getRealPath(), $fullPath);
                     if ($saved) {
-                        \Log::info('File saved using Storage facade', ['path' => $imagePath]);
+                        \Log::info('File saved using direct copy', ['path' => $fullPath]);
                     }
                 } catch (\Exception $e) {
-                    $error .= 'Storage facade error: ' . $e->getMessage() . '; ';
+                    $error .= 'Direct copy error: ' . $e->getMessage() . '; ';
                 }
                 
-                // Method 2: Direct file copy if Storage failed
-                if (!$saved) {
-                    try {
-                        $saved = copy($file->getRealPath(), $fullPath);
-                        if ($saved) {
-                            \Log::info('File saved using direct copy', ['path' => $fullPath]);
-                        }
-                    } catch (\Exception $e) {
-                        $error .= 'Direct copy error: ' . $e->getMessage() . '; ';
-                    }
-                }
-                
-                // Method 3: Using move_uploaded_file if still failed
+                // Method 2: Using move_uploaded_file if copy failed
                 if (!$saved) {
                     try {
                         $saved = move_uploaded_file($file->getRealPath(), $fullPath);
@@ -436,7 +402,7 @@ class MenuItemController extends Controller
                     'saved_file_size' => $savedFileSize,
                     'mime_type' => $file->getMimeType(),
                     'exists' => file_exists($fullPath),
-                    'url' => Storage::url($imagePath),
+                    'url' => asset($imagePath),
                     'saved' => $saved,
                     'content_length' => strlen($fileContent ?? ''),
                     'server_info' => [
@@ -481,7 +447,14 @@ class MenuItemController extends Controller
         
         // Delete image
         if ($menuItem->image) {
-            Storage::disk('public')->delete($menuItem->image);
+            $oldPath = public_path($menuItem->image);
+            if (file_exists($oldPath)) {
+                if (unlink($oldPath)) {
+                    \Log::info('Old menu item image deleted', ['old_path' => $menuItem->image]);
+                } else {
+                    \Log::warning('Failed to delete old image', ['old_path' => $menuItem->image]);
+                }
+            }
         }
         
         $menuItem->delete();

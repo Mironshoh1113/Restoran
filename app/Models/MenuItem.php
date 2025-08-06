@@ -44,8 +44,8 @@ class MenuItem extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-            $url = Storage::url($this->image);
-            $fullPath = storage_path('app/public/' . $this->image);
+            $url = asset($this->image);
+            $fullPath = public_path($this->image);
             
             \Log::info('Menu item image URL generated', [
                 'item_id' => $this->id,
@@ -54,8 +54,7 @@ class MenuItem extends Model
                 'full_path' => $fullPath,
                 'exists' => file_exists($fullPath),
                 'file_size' => file_exists($fullPath) ? filesize($fullPath) : 0,
-                'storage_url' => Storage::url($this->image),
-                'asset_url' => asset('storage/' . $this->image)
+                'asset_url' => asset($this->image)
             ]);
             return $url;
         }
@@ -71,7 +70,7 @@ class MenuItem extends Model
             return false;
         }
         
-        $fullPath = storage_path('app/public/' . $this->image);
+        $fullPath = public_path($this->image);
         $exists = file_exists($fullPath);
         $fileSize = $exists ? filesize($fullPath) : 0;
         
@@ -81,8 +80,7 @@ class MenuItem extends Model
             'full_path' => $fullPath,
             'exists' => $exists,
             'file_size' => $fileSize,
-            'is_valid' => $exists && $fileSize > 0,
-            'storage_exists' => Storage::disk('public')->exists($this->image)
+            'is_valid' => $exists && $fileSize > 0
         ]);
         
         return $exists && $fileSize > 0;
