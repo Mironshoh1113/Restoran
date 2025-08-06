@@ -68,9 +68,9 @@
         @forelse($menuItems as $menuItem)
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200">
             <div class="p-6">
-                @if($menuItem->image)
+                @if($menuItem->hasImage())
                 <div class="mb-4">
-                    <img src="{{ Storage::url($menuItem->image) }}" 
+                    <img src="{{ $menuItem->image_url }}" 
                          alt="{{ $menuItem->name }}"
                          class="w-full h-48 object-cover rounded-lg">
                 </div>

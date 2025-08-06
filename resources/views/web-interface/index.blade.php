@@ -134,6 +134,22 @@
             color: white;
             font-size: 20px;
             flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        
+        .item-image i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
         }
         
         .item-info {
@@ -520,7 +536,13 @@
                         <div class="menu-item" data-item-id="{{ $item->id }}" data-price="{{ $item->price }}">
                             <div class="item-content">
                                 <div class="item-image">
-                                    <i class="fas fa-utensils"></i>
+                                    @if($item->hasImage())
+                                        <img src="{{ $item->image_url }}" alt="{{ $item->name }}" 
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <i class="fas fa-utensils" style="display: none;"></i>
+                                    @else
+                                        <i class="fas fa-utensils"></i>
+                                    @endif
                                 </div>
                                 <div class="item-info">
                                     <div class="item-name">{{ $item->name }}</div>

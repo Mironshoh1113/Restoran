@@ -285,29 +285,6 @@ function saveRestaurant() {
     const form = document.getElementById('restaurantForm');
     const formData = new FormData(form);
     
-    // Validate required fields
-    const name = document.getElementById('restaurantName').value.trim();
-    const phone = document.getElementById('restaurantPhone').value.trim();
-    const address = document.getElementById('restaurantAddress').value.trim();
-    
-    if (!name) {
-        alert('Restoran nomini kiriting');
-        document.getElementById('restaurantName').focus();
-        return;
-    }
-    
-    if (!phone) {
-        alert('Telefon raqamini kiriting');
-        document.getElementById('restaurantPhone').focus();
-        return;
-    }
-    
-    if (!address) {
-        alert('Manzilni kiriting');
-        document.getElementById('restaurantAddress').focus();
-        return;
-    }
-    
     const url = currentRestaurantId 
         ? `/admin/restaurants/${currentRestaurantId}` 
         : '/admin/restaurants';
@@ -369,13 +346,6 @@ function saveRestaurant() {
         if (data && data.success) {
             closeModal();
             location.reload();
-        } else if (data && data.errors) {
-            // Show validation errors
-            let errorMessage = 'Ma\'lumotlarni to\'g\'ri kiriting:\n';
-            for (let field in data.errors) {
-                errorMessage += `- ${field}: ${data.errors[field].join(', ')}\n`;
-            }
-            alert(errorMessage);
         } else if (data && data.message) {
             alert(data.message);
             closeModal();
@@ -390,9 +360,7 @@ function saveRestaurant() {
         console.error('Error saving restaurant:', error);
         
         let errorMessage = 'Xatolik yuz berdi: ';
-        if (error.message.includes('422')) {
-            errorMessage += 'Ma\'lumotlarni to\'g\'ri kiriting';
-        } else if (error.message.includes('404')) {
+        if (error.message.includes('404')) {
             errorMessage += 'Restoran topilmadi';
         } else if (error.message.includes('500')) {
             errorMessage += 'Server xatosi. Iltimos, keyinroq urinib ko\'ring';

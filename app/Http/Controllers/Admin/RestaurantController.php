@@ -34,14 +34,6 @@ class RestaurantController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string',
-            'bot_token' => 'nullable|string',
-            'bot_username' => 'nullable|string',
-        ]);
-
         $restaurant = Restaurant::create([
             'name' => $request->name,
             'owner_user_id' => Auth::id(),
@@ -77,14 +69,6 @@ class RestaurantController extends Controller
     {
         $this->authorize('update', $restaurant);
         
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string',
-            'bot_token' => 'nullable|string',
-            'bot_username' => 'nullable|string',
-        ]);
-
         try {
             $restaurant->update($request->all());
 
