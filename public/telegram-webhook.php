@@ -88,18 +88,11 @@ if (isset($update['message'])) {
     if ($text === '/start') {
         $welcomeMessage = "Assalomu alaykum! 🍽️\n\n";
         $welcomeMessage .= "Restoran buyurtma botiga xush kelibsiz!\n\n";
-        $welcomeMessage .= "📋 Menyu ko'rish uchun \"Menyu\" tugmasini bosing\n";
-        $welcomeMessage .= "🛒 Savatni ko'rish uchun \"Savat\" tugmasini bosing\n";
-        $welcomeMessage .= "📞 Buyurtma qilish uchun \"Buyurtma qilish\" tugmasini bosing\n";
-        $welcomeMessage .= "📊 Buyurtmalaringizni ko'rish uchun \"Buyurtmalarim\" tugmasini bosing";
+        $welcomeMessage .= "📊 Buyurtmalaringizni ko'rish uchun \"Buyurtmalarim\" tugmasini bosing\n";
+        $welcomeMessage .= "ℹ️ Yordam kerak bo'lsa \"Yordam\" tugmasini bosing";
 
         $keyboard = [
             [
-                ['text' => '📋 Menyu'],
-                ['text' => '🛒 Savat']
-            ],
-            [
-                ['text' => '📞 Buyurtma qilish'],
                 ['text' => '📊 Buyurtmalarim']
             ],
             [
@@ -121,110 +114,6 @@ if (isset($update['message'])) {
         }
     }
     // Handle other commands
-    elseif ($text === '📋 Menyu') {
-        // Get categories for this restaurant
-        $categories = \App\Models\Category::whereHas('project', function($query) use ($restaurant) {
-            $query->where('restaurant_id', $restaurant->id);
-        })->get();
-
-        if ($categories->isEmpty()) {
-            $responseMessage = "Kechirasiz, hozircha menyu mavjud emas.";
-            $result = $telegramService->sendMessage($chatId, $responseMessage);
-            
-            // Save outgoing message to database
-            if ($telegramUser && $result['ok']) {
-                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
-            }
-        } else {
-            $responseMessage = "🍽️ *Kategoriyalar:*\n\n";
-            $responseMessage .= "Tanlang:\n\n";
-            
-            foreach ($categories as $category) {
-                $responseMessage .= "• {$category->name}\n";
-            }
-
-            $result = $telegramService->sendMessage($chatId, $responseMessage);
-            
-            // Save outgoing message to database
-            if ($telegramUser && $result['ok']) {
-                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
-            }
-        }
-    }
-    elseif ($text === '🛒 Savat') {
-        // Get cart from cache
-        $cart = \Illuminate\Support\Facades\Cache::get("cart_{$chatId}", []);
-        
-        if (empty($cart)) {
-            $responseMessage = "Savat bo'sh. Menyudan taom tanlang.";
-            $result = $telegramService->sendMessage($chatId, $responseMessage);
-            
-            // Save outgoing message to database
-            if ($telegramUser && $result['ok']) {
-                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
-            }
-        } else {
-            $responseMessage = "🛒 *Savat:*\n\n";
-            $total = 0;
-            
-            foreach ($cart as $itemId => $item) {
-                $subtotal = $item['price'] * $item['quantity'];
-                $total += $subtotal;
-                
-                $responseMessage .= "• {$item['name']} x{$item['quantity']} = " . number_format($subtotal, 0, ',', ' ') . " so'm\n";
-            }
-
-            $responseMessage .= "\n<b>Jami: " . number_format($total, 0, ',', ' ') . " so'm</b>";
-
-            $result = $telegramService->sendMessage($chatId, $responseMessage);
-            
-            // Save outgoing message to database
-            if ($telegramUser && $result['ok']) {
-                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
-            }
-        }
-    }
-    elseif ($text === '📞 Buyurtma qilish') {
-        // Get cart from cache
-        $cart = \Illuminate\Support\Facades\Cache::get("cart_{$chatId}", []);
-        
-        if (empty($cart)) {
-            $responseMessage = "Savat bo'sh. Buyurtma qilish uchun avval taom tanlang.";
-            $result = $telegramService->sendMessage($chatId, $responseMessage);
-            
-            // Save outgoing message to database
-            if ($telegramUser && $result['ok']) {
-                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
-            }
-        } else {
-            $responseMessage = "📞 *Buyurtma qilish*\n\n";
-            $responseMessage .= "Buyurtma qilish uchun quyidagi ma'lumotlarni kiriting:\n\n";
-            $responseMessage .= "1️⃣ Ismingiz\n";
-            $responseMessage .= "2️⃣ Telefon raqamingiz\n";
-            $responseMessage .= "3️⃣ Yetkazib berish manzili\n\n";
-            $responseMessage .= "Yoki web sahifani ochib buyurtma bering:";
-            
-            // Create web interface URL
-            $webUrl = "https://simpsons.uz/web-interface";
-            
-            $keyboard = [
-                [
-                    ['text' => '🌐 Web sahifani ochish', 'web_app' => ['url' => $webUrl]]
-                ]
-            ];
-            
-            $inlineKeyboard = [
-                'inline_keyboard' => $keyboard
-            ];
-            
-            $result = $telegramService->sendMessage($chatId, $responseMessage, $inlineKeyboard);
-            
-            // Save outgoing message to database
-            if ($telegramUser && $result['ok']) {
-                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result['result']['message_id'] ?? null, $result);
-            }
-        }
-    }
     elseif ($text === '📊 Buyurtmalarim') {
         // Get orders for this user from this restaurant
         $orders = \App\Models\Order::where('telegram_chat_id', $chatId)
@@ -281,7 +170,7 @@ if (isset($update['message'])) {
         }
     }
     else {
-        $responseMessage = "Kechirasiz, \"{$text}\" buyrug'i tushunilmadi. Menyudan tanlang.";
+        $responseMessage = "Kechirasiz, \"{$text}\" buyrug'i tushunilmadi. Faqat \"Buyurtmalarim\" va \"Yordam\" tugmalari mavjud.";
         $result = $telegramService->sendMessage($chatId, $responseMessage);
         
         // Save outgoing message to database
