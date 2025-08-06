@@ -23,9 +23,21 @@
             <h2 class="text-lg font-semibold text-gray-800">Taom ma'lumotlari</h2>
         </div>
         
-        <form action="{{ route('admin.menu-items.store', [$restaurant, $project, $category]) }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
+        <form action="{{ route('admin.menu-items.store', [$restaurant, $project, $category]) }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-6" id="menu-item-form">
             @csrf
             
+            <!-- Debug info -->
+            @if($errors->any())
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h3 class="text-red-800 font-medium">Xatoliklar:</h3>
+                    <ul class="mt-2 text-sm text-red-700">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
@@ -145,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageInput = document.getElementById('image');
     const imagePreview = document.getElementById('image-preview');
     const previewImg = imagePreview.querySelector('img');
+    const form = document.getElementById('menu-item-form');
     
     imageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -158,11 +171,28 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             reader.readAsDataURL(file);
             
-            console.log('Image selected:', file.name, 'Size:', file.size, 'bytes');
+            console.log('Image selected:', file.name, 'Size:', file.size, 'bytes', 'Type:', file.type);
         } else {
             // Hide preview
             imagePreview.classList.add('hidden');
         }
+    });
+    
+    // Form submission handling
+    form.addEventListener('submit', function(e) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saqlanmoqda...';
+        submitBtn.disabled = true;
+        
+        // Log form data
+        const formData = new FormData(form);
+        console.log('Form submission started');
+        console.log('Image file:', formData.get('image'));
+        
+        // Allow form to submit normally
+        // The loading state will be handled by the page reload
     });
 });
 </script>
