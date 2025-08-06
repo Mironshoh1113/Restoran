@@ -1290,6 +1290,15 @@ class TelegramController extends Controller
      */
     protected function handleUnknownCommand($chatId, $text)
     {
+        Log::info('Unknown command received', ['text' => $text, 'chat_id' => $chatId]);
+        
+        // Check if it's the Buyurtmalarim command
+        if ($text === '📊 Buyurtmalarim') {
+            Log::info('Buyurtmalarim command detected in unknown command handler', ['chat_id' => $chatId]);
+            $this->handleMyOrders($chatId);
+            return;
+        }
+        
         $this->telegramService->sendMessage($chatId, "Kechirasiz, \"{$text}\" buyrug'i tushunilmadi. Menyudan tanlang.");
     }
 
