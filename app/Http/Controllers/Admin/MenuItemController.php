@@ -98,6 +98,13 @@ class MenuItemController extends Controller
                 
                 // Ensure storage directory exists with proper permissions
                 $storagePath = storage_path('app/public/menu-items');
+                \Log::info('Storage path check', [
+                    'storage_path' => $storagePath,
+                    'exists' => is_dir($storagePath),
+                    'writable' => is_writable($storagePath),
+                    'permissions' => is_dir($storagePath) ? substr(sprintf('%o', fileperms($storagePath)), -4) : 'N/A'
+                ]);
+                
                 if (!is_dir($storagePath)) {
                     if (!mkdir($storagePath, 0755, true)) {
                         throw new \Exception('Storage papkasini yaratishda xatolik yuz berdi');
@@ -108,6 +115,17 @@ class MenuItemController extends Controller
                 // Check if directory is writable
                 if (!is_writable($storagePath)) {
                     throw new \Exception('Storage papkasi yozish uchun ochiq emas');
+                }
+                
+                // Test file creation
+                $testFile = $storagePath . '/test_' . time() . '.txt';
+                $testContent = 'Test file created at ' . date('Y-m-d H:i:s');
+                if (file_put_contents($testFile, $testContent) === false) {
+                    throw new \Exception('Storage papkasiga yozishda xatolik yuz berdi');
+                } else {
+                    \Log::info('Test file created successfully', ['test_file' => $testFile]);
+                    // Clean up test file
+                    unlink($testFile);
                 }
                 
                 // Generate unique filename with timestamp
@@ -187,7 +205,15 @@ class MenuItemController extends Controller
                     'exists' => file_exists($fullPath),
                     'url' => Storage::url($imagePath),
                     'saved' => $saved,
-                    'content_length' => strlen($fileContent ?? '')
+                    'content_length' => strlen($fileContent ?? ''),
+                    'server_info' => [
+                        'document_root' => $_SERVER['DOCUMENT_ROOT'] ?? 'N/A',
+                        'script_name' => $_SERVER['SCRIPT_NAME'] ?? 'N/A',
+                        'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'N/A',
+                        'storage_path' => storage_path(),
+                        'public_path' => public_path(),
+                        'base_path' => base_path()
+                    ]
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to upload menu item image', [
@@ -293,6 +319,13 @@ class MenuItemController extends Controller
                 
                 // Ensure storage directory exists with proper permissions
                 $storagePath = storage_path('app/public/menu-items');
+                \Log::info('Storage path check (update)', [
+                    'storage_path' => $storagePath,
+                    'exists' => is_dir($storagePath),
+                    'writable' => is_writable($storagePath),
+                    'permissions' => is_dir($storagePath) ? substr(sprintf('%o', fileperms($storagePath)), -4) : 'N/A'
+                ]);
+                
                 if (!is_dir($storagePath)) {
                     if (!mkdir($storagePath, 0755, true)) {
                         throw new \Exception('Storage papkasini yaratishda xatolik yuz berdi');
@@ -303,6 +336,17 @@ class MenuItemController extends Controller
                 // Check if directory is writable
                 if (!is_writable($storagePath)) {
                     throw new \Exception('Storage papkasi yozish uchun ochiq emas');
+                }
+                
+                // Test file creation
+                $testFile = $storagePath . '/test_' . time() . '.txt';
+                $testContent = 'Test file created at ' . date('Y-m-d H:i:s');
+                if (file_put_contents($testFile, $testContent) === false) {
+                    throw new \Exception('Storage papkasiga yozishda xatolik yuz berdi');
+                } else {
+                    \Log::info('Test file created successfully (update)', ['test_file' => $testFile]);
+                    // Clean up test file
+                    unlink($testFile);
                 }
                 
                 // Delete old image
@@ -394,7 +438,15 @@ class MenuItemController extends Controller
                     'exists' => file_exists($fullPath),
                     'url' => Storage::url($imagePath),
                     'saved' => $saved,
-                    'content_length' => strlen($fileContent ?? '')
+                    'content_length' => strlen($fileContent ?? ''),
+                    'server_info' => [
+                        'document_root' => $_SERVER['DOCUMENT_ROOT'] ?? 'N/A',
+                        'script_name' => $_SERVER['SCRIPT_NAME'] ?? 'N/A',
+                        'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'N/A',
+                        'storage_path' => storage_path(),
+                        'public_path' => public_path(),
+                        'base_path' => base_path()
+                    ]
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to update menu item image', [
