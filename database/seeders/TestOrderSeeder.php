@@ -84,10 +84,10 @@ class TestOrderSeeder extends Seeder
                 'telegram_chat_id' => $chatId,
                 'customer_name' => 'Test Customer ' . ($index + 1),
                 'customer_phone' => '+99890123456' . ($index + 1),
-                'delivery_address' => 'Test Address ' . ($index + 1),
-                'payment_method' => $index % 2 === 0 ? 'cash' : 'card',
+                'address' => 'Test Address ' . ($index + 1),
+                'payment_type' => $index % 2 === 0 ? 'cash' : 'card',
                 'status' => $statuses[$index % count($statuses)],
-                'total_amount' => 0,
+                'total_price' => 0,
                 'items' => json_encode([
                     [
                         'name' => 'Test Item 1',
