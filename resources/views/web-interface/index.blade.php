@@ -1084,26 +1084,33 @@
         function updateQuantity(itemId, change) {
             const currentQty = cart[itemId] || 0;
             const newQty = Math.max(0, currentQty + change);
-            
             if (newQty === 0) {
                 delete cart[itemId];
             } else {
                 cart[itemId] = newQty;
             }
-            
             document.getElementById(`qty-${itemId}`).textContent = newQty;
             updateCartTotal();
+            // If modal is open, update modal cart and button
+            if (!document.getElementById('cart-order-modal').classList.contains('hidden')) {
+                renderModalCart();
+                updateModalCheckoutBtn();
+            }
         }
-        
         function updateCartTotal() {
             let total = 0;
             for (let itemId in cart) {
                 const price = parseInt(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price);
                 total += price * cart[itemId];
             }
-            
             document.getElementById('cart-total').textContent = total.toLocaleString();
             document.getElementById('checkout-btn').disabled = total === 0;
+        }
+        function updateModalCheckoutBtn() {
+            const btn = document.querySelector('#cart-order-modal .checkout-btn');
+            let hasItems = false;
+            for (let itemId in cart) { hasItems = true; break; }
+            btn.disabled = !hasItems;
         }
         
         function showOrderForm() {
@@ -1343,6 +1350,7 @@
                 modalCart.innerHTML = `<div class='empty-cart'><i class='fas fa-shopping-cart'></i><br>Savat bo'sh</div>`;
             }
             document.getElementById('modal-cart-total').textContent = total.toLocaleString();
+            updateModalCheckoutBtn();
         }
         // Payment method selection in modal
         document.querySelectorAll('#cart-order-modal .payment-method').forEach(method => {
