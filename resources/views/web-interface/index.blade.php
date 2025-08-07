@@ -1091,11 +1091,8 @@
             }
             document.getElementById(`qty-${itemId}`).textContent = newQty;
             updateCartTotal();
-            // If modal is open, update modal cart and button
-            if (!document.getElementById('cart-order-modal').classList.contains('hidden')) {
-                renderModalCart();
-                updateModalCheckoutBtn();
-            }
+            renderModalCart();
+            updateModalCheckoutBtn();
         }
         function updateCartTotal() {
             let total = 0;
@@ -1105,6 +1102,8 @@
             }
             document.getElementById('cart-total').textContent = total.toLocaleString();
             document.getElementById('checkout-btn').disabled = total === 0;
+            renderModalCart();
+            updateModalCheckoutBtn();
         }
         function updateModalCheckoutBtn() {
             const btn = document.querySelector('#cart-order-modal .checkout-btn');
@@ -1299,7 +1298,7 @@
 
         // Floating cart button logic
         function scrollToCart() {
-            document.getElementById('cart').scrollIntoView({ behavior: 'smooth' });
+            openCartOrderModal();
         }
         function scrollToMenu() {
             document.querySelector('.container').scrollIntoView({ behavior: 'smooth' });
