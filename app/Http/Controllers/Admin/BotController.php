@@ -746,4 +746,387 @@ class BotController extends Controller
         
         return response()->json(['success' => true, 'message' => 'Xabarlar o\'qildi deb belgilandi']);
     }
+
+    /**
+     * Get users statistics for all restaurants
+     */
+    public function getAllUsersStats()
+    {
+        $user = Auth::user();
+        
+        if ($user->isSuperAdmin()) {
+            $restaurants = Restaurant::with('telegramUsers')->get();
+        } else {
+            $restaurants = Restaurant::where('owner_user_id', $user->id)->with('telegramUsers')->get();
+        }
+        
+        $stats = [];
+        $totalUsers = 0;
+        $totalActiveUsers = 0;
+        $totalMessages = 0;
+        
+        foreach ($restaurants as $restaurant) {
+            $userCount = $restaurant->telegramUsers()->count();
+            $activeUserCount = $restaurant->telegramUsers()->where('is_active', true)->count();
+            $messageCount = \App\Models\TelegramMessage::whereHas('telegramUser', function($query) use ($restaurant) {
+                $query->where('restaurant_id', $restaurant->id);
+            })->count();
+            
+            $stats[] = [
+                'restaurant_id' => $restaurant->id,
+                'restaurant_name' => $restaurant->name,
+                'bot_username' => $restaurant->bot_username,
+                'user_count' => $userCount,
+                'active_user_count' => $activeUserCount,
+                'message_count' => $messageCount,
+                'is_active' => !empty($restaurant->bot_token)
+            ];
+            
+            $totalUsers += $userCount;
+            $totalActiveUsers += $activeUserCount;
+            $totalMessages += $messageCount;
+        }
+        
+        return response()->json([
+            'success' => true,
+            'stats' => $stats,
+            'totals' => [
+                'restaurants' => $restaurants->count(),
+                'users' => $totalUsers,
+                'active_users' => $totalActiveUsers,
+                'messages' => $totalMessages
+            ]
+        ]);
+    }
+
+    /**
+     * Send message to users across multiple restaurants
+     */
+    public function sendMessageToMultipleRestaurants(Request $request)
+    {
+        $request->validate([
+            'restaurant_ids' => 'required|array',
+            'restaurant_ids.*' => 'integer|exists:restaurants,id',
+            'message' => 'required|string|max:4096',
+            'user_ids' => 'nullable|array',
+            'user_ids.*' => 'integer'
+        ]);
+
+        $user = Auth::user();
+        $restaurantIds = $request->restaurant_ids;
+        
+        // Filter restaurants based on user permissions
+        if (!$user->isSuperAdmin()) {
+            $restaurantIds = Restaurant::where('owner_user_id', $user->id)
+                ->whereIn('id', $restaurantIds)
+                ->pluck('id')
+                ->toArray();
+        }
+        
+        $results = [];
+        $totalSuccess = 0;
+        $totalErrors = 0;
+        
+        foreach ($restaurantIds as $restaurantId) {
+            $restaurant = Restaurant::find($restaurantId);
+            
+            if (!$restaurant || !$restaurant->bot_token) {
+                $results[] = [
+                    'restaurant_id' => $restaurantId,
+                    'restaurant_name' => $restaurant ? $restaurant->name : 'Unknown',
+                    'success' => false,
+                    'message' => 'Bot token o\'rnatilmagan'
+                ];
+                $totalErrors++;
+                continue;
+            }
+            
+            try {
+                $telegramService = new TelegramService($restaurant->bot_token);
+                
+                // Test bot connection
+                $botInfo = $telegramService->getMe();
+                if (!$botInfo['ok']) {
+                    $results[] = [
+                        'restaurant_id' => $restaurantId,
+                        'restaurant_name' => $restaurant->name,
+                        'success' => false,
+                        'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')
+                    ];
+                    $totalErrors++;
+                    continue;
+                }
+                
+                // Get users for this restaurant
+                $query = TelegramUser::where('restaurant_id', $restaurant->id);
+                
+                if ($request->user_ids) {
+                    $query->whereIn('telegram_id', $request->user_ids);
+                } else {
+                    $query->where('is_active', true);
+                }
+                
+                $users = $query->get();
+                
+                $successCount = 0;
+                $errorCount = 0;
+                $errors = [];
+                
+                foreach ($users as $telegramUser) {
+                    try {
+                        $result = $telegramService->sendMessage($telegramUser->telegram_id, $request->message);
+                        
+                        if ($result['ok']) {
+                            $successCount++;
+                        } else {
+                            $errorCount++;
+                            $errors[] = "User {$telegramUser->telegram_id}: " . ($result['description'] ?? 'Unknown error');
+                        }
+                    } catch (\Exception $e) {
+                        $errorCount++;
+                        $errors[] = "User {$telegramUser->telegram_id}: " . $e->getMessage();
+                    }
+                }
+                
+                $results[] = [
+                    'restaurant_id' => $restaurantId,
+                    'restaurant_name' => $restaurant->name,
+                    'success' => true,
+                    'success_count' => $successCount,
+                    'error_count' => $errorCount,
+                    'errors' => $errors
+                ];
+                
+                $totalSuccess += $successCount;
+                $totalErrors += $errorCount;
+                
+            } catch (\Exception $e) {
+                $results[] = [
+                    'restaurant_id' => $restaurantId,
+                    'restaurant_name' => $restaurant->name,
+                    'success' => false,
+                    'message' => 'Xatolik: ' . $e->getMessage()
+                ];
+                $totalErrors++;
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'results' => $results,
+            'summary' => [
+                'total_success' => $totalSuccess,
+                'total_errors' => $totalErrors,
+                'restaurants_processed' => count($restaurantIds)
+            ]
+        ]);
+    }
+
+    /**
+     * Get all users across multiple restaurants
+     */
+    public function getAllUsers(Request $request)
+    {
+        $user = Auth::user();
+        
+        if ($user->isSuperAdmin()) {
+            $restaurants = Restaurant::all();
+        } else {
+            $restaurants = Restaurant::where('owner_user_id', $user->id)->get();
+        }
+        
+        $restaurantId = $request->get('restaurant_id');
+        $search = $request->get('search');
+        $status = $request->get('status');
+        
+        $query = TelegramUser::with('restaurant');
+        
+        if ($restaurantId) {
+            $query->where('restaurant_id', $restaurantId);
+        } else {
+            $query->whereIn('restaurant_id', $restaurants->pluck('id'));
+        }
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
+        }
+        
+        $users = $query->orderBy('last_activity', 'desc')->paginate(20);
+        
+        return view('admin.bots.all-users', compact('users', 'restaurants'));
+    }
+
+    /**
+     * Test multiple bots at once
+     */
+    public function testMultipleBots(Request $request)
+    {
+        $request->validate([
+            'restaurant_ids' => 'required|array',
+            'restaurant_ids.*' => 'integer|exists:restaurants,id'
+        ]);
+
+        $user = Auth::user();
+        $restaurantIds = $request->restaurant_ids;
+        
+        // Filter restaurants based on user permissions
+        if (!$user->isSuperAdmin()) {
+            $restaurantIds = Restaurant::where('owner_user_id', $user->id)
+                ->whereIn('id', $restaurantIds)
+                ->pluck('id')
+                ->toArray();
+        }
+        
+        $results = [];
+        
+        foreach ($restaurantIds as $restaurantId) {
+            $restaurant = Restaurant::find($restaurantId);
+            
+            if (!$restaurant) {
+                $results[] = [
+                    'restaurant_id' => $restaurantId,
+                    'success' => false,
+                    'message' => 'Restoran topilmadi'
+                ];
+                continue;
+            }
+            
+            if (!$restaurant->bot_token) {
+                $results[] = [
+                    'restaurant_id' => $restaurantId,
+                    'restaurant_name' => $restaurant->name,
+                    'success' => false,
+                    'message' => 'Bot token o\'rnatilmagan'
+                ];
+                continue;
+            }
+            
+            try {
+                $telegramService = new TelegramService($restaurant->bot_token);
+                
+                // Test bot connection
+                $botInfo = $telegramService->getMe();
+                if (!$botInfo['ok']) {
+                    $results[] = [
+                        'restaurant_id' => $restaurantId,
+                        'restaurant_name' => $restaurant->name,
+                        'success' => false,
+                        'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')
+                    ];
+                    continue;
+                }
+                
+                // Test webhook
+                $webhookInfo = $telegramService->getWebhookInfo();
+                
+                $results[] = [
+                    'restaurant_id' => $restaurantId,
+                    'restaurant_name' => $restaurant->name,
+                    'success' => true,
+                    'bot_info' => $botInfo['result'],
+                    'webhook_info' => $webhookInfo['result'],
+                    'message' => 'Bot muvaffaqiyatli ishlayapti'
+                ];
+                
+            } catch (\Exception $e) {
+                $results[] = [
+                    'restaurant_id' => $restaurantId,
+                    'restaurant_name' => $restaurant->name,
+                    'success' => false,
+                    'message' => 'Xatolik: ' . $e->getMessage()
+                ];
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'results' => $results
+        ]);
+    }
+
+    /**
+     * Set webhooks for multiple bots
+     */
+    public function setMultipleWebhooks(Request $request)
+    {
+        $request->validate([
+            'restaurant_ids' => 'required|array',
+            'restaurant_ids.*' => 'integer|exists:restaurants,id'
+        ]);
+
+        $user = Auth::user();
+        $restaurantIds = $request->restaurant_ids;
+        
+        // Filter restaurants based on user permissions
+        if (!$user->isSuperAdmin()) {
+            $restaurantIds = Restaurant::where('owner_user_id', $user->id)
+                ->whereIn('id', $restaurantIds)
+                ->pluck('id')
+                ->toArray();
+        }
+        
+        $results = [];
+        
+        foreach ($restaurantIds as $restaurantId) {
+            $restaurant = Restaurant::find($restaurantId);
+            
+            if (!$restaurant || !$restaurant->bot_token) {
+                $results[] = [
+                    'restaurant_id' => $restaurantId,
+                    'restaurant_name' => $restaurant ? $restaurant->name : 'Unknown',
+                    'success' => false,
+                    'message' => 'Bot token o\'rnatilmagan'
+                ];
+                continue;
+            }
+            
+            try {
+                $telegramService = new TelegramService($restaurant->bot_token);
+                
+                // Set webhook URL
+                $webhookUrl = url('/telegram/webhook/' . $restaurant->bot_token);
+                $result = $telegramService->setWebhook($webhookUrl);
+                
+                if ($result['ok']) {
+                    $results[] = [
+                        'restaurant_id' => $restaurantId,
+                        'restaurant_name' => $restaurant->name,
+                        'success' => true,
+                        'webhook_url' => $webhookUrl,
+                        'message' => 'Webhook muvaffaqiyatli o\'rnatildi'
+                    ];
+                } else {
+                    $results[] = [
+                        'restaurant_id' => $restaurantId,
+                        'restaurant_name' => $restaurant->name,
+                        'success' => false,
+                        'message' => 'Webhook o\'rnatishda xatolik: ' . ($result['description'] ?? 'Unknown error')
+                    ];
+                }
+                
+            } catch (\Exception $e) {
+                $results[] = [
+                    'restaurant_id' => $restaurantId,
+                    'restaurant_name' => $restaurant->name,
+                    'success' => false,
+                    'message' => 'Xatolik: ' . $e->getMessage()
+                ];
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'results' => $results
+        ]);
+    }
 } 
