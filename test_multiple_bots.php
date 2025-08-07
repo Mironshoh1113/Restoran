@@ -29,7 +29,8 @@ try {
     foreach ($restaurants as $restaurant) {
         $botStatus = $restaurant->bot_token ? '✅ Faol' : '❌ Faol emas';
         $userCount = $restaurant->telegramUsers()->count();
-        echo "   - {$restaurant->name} ({$restaurant->owner->name ?? 'Noma\'lum'}) - {$botStatus} - {$userCount} foydalanuvchi\n";
+        $ownerName = $restaurant->owner ? $restaurant->owner->name : 'Noma\'lum';
+        echo "   - {$restaurant->name} ({$ownerName}) - {$botStatus} - {$userCount} foydalanuvchi\n";
     }
     echo "\n";
 

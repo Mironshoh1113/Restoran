@@ -543,10 +543,230 @@
         html {
             scroll-behavior: smooth;
         }
+        /* --- Modern Mobile Redesign Additions --- */
+        body {
+            background: #f3f4f6;
+        }
+        .header {
+            background: #fff;
+            color: #22223b;
+            border-bottom: 1px solid #e5e7eb;
+            border-radius: 0 0 24px 24px;
+            box-shadow: 0 2px 12px rgba(102, 126, 234, 0.08);
+            padding: 18px 12px 12px 12px;
+        }
+        .restaurant-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            object-fit: cover;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.12);
+        }
+        .restaurant-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #22223b;
+            margin-bottom: 2px;
+        }
+        .restaurant-description {
+            font-size: 13px;
+            color: #4b5563;
+            opacity: 0.85;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 0 90px 0;
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+        .categories-nav {
+            background: #fff;
+            border-radius: 0 0 18px 18px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.04);
+        }
+        .category-tab {
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 18px;
+            padding: 10px 18px;
+            margin-bottom: 2px;
+        }
+        .category-tab.active {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.10);
+        }
+        .menu-item {
+            border-radius: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 12px rgba(102, 126, 234, 0.08);
+            border: none;
+        }
+        .item-content {
+            gap: 14px;
+        }
+        .item-image {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+        }
+        .item-info {
+            min-width: 0;
+        }
+        .item-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #22223b;
+        }
+        .item-description {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .item-price {
+            font-size: 15px;
+            color: #059669;
+            font-weight: 700;
+        }
+        .item-controls {
+            gap: 10px;
+        }
+        .quantity-btn {
+            width: 36px;
+            height: 36px;
+            font-size: 20px;
+            border-radius: 50%;
+            background: #e0e7ff;
+            color: #4f46e5;
+            border: none;
+            font-weight: 700;
+        }
+        .quantity-btn.plus {
+            background: #4f46e5;
+            color: #fff;
+        }
+        .quantity-btn:active {
+            background: #a5b4fc;
+        }
+        .cart {
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            background: #fff;
+            border-radius: 18px 18px 0 0;
+            box-shadow: 0 -4px 16px rgba(102, 126, 234, 0.10);
+            padding: 12px 18px 18px 18px;
+            z-index: 1000;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .cart-header {
+            margin-bottom: 0;
+        }
+        .cart-total {
+            font-size: 18px;
+            color: #22223b;
+        }
+        .checkout-btn {
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.10);
+        }
+        .checkout-btn:active {
+            background: #a5b4fc;
+        }
+        /* Floating cart button for mobile */
+        .floating-cart-btn {
+            display: none;
+            position: fixed;
+            right: 18px;
+            bottom: 90px;
+            z-index: 1100;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18);
+            font-size: 28px;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (max-width: 480px) {
+            .floating-cart-btn {
+                display: flex;
+            }
+            .container {
+                padding-bottom: 120px;
+            }
+        }
+        /* Bottom navigation bar */
+        .bottom-nav {
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            box-shadow: 0 -2px 12px rgba(102, 126, 234, 0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 60px;
+            z-index: 1200;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .bottom-nav-btn {
+            flex: 1;
+            text-align: center;
+            color: #6b7280;
+            font-size: 22px;
+            padding: 8px 0 0 0;
+            transition: color 0.2s;
+        }
+        .bottom-nav-btn.active, .bottom-nav-btn:active {
+            color: #4f46e5;
+        }
+        .bottom-nav-label {
+            display: block;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+        /* Order form and success message improvements */
+        .order-form {
+            border-radius: 18px;
+            box-shadow: 0 2px 12px rgba(102, 126, 234, 0.10);
+            background: #fff;
+        }
+        .form-title {
+            color: #4f46e5;
+        }
+        .success-message {
+            border-radius: 18px;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .back-btn {
+            border-radius: 12px;
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+        .back-btn:active {
+            background: #a5b4fc;
+        }
     </style>
 </head>
 <body>
     <div class="header">
+        @if($restaurant->logo)
+            <img src="{{ $restaurant->logo }}" alt="Logo" class="restaurant-logo">
+        @endif
         <div class="restaurant-name">{{ $restaurant->name }}</div>
         <div class="restaurant-description">{{ $restaurant->description ?? 'Restoran menyusi' }}</div>
         @if(isset($botToken))
@@ -665,6 +885,27 @@
             <button class="checkout-btn" id="checkout-btn" onclick="showOrderForm()" disabled>
                 <i class="fas fa-credit-card"></i> Buyurtma berish
             </button>
+        </div>
+    </div>
+    
+    <!-- Floating cart button for mobile -->
+    <button class="floating-cart-btn" id="floating-cart-btn" onclick="scrollToCart()">
+        <i class="fas fa-shopping-cart"></i>
+    </button>
+    
+    <!-- Bottom navigation bar -->
+    <div class="bottom-nav">
+        <div class="bottom-nav-btn active" onclick="scrollToMenu()">
+            <i class="fas fa-utensils"></i>
+            <span class="bottom-nav-label">Menyu</span>
+        </div>
+        <div class="bottom-nav-btn" onclick="scrollToCart()">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="bottom-nav-label">Savat</span>
+        </div>
+        <div class="bottom-nav-btn" onclick="scrollToProfile()">
+            <i class="fas fa-user"></i>
+            <span class="bottom-nav-label">Profil</span>
         </div>
     </div>
     
@@ -976,6 +1217,29 @@
             if (phone) localStorage.setItem('customer_phone', phone);
             if (address) localStorage.setItem('delivery_address', address);
         }
+
+        // Floating cart button logic
+        function scrollToCart() {
+            document.getElementById('cart').scrollIntoView({ behavior: 'smooth' });
+        }
+        function scrollToMenu() {
+            document.querySelector('.container').scrollIntoView({ behavior: 'smooth' });
+        }
+        function scrollToProfile() {
+            alert('Profil sahifasi tez orada!');
+        }
+        // Hide floating cart button if cart is visible
+        function handleFloatingCartBtn() {
+            const cart = document.getElementById('cart');
+            const btn = document.getElementById('floating-cart-btn');
+            if (window.scrollY + window.innerHeight < cart.offsetTop + cart.offsetHeight - 60) {
+                btn.style.display = 'flex';
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+        window.addEventListener('scroll', handleFloatingCartBtn);
+        document.addEventListener('DOMContentLoaded', handleFloatingCartBtn);
     </script>
 </body>
 </html> 
