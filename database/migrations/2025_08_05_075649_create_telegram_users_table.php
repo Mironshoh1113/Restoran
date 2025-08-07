@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('telegram_users', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('restaurant_id');
-            $table->bigInteger('telegram_id')->unique();
+            $table->bigInteger('telegram_id');
             $table->string('username')->nullable();
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
@@ -27,7 +27,14 @@ return new class extends Migration
             $table->timestamps();
             
             $table->foreign('restaurant_id')->references('id')->on('restaurants')->onDelete('cascade');
-            $table->index(['restaurant_id', 'telegram_id']);
+            
+            // Composite unique index to ensure one user per restaurant
+            $table->unique(['restaurant_id', 'telegram_id']);
+            
+            // Indexes for better performance
+            $table->index(['restaurant_id', 'is_active']);
+            $table->index(['restaurant_id', 'last_activity']);
+            $table->index(['telegram_id']);
         });
     }
 

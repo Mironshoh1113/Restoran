@@ -72,7 +72,8 @@ try {
 
     Log::info("Restaurant found", [
         "restaurant_id" => $restaurant->id,
-        "restaurant_name" => $restaurant->name
+        "restaurant_name" => $restaurant->name,
+        "bot_username" => $restaurant->bot_username
     ]);
 
     // Check if required tables exist
@@ -103,7 +104,7 @@ try {
         exit("Database connection failed");
     }
 
-    // Initialize TelegramService
+    // Initialize TelegramService with the specific bot token
     $telegramService = new TelegramService($token);
 
     // Handle different types of updates
@@ -117,10 +118,12 @@ try {
         Log::info("Processing message", [
             "chat_id" => $chatId,
             "text" => $text,
-            "user_data" => $userData
+            "user_data" => $userData,
+            "restaurant_id" => $restaurant->id,
+            "restaurant_name" => $restaurant->name
         ]);
 
-        // Save or update telegram user
+        // Save or update telegram user for this specific restaurant
         $telegramUser = null;
         if ($userData) {
             try {
@@ -138,6 +141,7 @@ try {
                         "last_name" => $userData["last_name"] ?? null,
                         "language_code" => $userData["language_code"] ?? "uz",
                         "is_bot" => $userData["is_bot"] ?? false,
+                        "is_active" => true,
                         "last_activity" => now(),
                     ]
                 );
@@ -145,7 +149,8 @@ try {
                 Log::info("Telegram user saved/updated", [
                     "telegram_id" => $userData["id"],
                     "restaurant_id" => $restaurant->id,
-                    "user_id" => $telegramUser->id ?? null
+                    "user_id" => $telegramUser->id ?? null,
+                    "username" => $userData["username"] ?? null
                 ]);
                 
             } catch (\Exception $e) {
@@ -160,15 +165,38 @@ try {
             }
         }
 
-        // Save incoming message to database
+        // Save incoming message to database for this restaurant
         if ($telegramUser && $text) {
-            $telegramService->saveIncomingMessage($telegramUser, $text, $message["message_id"] ?? null, $message);
+            try {
+                TelegramMessage::create([
+                    'restaurant_id' => $restaurant->id,
+                    'telegram_user_id' => $telegramUser->id,
+                    'message_id' => $message["message_id"] ?? null,
+                    'direction' => 'incoming',
+                    'message_text' => $text,
+                    'message_data' => $message,
+                    'message_type' => 'text',
+                    'is_read' => false,
+                ]);
+                
+                Log::info("Incoming message saved", [
+                    "message_id" => $message["message_id"] ?? null,
+                    "restaurant_id" => $restaurant->id,
+                    "telegram_user_id" => $telegramUser->id
+                ]);
+            } catch (\Exception $e) {
+                Log::error("Error saving incoming message", [
+                    "error" => $e->getMessage(),
+                    "restaurant_id" => $restaurant->id,
+                    "telegram_user_id" => $telegramUser->id ?? null
+                ]);
+            }
         }
 
         // Handle /start command
         if ($text === "/start") {
             $welcomeMessage = "Assalomu alaykum! 🍽️\n\n";
-            $welcomeMessage .= "Restoran buyurtma botiga xush kelibsiz!\n\n";
+            $welcomeMessage .= "**{$restaurant->name}** buyurtma botiga xush kelibsiz!\n\n";
             $welcomeMessage .= "📋 Buyurtmalaringizni ko'rish uchun \"Buyurtmalarim\" tugmasini bosing\n";
             $welcomeMessage .= "ℹ Yordam kerak bo'lsa \"Yordam\" tugmasini bosing";
 
@@ -191,12 +219,29 @@ try {
             
             // Save outgoing message to database
             if ($telegramUser && $result["ok"]) {
-                $telegramService->saveOutgoingMessage($telegramUser, $welcomeMessage, $result["result"]["message_id"] ?? null, $result);
+                try {
+                    TelegramMessage::create([
+                        'restaurant_id' => $restaurant->id,
+                        'telegram_user_id' => $telegramUser->id,
+                        'message_id' => $result["result"]["message_id"] ?? null,
+                        'direction' => 'outgoing',
+                        'message_text' => $welcomeMessage,
+                        'message_data' => $result["result"] ?? null,
+                        'message_type' => 'text',
+                        'is_read' => false,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Error saving outgoing message", [
+                        "error" => $e->getMessage(),
+                        "restaurant_id" => $restaurant->id,
+                        "telegram_user_id" => $telegramUser->id ?? null
+                    ]);
+                }
             }
         }
         // Handle other commands
         elseif ($text === "📊 Buyurtmalarim" || $text === "Buyurtmalarim") {
-            // Get orders for this user from this restaurant
+            // Get orders for this user from this specific restaurant
             $orders = \App\Models\Order::where("telegram_chat_id", $chatId)
                 ->where("restaurant_id", $restaurant->id)
                 ->orderBy("created_at", "desc")
@@ -209,7 +254,24 @@ try {
                 
                 // Save outgoing message to database
                 if ($telegramUser && $result["ok"]) {
-                    $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result["result"]["message_id"] ?? null, $result);
+                    try {
+                        TelegramMessage::create([
+                            'restaurant_id' => $restaurant->id,
+                            'telegram_user_id' => $telegramUser->id,
+                            'message_id' => $result["result"]["message_id"] ?? null,
+                            'direction' => 'outgoing',
+                            'message_text' => $responseMessage,
+                            'message_data' => $result["result"] ?? null,
+                            'message_type' => 'text',
+                            'is_read' => false,
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error("Error saving outgoing message", [
+                            "error" => $e->getMessage(),
+                            "restaurant_id" => $restaurant->id,
+                            "telegram_user_id" => $telegramUser->id ?? null
+                        ]);
+                    }
                 }
             } else {
                 $responseMessage = "📊 *Buyurtmalaringiz:*\n\n";
@@ -232,7 +294,24 @@ try {
                 
                 // Save outgoing message to database
                 if ($telegramUser && $result["ok"]) {
-                    $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result["result"]["message_id"] ?? null, $result);
+                    try {
+                        TelegramMessage::create([
+                            'restaurant_id' => $restaurant->id,
+                            'telegram_user_id' => $telegramUser->id,
+                            'message_id' => $result["result"]["message_id"] ?? null,
+                            'direction' => 'outgoing',
+                            'message_text' => $responseMessage,
+                            'message_data' => $result["result"] ?? null,
+                            'message_type' => 'text',
+                            'is_read' => false,
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error("Error saving outgoing message", [
+                            "error" => $e->getMessage(),
+                            "restaurant_id" => $restaurant->id,
+                            "telegram_user_id" => $telegramUser->id ?? null
+                        ]);
+                    }
                 }
             }
         }
@@ -246,7 +325,24 @@ try {
             
             // Save outgoing message to database
             if ($telegramUser && $result["ok"]) {
-                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result["result"]["message_id"] ?? null, $result);
+                try {
+                    TelegramMessage::create([
+                        'restaurant_id' => $restaurant->id,
+                        'telegram_user_id' => $telegramUser->id,
+                        'message_id' => $result["result"]["message_id"] ?? null,
+                        'direction' => 'outgoing',
+                        'message_text' => $responseMessage,
+                        'message_data' => $result["result"] ?? null,
+                        'message_type' => 'text',
+                        'is_read' => false,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Error saving outgoing message", [
+                        "error" => $e->getMessage(),
+                        "restaurant_id" => $restaurant->id,
+                        "telegram_user_id" => $telegramUser->id ?? null
+                    ]);
+                }
             }
         }
         else {
@@ -255,7 +351,24 @@ try {
             
             // Save outgoing message to database
             if ($telegramUser && $result["ok"]) {
-                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result["result"]["message_id"] ?? null, $result);
+                try {
+                    TelegramMessage::create([
+                        'restaurant_id' => $restaurant->id,
+                        'telegram_user_id' => $telegramUser->id,
+                        'message_id' => $result["result"]["message_id"] ?? null,
+                        'direction' => 'outgoing',
+                        'message_text' => $responseMessage,
+                        'message_data' => $result["result"] ?? null,
+                        'message_type' => 'text',
+                        'is_read' => false,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Error saving outgoing message", [
+                        "error" => $e->getMessage(),
+                        "restaurant_id" => $restaurant->id,
+                        "telegram_user_id" => $telegramUser->id ?? null
+                    ]);
+                }
             }
         }
     }
@@ -266,7 +379,8 @@ try {
         
         Log::info("Processing callback query", [
             "chat_id" => $chatId,
-            "data" => $data
+            "data" => $data,
+            "restaurant_id" => $restaurant->id
         ]);
         
         // Handle callback queries
@@ -276,7 +390,7 @@ try {
         switch ($action) {
             case "refresh":
                 if ($parts[1] === "orders") {
-                    // Refresh orders
+                    // Refresh orders for this specific restaurant
                     $orders = \App\Models\Order::where("telegram_chat_id", $chatId)
                         ->where("restaurant_id", $restaurant->id)
                         ->orderBy("created_at", "desc")
@@ -323,7 +437,16 @@ try {
                 ->first();
             
             if ($telegramUser && $result["ok"]) {
-                $telegramService->saveOutgoingMessage($telegramUser, $responseMessage, $result["result"]["message_id"] ?? null, $result);
+                TelegramMessage::create([
+                    'restaurant_id' => $restaurant->id,
+                    'telegram_user_id' => $telegramUser->id,
+                    'message_id' => $result["result"]["message_id"] ?? null,
+                    'direction' => 'outgoing',
+                    'message_text' => $responseMessage,
+                    'message_data' => $result["result"] ?? null,
+                    'message_type' => 'text',
+                    'is_read' => false,
+                ]);
             }
         } catch (\Exception $e) {
             Log::error("Error saving callback message", [
@@ -334,7 +457,10 @@ try {
         }
     }
 
-    Log::info("Webhook processed successfully");
+    Log::info("Webhook processed successfully", [
+        "restaurant_id" => $restaurant->id,
+        "restaurant_name" => $restaurant->name
+    ]);
     
     // Always return OK to Telegram
     http_response_code(200);

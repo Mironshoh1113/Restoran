@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Storage;
 use App\Models\TelegramUser;
+use App\Models\TelegramMessage;
 
 class BotController extends Controller
 {
@@ -277,6 +278,79 @@ class BotController extends Controller
     }
 
     /**
+     * Set webhook for bot
+     */
+    public function setWebhook(Request $request, Restaurant $restaurant)
+    {
+        $this->authorize('update', $restaurant);
+        
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            // Create TelegramService with restaurant's bot token
+            $telegramService = new TelegramService($restaurant->bot_token);
+            
+            // Test bot connection first
+            $botInfo = $telegramService->getMe();
+            if (!$botInfo['ok']) {
+                return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
+            }
+            
+            // Set webhook URL for this specific bot
+            $webhookUrl = url('/telegram-webhook/' . $restaurant->bot_token);
+            $result = $telegramService->setWebhook($webhookUrl);
+            
+            if ($result['ok']) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Webhook muvaffaqiyatli o\'rnatildi',
+                    'webhook_url' => $webhookUrl,
+                    'bot_info' => $botInfo['result']
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Webhook o\'rnatishda xatolik: ' . ($result['description'] ?? 'Unknown error')
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete webhook for bot
+     */
+    public function deleteWebhook(Restaurant $restaurant)
+    {
+        $this->authorize('update', $restaurant);
+        
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            // Create TelegramService with restaurant's bot token
+            $telegramService = new TelegramService($restaurant->bot_token);
+            
+            $result = $telegramService->deleteWebhook();
+            
+            if ($result['ok']) {
+                return response()->json(['success' => true, 'message' => 'Webhook muvaffaqiyatli o\'chirildi']);
+            } else {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Webhook o\'chirishda xatolik: ' . ($result['description'] ?? 'Unknown error')
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Test bot connection
      */
     public function test(Restaurant $restaurant)
@@ -288,78 +362,24 @@ class BotController extends Controller
         }
 
         try {
+            // Create TelegramService with restaurant's bot token
             $telegramService = new TelegramService($restaurant->bot_token);
+            
+            // Test bot connection
             $botInfo = $telegramService->getMe();
-            
-            if ($botInfo['ok']) {
-                return response()->json([
-                    'success' => true, 
-                    'message' => 'Bot ulanishi muvaffaqiyatli',
-                    'bot_info' => $botInfo['result']
-                ]);
-            } else {
-                return response()->json([
-                    'success' => false, 
-                    'message' => 'Bot token noto\'g\'ri'
-                ]);
+            if (!$botInfo['ok']) {
+                return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
             }
-        } catch (\Exception $e) {
+            
+            // Get webhook info
+            $webhookInfo = $telegramService->getWebhookInfo();
+            
             return response()->json([
-                'success' => false, 
-                'message' => 'Xatolik: ' . $e->getMessage()
+                'success' => true,
+                'message' => 'Bot muvaffaqiyatli ulangan',
+                'bot_info' => $botInfo['result'],
+                'webhook_info' => $webhookInfo['result'] ?? null
             ]);
-        }
-    }
-
-    /**
-     * Set webhook
-     */
-    public function setWebhook(Request $request, Restaurant $restaurant)
-    {
-        $this->authorize('update', $restaurant);
-        
-        $request->validate([
-            'webhook_url' => 'required|url'
-        ]);
-
-        if (!$restaurant->bot_token) {
-            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
-        }
-
-        try {
-            $telegramService = new TelegramService($restaurant->bot_token);
-            $result = $telegramService->setWebhook($request->webhook_url);
-            
-            if ($result['ok']) {
-                return response()->json(['success' => true, 'message' => 'Webhook muvaffaqiyatli o\'rnatildi']);
-            } else {
-                return response()->json(['success' => false, 'message' => 'Webhook o\'rnatishda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')]);
-            }
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Delete webhook
-     */
-    public function deleteWebhook(Restaurant $restaurant)
-    {
-        $this->authorize('update', $restaurant);
-        
-        if (!$restaurant->bot_token) {
-            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
-        }
-
-        try {
-            $telegramService = new TelegramService($restaurant->bot_token);
-            $result = $telegramService->deleteWebhook();
-            
-            if ($result['ok']) {
-                return response()->json(['success' => true, 'message' => 'Webhook muvaffaqiyatli o\'chirildi']);
-            } else {
-                return response()->json(['success' => false, 'message' => 'Webhook o\'chirishda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')]);
-            }
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
         }
@@ -436,13 +456,14 @@ class BotController extends Controller
                 return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
             }
             
-            // Get selected users for this restaurant
+            // Get selected users for this specific restaurant only
             $users = TelegramUser::where('restaurant_id', $restaurant->id)
-                ->whereIn('id', $request->user_ids)
+                ->whereIn('telegram_id', $request->user_ids) // Use telegram_id instead of id
                 ->get();
             
             $successCount = 0;
             $errorCount = 0;
+            $errors = [];
             
             foreach ($users as $user) {
                 $result = $telegramService->sendMessage($user->telegram_id, $request->message);
@@ -451,7 +472,7 @@ class BotController extends Controller
                     $successCount++;
                     
                     // Save outgoing message to database
-                    \App\Models\TelegramMessage::create([
+                    TelegramMessage::create([
                         'restaurant_id' => $restaurant->id,
                         'telegram_user_id' => $user->id,
                         'message_id' => $result['result']['message_id'] ?? null,
@@ -463,16 +484,23 @@ class BotController extends Controller
                     ]);
                 } else {
                     $errorCount++;
+                    $errors[] = "User {$user->telegram_id}: " . ($result['description'] ?? 'Unknown error');
                 }
+            }
+            
+            $message = "Xabar {$successCount} ta foydalanuvchiga yuborildi.";
+            if ($errorCount > 0) {
+                $message .= " {$errorCount} ta xatolik yuz berdi.";
             }
             
             return response()->json([
                 'success' => true,
-                'message' => "Xabar {$successCount} ta foydalanuvchiga yuborildi. {$errorCount} ta xatolik yuz berdi.",
+                'message' => $message,
                 'result' => [
                     'success_count' => $successCount,
                     'error_count' => $errorCount,
-                    'total_users' => $users->count()
+                    'total_users' => $users->count(),
+                    'errors' => $errors
                 ]
             ]);
         } catch (\Exception $e) {
@@ -505,11 +533,14 @@ class BotController extends Controller
                 return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
             }
             
-            // Get all telegram users for this restaurant
-            $users = TelegramUser::where('restaurant_id', $restaurant->id)->get();
+            // Get all telegram users for this specific restaurant only
+            $users = TelegramUser::where('restaurant_id', $restaurant->id)
+                ->where('is_active', true)
+                ->get();
             
             $successCount = 0;
             $errorCount = 0;
+            $errors = [];
             
             foreach ($users as $user) {
                 $result = $telegramService->sendMessage($user->telegram_id, $request->message);
@@ -518,7 +549,7 @@ class BotController extends Controller
                     $successCount++;
                     
                     // Save outgoing message to database
-                    \App\Models\TelegramMessage::create([
+                    TelegramMessage::create([
                         'restaurant_id' => $restaurant->id,
                         'telegram_user_id' => $user->id,
                         'message_id' => $result['result']['message_id'] ?? null,
@@ -530,16 +561,23 @@ class BotController extends Controller
                     ]);
                 } else {
                     $errorCount++;
+                    $errors[] = "User {$user->telegram_id}: " . ($result['description'] ?? 'Unknown error');
                 }
+            }
+            
+            $message = "Xabar {$successCount} ta foydalanuvchiga yuborildi.";
+            if ($errorCount > 0) {
+                $message .= " {$errorCount} ta xatolik yuz berdi.";
             }
             
             return response()->json([
                 'success' => true,
-                'message' => "Xabar {$successCount} ta foydalanuvchiga yuborildi. {$errorCount} ta xatolik yuz berdi.",
+                'message' => $message,
                 'result' => [
                     'success_count' => $successCount,
                     'error_count' => $errorCount,
-                    'total_users' => $users->count()
+                    'total_users' => $users->count(),
+                    'errors' => $errors
                 ]
             ]);
         } catch (\Exception $e) {
@@ -548,32 +586,55 @@ class BotController extends Controller
     }
 
     /**
-     * Get users statistics
+     * Get users statistics for restaurant
      */
     public function getUsersStats(Restaurant $restaurant)
     {
         $this->authorize('view', $restaurant);
         
-        $stats = [
-            'total_users' => $restaurant->telegramUsers()->count(),
-            'active_users' => $restaurant->telegramUsers()->active()->count(),
-            'recent_users' => $restaurant->telegramUsers()->recent(7)->count(),
-            'today_users' => $restaurant->telegramUsers()->whereDate('last_activity', today())->count(),
-        ];
-        
-        return response()->json(['success' => true, 'stats' => $stats]);
+        try {
+            $totalUsers = TelegramUser::where('restaurant_id', $restaurant->id)->count();
+            $activeUsers = TelegramUser::where('restaurant_id', $restaurant->id)
+                ->where('is_active', true)
+                ->count();
+            $recentUsers = TelegramUser::where('restaurant_id', $restaurant->id)
+                ->where('last_activity', '>=', now()->subDays(7))
+                ->count();
+            $todayUsers = TelegramUser::where('restaurant_id', $restaurant->id)
+                ->where('last_activity', '>=', now()->startOfDay())
+                ->count();
+            
+            return response()->json([
+                'success' => true,
+                'stats' => [
+                    'total_users' => $totalUsers,
+                    'active_users' => $activeUsers,
+                    'recent_users' => $recentUsers,
+                    'today_users' => $todayUsers
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
     }
 
     /**
-     * Show conversation with specific user
+     * Show conversation with user
      */
     public function conversation(Restaurant $restaurant, TelegramUser $telegramUser)
     {
         $this->authorize('view', $restaurant);
         
-        $messages = $telegramUser->messages()
+        // Ensure the user belongs to this restaurant
+        if ($telegramUser->restaurant_id !== $restaurant->id) {
+            abort(404);
+        }
+        
+        $messages = TelegramMessage::where('restaurant_id', $restaurant->id)
+            ->where('telegram_user_id', $telegramUser->id)
             ->orderBy('created_at', 'asc')
-            ->paginate(50);
+            ->limit(100)
+            ->get();
         
         return view('admin.bots.conversation', compact('restaurant', 'telegramUser', 'messages'));
     }
@@ -584,6 +645,11 @@ class BotController extends Controller
     public function sendMessageToUser(Request $request, Restaurant $restaurant, TelegramUser $telegramUser)
     {
         $this->authorize('update', $restaurant);
+        
+        // Ensure the user belongs to this restaurant
+        if ($telegramUser->restaurant_id !== $restaurant->id) {
+            return response()->json(['success' => false, 'message' => 'Foydalanuvchi topilmadi']);
+        }
         
         $request->validate([
             'message' => 'required|string|max:4096'
@@ -607,7 +673,7 @@ class BotController extends Controller
             
             if ($result['ok']) {
                 // Save outgoing message to database
-                \App\Models\TelegramMessage::create([
+                TelegramMessage::create([
                     'restaurant_id' => $restaurant->id,
                     'telegram_user_id' => $telegramUser->id,
                     'message_id' => $result['result']['message_id'] ?? null,
@@ -619,16 +685,15 @@ class BotController extends Controller
                 ]);
                 
                 return response()->json([
-                    'success' => true, 
+                    'success' => true,
                     'message' => 'Xabar muvaffaqiyatli yuborildi',
-                    'message_data' => [
-                        'text' => $request->message,
-                        'direction' => 'outgoing',
-                        'created_at' => now()->format('Y-m-d H:i:s')
-                    ]
+                    'result' => $result['result']
                 ]);
             } else {
-                return response()->json(['success' => false, 'message' => 'Xabar yuborishda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Xabar yuborishda xatolik: ' . ($result['description'] ?? 'Unknown error')
+                ]);
             }
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
@@ -636,18 +701,29 @@ class BotController extends Controller
     }
 
     /**
-     * Get new messages for real-time updates
+     * Get new messages from user
      */
     public function getNewMessages(Restaurant $restaurant, TelegramUser $telegramUser)
     {
         $this->authorize('view', $restaurant);
         
-        $messages = $telegramUser->messages()
-            ->where('created_at', '>', request('last_message_time', now()->subMinutes(5)))
-            ->orderBy('created_at', 'asc')
+        // Ensure the user belongs to this restaurant
+        if ($telegramUser->restaurant_id !== $restaurant->id) {
+            return response()->json(['success' => false, 'message' => 'Foydalanuvchi topilmadi']);
+        }
+        
+        $messages = TelegramMessage::where('restaurant_id', $restaurant->id)
+            ->where('telegram_user_id', $telegramUser->id)
+            ->where('direction', 'incoming')
+            ->where('is_read', false)
+            ->orderBy('created_at', 'desc')
+            ->limit(50)
             ->get();
         
-        return response()->json(['success' => true, 'messages' => $messages]);
+        return response()->json([
+            'success' => true,
+            'messages' => $messages
+        ]);
     }
 
     /**
@@ -655,9 +731,15 @@ class BotController extends Controller
      */
     public function markMessagesAsRead(Restaurant $restaurant, TelegramUser $telegramUser)
     {
-        $this->authorize('update', $restaurant);
+        $this->authorize('view', $restaurant);
         
-        $telegramUser->messages()
+        // Ensure the user belongs to this restaurant
+        if ($telegramUser->restaurant_id !== $restaurant->id) {
+            return response()->json(['success' => false, 'message' => 'Foydalanuvchi topilmadi']);
+        }
+        
+        TelegramMessage::where('restaurant_id', $restaurant->id)
+            ->where('telegram_user_id', $telegramUser->id)
             ->where('direction', 'incoming')
             ->where('is_read', false)
             ->update(['is_read' => true]);

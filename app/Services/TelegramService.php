@@ -462,12 +462,12 @@ class TelegramService
     }
 
     /**
-     * Get telegram users for restaurant
+     * Get telegram users for restaurant with proper filtering
      */
     public function getTelegramUsers(Restaurant $restaurant, $limit = 50)
     {
         return $restaurant->telegramUsers()
-            ->active()
+            ->where('is_active', true)
             ->orderBy('last_activity', 'desc')
             ->limit($limit)
             ->get();
@@ -478,74 +478,117 @@ class TelegramService
      */
     public function sendMessageToAllUsers(Restaurant $restaurant, $message, $keyboard = null)
     {
-        $users = $restaurant->telegramUsers()->active()->get();
-        $successCount = 0;
-        $errorCount = 0;
-
-        foreach ($users as $user) {
-            try {
-                $result = $this->sendMessage($user->telegram_id, $message, $keyboard);
-                if ($result['ok']) {
-                    $successCount++;
-                    $user->updateActivity();
-                } else {
-                    $errorCount++;
-                }
-            } catch (\Exception $e) {
-                $errorCount++;
-                Log::error('Failed to send message to user', [
-                    'user_id' => $user->telegram_id,
-                    'error' => $e->getMessage()
-                ]);
-            }
+        if (!$restaurant->bot_token) {
+            return ['success' => false, 'message' => 'Bot token o\'rnatilmagan'];
         }
 
+        // Create new TelegramService instance with restaurant's bot token
+        $telegramService = new TelegramService($restaurant->bot_token);
+        
+        // Get all active users for this restaurant
+        $users = \App\Models\TelegramUser::where('restaurant_id', $restaurant->id)
+            ->where('is_active', true)
+            ->get();
+        
+        $successCount = 0;
+        $errorCount = 0;
+        $errors = [];
+        
+        foreach ($users as $user) {
+            $result = $telegramService->sendMessage($user->telegram_id, $message, $keyboard);
+            
+            if ($result['ok']) {
+                $successCount++;
+                
+                // Save outgoing message to database
+                \App\Models\TelegramMessage::create([
+                    'restaurant_id' => $restaurant->id,
+                    'telegram_user_id' => $user->id,
+                    'message_id' => $result['result']['message_id'] ?? null,
+                    'direction' => 'outgoing',
+                    'message_text' => $message,
+                    'message_data' => $result['result'] ?? null,
+                    'message_type' => 'text',
+                    'is_read' => false,
+                ]);
+            } else {
+                $errorCount++;
+                $errors[] = "User {$user->telegram_id}: " . ($result['description'] ?? 'Unknown error');
+            }
+        }
+        
         return [
+            'success' => true,
             'success_count' => $successCount,
             'error_count' => $errorCount,
-            'total_users' => $users->count()
+            'total_users' => $users->count(),
+            'errors' => $errors
         ];
     }
 
     /**
-     * Send message to specific users
+     * Send message to specific users of a restaurant
      */
     public function sendMessageToUsers($userIds, $message, $keyboard = null)
     {
-        $users = \App\Models\TelegramUser::whereIn('telegram_id', $userIds)->get();
-        $successCount = 0;
-        $errorCount = 0;
-
-        foreach ($users as $user) {
-            try {
-                $result = $this->sendMessage($user->telegram_id, $message, $keyboard);
-                if ($result['ok']) {
-                    $successCount++;
-                    $user->updateActivity();
-                    
-                    // Save outgoing message
-                    $this->saveOutgoingMessage($user, $message, $result['result']['message_id'] ?? null);
-                } else {
-                    $errorCount++;
-                }
-            } catch (\Exception $e) {
-                $errorCount++;
-                Log::error('Failed to send message to user', [
-                    'user_id' => $user->telegram_id,
-                    'error' => $e->getMessage()
-                ]);
-            }
+        // Get restaurant from first user
+        $firstUser = \App\Models\TelegramUser::whereIn('telegram_id', $userIds)->first();
+        if (!$firstUser) {
+            return ['success' => false, 'message' => 'Foydalanuvchilar topilmadi'];
+        }
+        
+        $restaurant = \App\Models\Restaurant::find($firstUser->restaurant_id);
+        if (!$restaurant || !$restaurant->bot_token) {
+            return ['success' => false, 'message' => 'Bot token o\'rnatilmagan'];
         }
 
+        // Create new TelegramService instance with restaurant's bot token
+        $telegramService = new TelegramService($restaurant->bot_token);
+        
+        // Get users for this specific restaurant
+        $users = \App\Models\TelegramUser::where('restaurant_id', $restaurant->id)
+            ->whereIn('telegram_id', $userIds)
+            ->where('is_active', true)
+            ->get();
+        
+        $successCount = 0;
+        $errorCount = 0;
+        $errors = [];
+        
+        foreach ($users as $user) {
+            $result = $telegramService->sendMessage($user->telegram_id, $message, $keyboard);
+            
+            if ($result['ok']) {
+                $successCount++;
+                
+                // Save outgoing message to database
+                \App\Models\TelegramMessage::create([
+                    'restaurant_id' => $restaurant->id,
+                    'telegram_user_id' => $user->id,
+                    'message_id' => $result['result']['message_id'] ?? null,
+                    'direction' => 'outgoing',
+                    'message_text' => $message,
+                    'message_data' => $result['result'] ?? null,
+                    'message_type' => 'text',
+                    'is_read' => false,
+                ]);
+            } else {
+                $errorCount++;
+                $errors[] = "User {$user->telegram_id}: " . ($result['description'] ?? 'Unknown error');
+            }
+        }
+        
         return [
+            'success' => true,
             'success_count' => $successCount,
             'error_count' => $errorCount,
-            'total_users' => $users->count()
+            'total_users' => $users->count(),
+            'errors' => $errors
         ];
     }
 
     /**
-     * Save incoming message
+     * Save incoming message with proper restaurant association
      */
     public function saveIncomingMessage($telegramUser, $messageText, $messageId = null, $messageData = null)
     {
@@ -562,7 +605,7 @@ class TelegramService
     }
 
     /**
-     * Save outgoing message
+     * Save outgoing message with proper restaurant association
      */
     public function saveOutgoingMessage($telegramUser, $messageText, $messageId = null, $messageData = null)
     {
@@ -574,20 +617,20 @@ class TelegramService
             'message_text' => $messageText,
             'message_data' => $messageData,
             'message_type' => 'text',
-            'is_read' => true,
+            'is_read' => false,
         ]);
     }
 
     /**
-     * Get conversation between user and bot
+     * Get conversation for specific user and restaurant
      */
     public function getConversation($telegramUser, $limit = 50)
     {
-        return $telegramUser->messages()
-            ->orderBy('created_at', 'desc')
+        return \App\Models\TelegramMessage::where('restaurant_id', $telegramUser->restaurant_id)
+            ->where('telegram_user_id', $telegramUser->id)
+            ->orderBy('created_at', 'asc')
             ->limit($limit)
-            ->get()
-            ->reverse();
+            ->get();
     }
 
     /**
