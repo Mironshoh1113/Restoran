@@ -760,6 +760,86 @@
         .back-btn:active {
             background: #a5b4fc;
         }
+    .cart-order-modal {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.25);
+        z-index: 2000;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+    }
+    .cart-order-modal-content {
+        background: #fff;
+        border-radius: 18px 18px 0 0;
+        width: 100%;
+        max-width: 480px;
+        max-height: 95vh;
+        overflow-y: auto;
+        box-shadow: 0 -4px 24px rgba(102, 126, 234, 0.18);
+        padding: 18px 16px 24px 16px;
+        position: relative;
+        animation: slideUp 0.25s cubic-bezier(.4,2,.6,1) 1;
+    }
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    .close-modal-btn {
+        background: none;
+        border: none;
+        color: #4f46e5;
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+    }
+    .modal-section {
+        margin-bottom: 18px;
+    }
+    .modal-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #22223b;
+        margin-bottom: 10px;
+    }
+    .modal-cart-total {
+        font-size: 16px;
+        font-weight: 700;
+        color: #059669;
+        margin-top: 8px;
+        text-align: right;
+    }
+    .modal-cart-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 15px;
+    }
+    .modal-cart-item:last-child {
+        border-bottom: none;
+    }
+    .modal-cart-item-name {
+        flex: 1;
+        font-weight: 600;
+        color: #22223b;
+    }
+    .modal-cart-item-qty {
+        color: #4f46e5;
+        font-weight: 700;
+        margin: 0 8px;
+    }
+    .modal-cart-item-price {
+        color: #059669;
+        font-weight: 700;
+        min-width: 60px;
+        text-align: right;
+    }
     </style>
 </head>
 <body>
@@ -831,60 +911,52 @@
             @endforeach
         </div>
         
-        <div id="order-form" class="order-form hidden">
-            <button class="back-btn" onclick="showMenu()">
-                <i class="fas fa-arrow-left"></i> Orqaga
-            </button>
-            <div class="form-title">Buyurtma ma'lumotlari</div>
-            <form id="checkout-form">
-                <div class="form-group">
-                    <label class="form-label">Ismingiz</label>
-                    <input type="text" class="form-input" id="customer-name" required>
+        <!-- Cart & Order Modal -->
+        <div id="cart-order-modal" class="cart-order-modal hidden">
+            <div class="cart-order-modal-content">
+                <button class="close-modal-btn" onclick="closeCartOrderModal()"><i class="fas fa-arrow-left"></i> Orqaga</button>
+                <div class="modal-section">
+                    <div class="modal-title">Savat</div>
+                    <div id="modal-cart-items"></div>
+                    <div class="modal-cart-total">Jami: <span id="modal-cart-total">0</span> so'm</div>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Telefon raqam</label>
-                    <input type="tel" class="form-input" id="customer-phone" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Yetkazib berish manzili</label>
-                    <textarea class="form-input" id="delivery-address" rows="3" required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">To'lov usuli</label>
-                    <div class="payment-methods">
-                        <div class="payment-method" data-method="cash">
-                            <div><i class="fas fa-money-bill-wave"></i> Naqd pul</div>
+                <div class="modal-section">
+                    <div class="modal-title">Buyurtma ma'lumotlari</div>
+                    <form id="modal-checkout-form">
+                        <div class="form-group">
+                            <label class="form-label">Ismingiz</label>
+                            <input type="text" class="form-input" id="modal-customer-name" required>
                         </div>
-                        <div class="payment-method" data-method="card">
-                            <div><i class="fas fa-credit-card"></i> Karta</div>
+                        <div class="form-group">
+                            <label class="form-label">Telefon raqam</label>
+                            <input type="tel" class="form-input" id="modal-customer-phone" required>
                         </div>
-                    </div>
-                    <input type="hidden" id="payment-method" value="cash">
+                        <div class="form-group">
+                            <label class="form-label">Yetkazib berish manzili</label>
+                            <textarea class="form-input" id="modal-delivery-address" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">To'lov usuli</label>
+                            <div class="payment-methods">
+                                <div class="payment-method" data-method="cash">
+                                    <div><i class="fas fa-money-bill-wave"></i> Naqd pul</div>
+                                </div>
+                                <div class="payment-method" data-method="card">
+                                    <div><i class="fas fa-credit-card"></i> Karta</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="modal-payment-method" value="cash">
+                        </div>
+                        <button type="submit" class="checkout-btn" style="width: 100%; margin-top: 15px;">
+                            <i class="fas fa-shopping-cart"></i> Buyurtma berish
+                        </button>
+                    </form>
                 </div>
-                
-                <button type="submit" class="checkout-btn" style="width: 100%; margin-top: 15px;">
-                    <i class="fas fa-shopping-cart"></i> Buyurtma berish
-                </button>
-            </form>
-        </div>
-        
-        <div id="success-message" class="success-message hidden">
-            <i class="fas fa-check-circle"></i><br>
-            <i class="fas fa-check"></i> Buyurtma qabul qilindi! Tez orada siz bilan bog'lanamiz.
-        </div>
-    </div>
-    
-    <div class="cart" id="cart">
-        <div class="cart-header">
-            <div class="cart-total">
-                <i class="fas fa-shopping-cart"></i> Jami: <span id="cart-total">0</span> so'm
+                <div id="modal-success-message" class="success-message hidden" style="margin-top: 20px;">
+                    <i class="fas fa-check-circle"></i><br>
+                    <i class="fas fa-check"></i> Buyurtma qabul qilindi! Tez orada siz bilan bog'lanamiz.
+                </div>
             </div>
-            <button class="checkout-btn" id="checkout-btn" onclick="showOrderForm()" disabled>
-                <i class="fas fa-credit-card"></i> Buyurtma berish
-            </button>
         </div>
     </div>
     
@@ -1240,6 +1312,123 @@
         }
         window.addEventListener('scroll', handleFloatingCartBtn);
         document.addEventListener('DOMContentLoaded', handleFloatingCartBtn);
+
+        // Cart & Order Modal Logic
+        document.getElementById('checkout-btn').onclick = function() {
+            openCartOrderModal();
+        };
+        function openCartOrderModal() {
+            renderModalCart();
+            loadModalCustomerData();
+            document.getElementById('cart-order-modal').classList.remove('hidden');
+        }
+        function closeCartOrderModal() {
+            document.getElementById('cart-order-modal').classList.add('hidden');
+        }
+        // Render cart items in modal
+        function renderModalCart() {
+            const modalCart = document.getElementById('modal-cart-items');
+            modalCart.innerHTML = '';
+            let total = 0;
+            for (let itemId in cart) {
+                const qty = cart[itemId];
+                const itemEl = document.querySelector(`[data-item-id="${itemId}"]`);
+                if (!itemEl) continue;
+                const name = itemEl.querySelector('.item-name').textContent;
+                const price = parseInt(itemEl.dataset.price);
+                total += price * qty;
+                modalCart.innerHTML += `<div class='modal-cart-item'><span class='modal-cart-item-name'>${name}</span> <span class='modal-cart-item-qty'>x${qty}</span> <span class='modal-cart-item-price'>${(price*qty).toLocaleString()} so'm</span></div>`;
+            }
+            if (total === 0) {
+                modalCart.innerHTML = `<div class='empty-cart'><i class='fas fa-shopping-cart'></i><br>Savat bo'sh</div>`;
+            }
+            document.getElementById('modal-cart-total').textContent = total.toLocaleString();
+        }
+        // Payment method selection in modal
+        document.querySelectorAll('#cart-order-modal .payment-method').forEach(method => {
+            method.addEventListener('click', function() {
+                document.querySelectorAll('#cart-order-modal .payment-method').forEach(m => m.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('modal-payment-method').value = this.dataset.method;
+            });
+        });
+        // Modal checkout form submit
+        document.getElementById('modal-checkout-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitModalOrder();
+        });
+        function submitModalOrder() {
+            const items = [];
+            for (let itemId in cart) {
+                items.push({ id: parseInt(itemId), quantity: cart[itemId] });
+            }
+            if (items.length === 0) {
+                alert('Savat bo\'sh!');
+                return;
+            }
+            const orderData = {
+                items: items,
+                customer_name: document.getElementById('modal-customer-name').value,
+                customer_phone: document.getElementById('modal-customer-phone').value,
+                delivery_address: document.getElementById('modal-delivery-address').value,
+                payment_method: document.getElementById('modal-payment-method').value,
+                telegram_chat_id: telegramChatId
+            };
+            // Get bot token from URL parameters or use the current token
+            const urlParams = new URLSearchParams(window.location.search);
+            const botToken = urlParams.get('bot_token');
+            const currentUrl = window.location.pathname;
+            const token = currentUrl.split('/').pop();
+            let endpoint = token && token !== 'web-interface' ? `/web-interface/${token}/order` : '/web-interface/order';
+            if (botToken) {
+                endpoint = '/web-interface/order';
+                orderData.bot_token = botToken;
+            }
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+            fetch(endpoint, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(orderData)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('modal-checkout-form').classList.add('hidden');
+                    document.getElementById('modal-success-message').classList.remove('hidden');
+                    tg.sendData(JSON.stringify({ action: 'order_placed', order_id: data.order_id }));
+                    setTimeout(() => { tg.close(); }, 3000);
+                } else {
+                    alert('Xatolik yuz berdi: ' + (data.error || 'Noma\'lum xatolik'));
+                }
+            })
+            .catch(error => {
+                alert('Xatolik yuz berdi: ' + error.message);
+            });
+            saveModalCustomerData();
+        }
+        // Save/load customer data for modal
+        function loadModalCustomerData() {
+            const savedName = localStorage.getItem('customer_name');
+            const savedPhone = localStorage.getItem('customer_phone');
+            const savedAddress = localStorage.getItem('delivery_address');
+            if (savedName) document.getElementById('modal-customer-name').value = savedName;
+            if (savedPhone) document.getElementById('modal-customer-phone').value = savedPhone;
+            if (savedAddress) document.getElementById('modal-delivery-address').value = savedAddress;
+        }
+        function saveModalCustomerData() {
+            const name = document.getElementById('modal-customer-name').value;
+            const phone = document.getElementById('modal-customer-phone').value;
+            const address = document.getElementById('modal-delivery-address').value;
+            if (name) localStorage.setItem('customer_name', name);
+            if (phone) localStorage.setItem('customer_phone', phone);
+            if (address) localStorage.setItem('delivery_address', address);
+        }
     </script>
 </body>
 </html> 
