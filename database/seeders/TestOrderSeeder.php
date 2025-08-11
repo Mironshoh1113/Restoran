@@ -5,111 +5,67 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Order;
 use App\Models\Restaurant;
-use App\Models\Project;
-use App\Models\Category;
-use App\Models\MenuItem;
-use App\Models\OrderItem;
+use App\Models\User;
+use Carbon\Carbon;
 
 class TestOrderSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Get or create a restaurant
+        // Get first restaurant
         $restaurant = Restaurant::first();
         if (!$restaurant) {
-            $restaurant = Restaurant::create([
-                'name' => 'Test Restaurant',
-                'address' => 'Test Address',
-                'phone' => '+998901234567',
-                'bot_token' => 'test_bot_token_123',
-            ]);
+            $this->command->info('No restaurant found. Please run RestaurantSeeder first.');
+            return;
         }
 
-        // Get or create a project
-        $project = Project::where('restaurant_id', $restaurant->id)->first();
-        if (!$project) {
-            $project = Project::create([
-                'name' => 'Test Project',
-                'restaurant_id' => $restaurant->id,
-            ]);
+        // Get first user
+        $user = User::first();
+        if (!$user) {
+            $this->command->info('No user found. Please run UserSeeder first.');
+            return;
         }
 
-        // Get or create a category
-        $category = Category::where('project_id', $project->id)->first();
-        if (!$category) {
-            $category = Category::create([
-                'name' => 'Test Category',
-                'project_id' => $project->id,
-            ]);
-        }
-
-        // Get or create menu items
-        $menuItems = MenuItem::where('category_id', $category->id)->get();
-        if ($menuItems->isEmpty()) {
-            $menuItems = collect([
-                MenuItem::create([
-                    'name' => 'Test Item 1',
-                    'description' => 'Test description 1',
-                    'price' => 15000,
-                    'category_id' => $category->id,
-                ]),
-                MenuItem::create([
-                    'name' => 'Test Item 2',
-                    'description' => 'Test description 2',
-                    'price' => 25000,
-                    'category_id' => $category->id,
-                ]),
-                MenuItem::create([
-                    'name' => 'Test Item 3',
-                    'description' => 'Test description 3',
-                    'price' => 35000,
-                    'category_id' => $category->id,
-                ]),
-            ]);
-        }
-
-        // Create test orders
-        $testChatIds = [1238412611, 987654321, 555666777]; // Using actual user chat ID
+        // Create test orders for the last 6 months
         $statuses = ['new', 'preparing', 'on_way', 'delivered', 'cancelled'];
-
-        foreach ($testChatIds as $index => $chatId) {
-            // Create order
-            $order = Order::create([
-                'order_number' => 'ORD-' . str_pad(time() + $index, 6, '0', STR_PAD_LEFT),
-                'restaurant_id' => $restaurant->id,
-                'project_id' => $project->id,
-                'telegram_chat_id' => $chatId,
-                'customer_name' => 'Test Customer ' . ($index + 1),
-                'customer_phone' => '+99890123456' . ($index + 1),
-                'address' => 'Test Address ' . ($index + 1),
-                'payment_type' => $index % 2 === 0 ? 'cash' : 'card',
-                'status' => $statuses[$index % count($statuses)],
-                'total_price' => 0
-            ]);
-
-            // Create order items
-            $total = 0;
-            foreach ($menuItems->take(2) as $menuItem) {
-                $quantity = rand(1, 3);
-                $subtotal = $menuItem->price * $quantity;
-                $total += $subtotal;
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'menu_item_id' => $menuItem->id,
-                    'quantity' => $quantity,
-                    'price' => $menuItem->price,
+        
+        for ($i = 5; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $daysInMonth = $month->daysInMonth;
+            
+            // Create 3-8 orders per month
+            $ordersCount = rand(3, 8);
+            
+            for ($j = 0; $j < $ordersCount; $j++) {
+                $randomDay = rand(1, $daysInMonth);
+                $orderDate = $month->copy()->day($randomDay)->hour(rand(8, 22))->minute(rand(0, 59));
+                
+                Order::create([
+                    'order_number' => 'ORD-' . str_pad(Order::max('id') + 1, 6, '0', STR_PAD_LEFT),
+                    'user_id' => $user->id,
+                    'restaurant_id' => $restaurant->id,
+                    'status' => $statuses[array_rand($statuses)],
+                    'total_price' => rand(15000, 150000),
+                    'payment_type' => rand(0, 1) ? 'cash' : 'card',
+                    'address' => 'Test Address ' . rand(1, 100),
+                    'customer_name' => 'Test Customer ' . rand(1, 50),
+                    'customer_phone' => '+998' . rand(900000000, 999999999),
+                    'total_amount' => rand(15000, 150000),
+                    'delivery_address' => 'Test Delivery Address ' . rand(1, 100),
+                    'payment_method' => rand(0, 1) ? 'cash' : 'card',
+                    'items' => [
+                        [
+                            'name' => 'Test Item ' . rand(1, 10),
+                            'price' => rand(5000, 50000),
+                            'quantity' => rand(1, 5)
+                        ]
+                    ],
+                    'created_at' => $orderDate,
+                    'updated_at' => $orderDate
                 ]);
             }
-
-            // Update order total
-            $order->update(['total_price' => $total]);
         }
 
         $this->command->info('Test orders created successfully!');
-        $this->command->info('Test chat IDs: ' . implode(', ', $testChatIds));
     }
 } 

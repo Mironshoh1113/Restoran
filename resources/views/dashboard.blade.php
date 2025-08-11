@@ -157,8 +157,8 @@
                                         <p class="font-medium text-gray-800 dark:text-gray-200">#{{ $order->order_number }}</p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">{{ $order->customer_name ?? 'Mijoz' }}</p>
                                         <p class="text-xs text-gray-400 dark:text-gray-500">
-                                            @if(isset($order->project) && isset($order->project->restaurant))
-                                                {{ $order->project->restaurant->name }}
+                                            @if(isset($order->restaurant))
+                                                {{ $order->restaurant->name }}
                                             @else
                                                 Restoran
                                             @endif

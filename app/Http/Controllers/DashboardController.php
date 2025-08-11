@@ -62,20 +62,17 @@ class DashboardController extends Controller
             // Get user's restaurants for this calculation
             $userRestaurants = $user->ownedRestaurants()->get();
             
-            // Current counts with error handling
-            $currentRestaurants = $userRestaurants->count();
-            $currentOrders = Order::whereHas('project', function($query) use ($restaurantIds) {
-                $query->whereIn('restaurant_id', $restaurantIds);
-            })->count();
-            $currentCouriers = Courier::whereIn('restaurant_id', $restaurantIds)->count();
-            $currentMenuItems = MenuItem::whereHas('category.project', function($query) use ($restaurantIds) {
-                $query->whereIn('restaurant_id', $restaurantIds);
-            })->count();
-            
-            // Last month counts for comparison with error handling
-            $lastMonthOrders = Order::whereHas('project', function($query) use ($restaurantIds) {
-                $query->whereIn('restaurant_id', $restaurantIds);
-            })->whereBetween('created_at', [$lastMonth->startOfMonth(), $lastMonth->endOfMonth()])->count();
+                    // Current counts with error handling
+        $currentRestaurants = $userRestaurants->count();
+        $currentOrders = Order::whereIn('restaurant_id', $restaurantIds)->count();
+        $currentCouriers = Courier::whereIn('restaurant_id', $restaurantIds)->count();
+        $currentMenuItems = MenuItem::whereHas('category.project', function($query) use ($restaurantIds) {
+            $query->whereIn('restaurant_id', $restaurantIds);
+        })->count();
+        
+        // Last month counts for comparison with error handling
+        $lastMonthOrders = Order::whereIn('restaurant_id', $restaurantIds)
+            ->whereBetween('created_at', [$lastMonth->startOfMonth(), $lastMonth->endOfMonth()])->count();
             
             $lastMonthRestaurants = $userRestaurants->where('created_at', '<=', $lastMonth->endOfMonth())->count();
             $lastMonthCouriers = Courier::whereIn('restaurant_id', $restaurantIds)
@@ -126,13 +123,11 @@ class DashboardController extends Controller
     private function getRecentOrders($restaurantIds)
     {
         try {
-            return Order::whereHas('project', function($query) use ($restaurantIds) {
-                $query->whereIn('restaurant_id', $restaurantIds);
-            })
-            ->with(['project.restaurant', 'courier'])
-            ->latest()
-            ->limit(5)
-            ->get();
+            return Order::whereIn('restaurant_id', $restaurantIds)
+                ->with(['restaurant', 'courier'])
+                ->latest()
+                ->limit(5)
+                ->get();
         } catch (\Exception $e) {
             return collect(); // Return empty collection if there's an error
         }
@@ -144,9 +139,8 @@ class DashboardController extends Controller
             $activities = collect();
             
             // Recent orders
-            $recentOrders = Order::whereHas('project', function($query) use ($restaurantIds) {
-                $query->whereIn('restaurant_id', $restaurantIds);
-            })->with(['project.restaurant'])->latest()->limit(3)->get();
+            $recentOrders = Order::whereIn('restaurant_id', $restaurantIds)
+                ->with(['restaurant'])->latest()->limit(3)->get();
             
             foreach ($recentOrders as $order) {
                 try {
@@ -155,7 +149,7 @@ class DashboardController extends Controller
                         'icon' => 'shopping-cart',
                         'icon_color' => 'green',
                         'title' => 'Yangi buyurtma qabul qilindi',
-                        'subtitle' => "#{$order->order_number} - " . ($order->project->restaurant->name ?? 'Restoran'),
+                        'subtitle' => "#{$order->order_number} - " . ($order->restaurant->name ?? 'Restoran'),
                         'time' => $order->created_at->diffForHumans(),
                         'timestamp' => $order->created_at
                     ]);
@@ -166,9 +160,8 @@ class DashboardController extends Controller
             }
             
             // Recent courier assignments
-            $recentCourierAssignments = Order::whereHas('project', function($query) use ($restaurantIds) {
-                $query->whereIn('restaurant_id', $restaurantIds);
-            })->whereNotNull('courier_id')->with(['project.restaurant', 'courier'])->latest()->limit(2)->get();
+            $recentCourierAssignments = Order::whereIn('restaurant_id', $restaurantIds)
+                ->whereNotNull('courier_id')->with(['restaurant', 'courier'])->latest()->limit(2)->get();
             
             foreach ($recentCourierAssignments as $order) {
                 try {
@@ -228,13 +221,11 @@ class DashboardController extends Controller
                     $monthStart = $month->copy()->startOfMonth();
                     $monthEnd = $month->copy()->endOfMonth();
                     
-                    $orderCount = Order::whereHas('project', function($query) use ($restaurantIds) {
-                        $query->whereIn('restaurant_id', $restaurantIds);
-                    })->whereBetween('created_at', [$monthStart, $monthEnd])->count();
+                    $orderCount = Order::whereIn('restaurant_id', $restaurantIds)
+                        ->whereBetween('created_at', [$monthStart, $monthEnd])->count();
                     
-                    $totalRevenue = Order::whereHas('project', function($query) use ($restaurantIds) {
-                        $query->whereIn('restaurant_id', $restaurantIds);
-                    })->whereBetween('created_at', [$monthStart, $monthEnd])->sum('total_price');
+                    $totalRevenue = Order::whereIn('restaurant_id', $restaurantIds)
+                        ->whereBetween('created_at', [$monthStart, $monthEnd])->sum('total_price');
                     
                     $months->push([
                         'month' => $month->format('M Y'),
