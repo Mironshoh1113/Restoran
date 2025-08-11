@@ -25,6 +25,7 @@ class CategorySeeder extends Seeder
                 Category::create([
                     'name' => $category['name'],
                     'project_id' => $project->id,
+                    'restaurant_id' => 1, // Default restaurant ID
                     'description' => $category['name'] . ' kategoriyasi',
                     'sort_order' => $category['sort_order'],
                     'is_active' => true,
