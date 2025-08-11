@@ -95,11 +95,14 @@
                 <div class="flex space-x-3">
                     <input type="text" id="messageInput" 
                            class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                           placeholder="Xabar yozing...">
-                    <button onclick="sendMessage()" 
-                            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2">
-                        <i class="fas fa-paper-plane"></i>
-                        <span>Yuborish</span>
+                           placeholder="Xabar yozing..." 
+                           onkeypress="if(event.key === 'Enter') sendMessage()">
+                    <button id="sendButton" onclick="sendMessage()" 
+                            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span id="sendButtonText">Yuborish</span>
+                        <div id="sendButtonSpinner" class="hidden">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
                     </button>
                 </div>
             </div>
@@ -110,6 +113,47 @@
 <script>
 let lastMessageTime = '{{ $messages->last() ? $messages->last()->created_at->toISOString() : now()->toISOString() }}';
 let isPolling = false;
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 transform transition-all duration-300 translate-x-full`;
+    
+    switch (type) {
+        case 'success':
+            notification.classList.add('bg-green-600');
+            break;
+        case 'error':
+            notification.classList.add('bg-red-600');
+            break;
+        case 'warning':
+            notification.classList.add('bg-yellow-600');
+            break;
+        case 'info':
+            notification.classList.add('bg-blue-600');
+            break;
+        default:
+            notification.classList.add('bg-blue-600');
+    }
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, 5000);
+}
 
 // Auto-scroll to bottom
 function scrollToBottom() {
@@ -186,7 +230,7 @@ function pollNewMessages() {
     
     isPolling = true;
     
-    fetch(`/admin/bots/{{ $restaurant->id }}/users/{{ $telegramUser->id }}/messages?last_message_time=${lastMessageTime}`)
+    fetch(`/admin/bots/{{ $restaurant->id }}/users/{{ $telegramUser->id }}/messages/new?last_message_time=${lastMessageTime}`)
         .then(response => response.json())
         .then(data => {
             if (data.success && data.messages.length > 0) {
@@ -199,6 +243,11 @@ function pollNewMessages() {
                 // Update last message time
                 const lastMessage = data.messages[data.messages.length - 1];
                 lastMessageTime = new Date(lastMessage.created_at).toISOString();
+                
+                // Show notification for new messages
+                if (data.messages.length > 0) {
+                    showNotification(`📨 ${data.messages.length} ta yangi xabar`, 'info');
+                }
             }
         })
         .catch(error => {
@@ -260,6 +309,80 @@ function markAsRead() {
         console.error('Error:', error);
         showNotification('Xatolik yuz berdi', 'error');
     });
+}
+
+// Send message function
+function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const sendButtonText = document.getElementById('sendButtonText');
+    const sendButtonSpinner = document.getElementById('sendButtonSpinner');
+    
+    const message = messageInput.value.trim();
+    if (!message) return;
+    
+    // Disable button and show loading
+    sendButton.disabled = true;
+    sendButtonText.classList.add('hidden');
+    sendButtonSpinner.classList.remove('hidden');
+    
+    fetch(`/admin/bots/{{ $restaurant->id }}/users/{{ $telegramUser->id }}/send`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ message: message })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add message to container
+            addOutgoingMessageToContainer(message);
+            messageInput.value = '';
+            showNotification('✅ ' + data.message, 'success');
+        } else {
+            showNotification('❌ ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Xabar yuborishda xatolik', 'error');
+    })
+    .finally(() => {
+        // Re-enable button
+        sendButton.disabled = false;
+        sendButtonText.classList.remove('hidden');
+        sendButtonSpinner.classList.add('hidden');
+    });
+}
+
+// Add outgoing message to container
+function addOutgoingMessageToContainer(messageText) {
+    const container = document.getElementById('messagesContainer');
+    
+    // Remove empty state if it exists
+    const emptyState = container.querySelector('.text-center');
+    if (emptyState) {
+        emptyState.remove();
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'flex justify-end';
+    
+    const time = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
+    
+    messageDiv.innerHTML = `
+        <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-blue-600 text-white">
+            <div class="text-sm">${messageText}</div>
+            <div class="text-xs mt-1 text-blue-100">
+                ${time}
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(messageDiv);
+    scrollToBottom();
 }
 
 // Enter key to send message

@@ -422,9 +422,21 @@ class BotController extends Controller
     {
         $this->authorize('view', $restaurant);
         
-        $users = $restaurant->telegramUsers()
-            ->orderBy('last_activity', 'desc')
-            ->paginate(20);
+        // Get users from this restaurant AND users who have messaged this restaurant's bot
+        $users = \App\Models\TelegramUser::where(function($query) use ($restaurant) {
+            $query->where('restaurant_id', $restaurant->id)
+                  ->orWhereExists(function($subQuery) use ($restaurant) {
+                      $subQuery->select(\Illuminate\Support\Facades\DB::raw(1))
+                               ->from('telegram_messages')
+                               ->whereColumn('telegram_messages.telegram_user_id', 'telegram_users.id')
+                               ->where('telegram_messages.restaurant_id', $restaurant->id);
+                  });
+        })
+        ->with(['restaurant', 'messages' => function($query) use ($restaurant) {
+            $query->where('restaurant_id', $restaurant->id);
+        }])
+        ->orderBy('last_activity', 'desc')
+        ->paginate(20);
         
         return view('admin.bots.users', compact('restaurant', 'users'));
     }
@@ -625,18 +637,17 @@ class BotController extends Controller
     {
         $this->authorize('view', $restaurant);
         
-        // Ensure the user belongs to this restaurant
-        if ($telegramUser->restaurant_id !== $restaurant->id) {
-            abort(404);
-        }
-        
-        $messages = TelegramMessage::where('restaurant_id', $restaurant->id)
+        // Get messages from this restaurant for this user
+        $messages = \App\Models\TelegramMessage::where('restaurant_id', $restaurant->id)
             ->where('telegram_user_id', $telegramUser->id)
             ->orderBy('created_at', 'asc')
             ->limit(100)
             ->get();
         
-        return view('admin.bots.conversation', compact('restaurant', 'telegramUser', 'messages'));
+        // Get user info from global table if exists
+        $globalUser = \App\Models\GlobalTelegramUser::where('telegram_id', $telegramUser->telegram_id)->first();
+        
+        return view('admin.bots.conversation', compact('restaurant', 'telegramUser', 'messages', 'globalUser'));
     }
 
     /**
@@ -645,11 +656,6 @@ class BotController extends Controller
     public function sendMessageToUser(Request $request, Restaurant $restaurant, TelegramUser $telegramUser)
     {
         $this->authorize('update', $restaurant);
-        
-        // Ensure the user belongs to this restaurant
-        if ($telegramUser->restaurant_id !== $restaurant->id) {
-            return response()->json(['success' => false, 'message' => 'Foydalanuvchi topilmadi']);
-        }
         
         $request->validate([
             'message' => 'required|string|max:4096'
@@ -673,7 +679,7 @@ class BotController extends Controller
             
             if ($result['ok']) {
                 // Save outgoing message to database
-                TelegramMessage::create([
+                \App\Models\TelegramMessage::create([
                     'restaurant_id' => $restaurant->id,
                     'telegram_user_id' => $telegramUser->id,
                     'message_id' => $result['result']['message_id'] ?? null,
@@ -691,8 +697,7 @@ class BotController extends Controller
                 ]);
             } else {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Xabar yuborishda xatolik: ' . ($result['description'] ?? 'Unknown error')
+                    'success' => false, 'message' => 'Xabar yuborishda xatolik: ' . ($result['description'] ?? 'Unknown error')
                 ]);
             }
         } catch (\Exception $e) {

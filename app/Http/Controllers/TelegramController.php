@@ -370,101 +370,114 @@ class TelegramController extends Controller
      */
     public function webInterfaceFromApp(Request $request)
     {
-        Log::info('Web interface accessed', [
-            'url' => $request->fullUrl(),
-            'user_agent' => $request->userAgent(),
-            'headers' => $request->headers->all()
-        ]);
-        
-        // Get init data from Telegram Web App
-        $initData = $request->get('_tgInitData') ?? $request->get('tgInitData');
-        
-        // Get bot token from query parameter or init data
-        $botToken = $request->get('bot_token');
-        
-        if (!$botToken && $initData) {
-            $botToken = $this->extractBotTokenFromInitData($initData);
-        }
-        
-        // If no bot token provided, try to get from referer or use first restaurant
-        if (!$botToken) {
-            $referer = $request->header('Referer');
-            if ($referer) {
-                // Try to extract bot token from referer URL
-                if (preg_match('/bot_token=([^&]+)/', $referer, $matches)) {
-                    $botToken = $matches[1];
+        try {
+            Log::info('Web interface from app request received', [
+                'request_data' => $request->all(),
+                'headers' => $request->headers->all()
+            ]);
+            
+            // Get init data from Telegram Web App
+            $initData = $request->get('_tgInitData') ?? $request->get('tgInitData') ?? $request->get('_tgWebAppData');
+            
+            // Get bot token from query parameter or init data
+            $botToken = $request->get('bot_token');
+            
+            if (!$botToken && $initData) {
+                $botToken = $this->extractBotTokenFromInitData($initData);
+            }
+            
+            // Validate bot token format
+            if ($botToken && !preg_match('/^\d+:[A-Za-z0-9_-]+$/', $botToken)) {
+                Log::error('Invalid bot token format: ' . $botToken);
+                return response()->json(['error' => 'Invalid bot token format'], 400);
+            }
+            
+            // Find restaurant by bot token
+            if ($botToken) {
+                $restaurant = Restaurant::where('bot_token', $botToken)->first();
+            } else {
+                // Fallback to first restaurant for testing
+                $restaurant = Restaurant::first();
+            }
+            
+            if (!$restaurant) {
+                Log::error('No restaurant available for web interface', ['bot_token' => $botToken]);
+                return response()->json(['error' => 'Restaurant not found'], 404);
+            }
+            
+            // Check if restaurant is active
+            if (!$restaurant->is_active) {
+                Log::error('Restaurant is not active: ' . $restaurant->id);
+                return response()->json(['error' => 'Restaurant is not active'], 400);
+            }
+            
+            Log::info('Restaurant found for web interface', [
+                'restaurant_id' => $restaurant->id,
+                'restaurant_name' => $restaurant->name,
+                'bot_token' => $botToken
+            ]);
+            
+            // Parse init data to get user info if available
+            $user = null;
+            $chatId = null;
+            
+            if ($initData) {
+                $data = [];
+                parse_str($initData, $data);
+                
+                $user = $data['user'] ?? null;
+                $chatId = $data['chat_instance'] ?? null;
+            }
+            
+            // If no user data from init, create a test user
+            if (!$user) {
+                $user = (object) [
+                    'id' => 123456789,
+                    'first_name' => 'Test User',
+                    'username' => 'testuser'
+                ];
+            }
+            
+            // Get or create user in database
+            $dbUser = null;
+            if ($chatId) {
+                $dbUser = \App\Models\User::where('telegram_chat_id', $chatId)->first();
+                
+                if (!$dbUser && $user) {
+                    // Create user from Telegram data
+                    $userData = is_string($user) ? json_decode($user, true) : (array) $user;
+                    $dbUser = \App\Models\User::create([
+                        'name' => $userData['first_name'] ?? 'User',
+                        'email' => 'telegram_' . $chatId . '@example.com',
+                        'telegram_chat_id' => $chatId,
+                        'password' => bcrypt(Str::random(16))
+                    ]);
                 }
             }
-        }
-        
-        // Find restaurant by bot token
-        if ($botToken) {
-            $restaurant = Restaurant::where('bot_token', $botToken)->first();
-        } else {
-            // Fallback to first restaurant for testing
-            $restaurant = Restaurant::first();
-        }
-        
-        if (!$restaurant) {
-            Log::error('No restaurant available for web interface', ['bot_token' => $botToken]);
-            return response('No restaurant available', 404);
-        }
-        
-        Log::info('Restaurant found for web interface', [
-            'restaurant_id' => $restaurant->id,
-            'restaurant_name' => $restaurant->name,
-            'bot_token' => $botToken
-        ]);
-        
-        // Parse init data to get user info if available
-        $user = null;
-        $chatId = null;
-        
-        if ($initData) {
-            $data = [];
-            parse_str($initData, $data);
             
-            $user = $data['user'] ?? null;
-            $chatId = $data['chat_instance'] ?? null;
-        }
-        
-        // If no user data from init, create a test user
-        if (!$user) {
-            $user = (object) [
-                'id' => 123456789,
-                'first_name' => 'Test User',
-                'username' => 'testuser'
-            ];
-        }
-        
-        // Get or create user in database
-        $dbUser = null;
-        if ($chatId) {
-            $dbUser = \App\Models\User::where('telegram_chat_id', $chatId)->first();
+            // Get categories and menu items for this specific restaurant
+            $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
             
-            if (!$dbUser && $user) {
-                // Create user from Telegram data
-                $userData = is_string($user) ? json_decode($user, true) : (array) $user;
-                $dbUser = \App\Models\User::create([
-                    'name' => $userData['first_name'] ?? 'User',
-                    'email' => 'telegram_' . $chatId . '@example.com',
-                    'telegram_chat_id' => $chatId,
-                    'password' => bcrypt(Str::random(16))
-                ]);
-            }
+            Log::info('Web interface loaded successfully', [
+                'restaurant_id' => $restaurant->id,
+                'restaurant_name' => $restaurant->name,
+                'categories_count' => $categories->count(),
+                'bot_token' => $botToken
+            ]);
+            
+            return view('web-interface.index', compact('restaurant', 'user', 'categories', 'botToken'));
+            
+        } catch (\Exception $e) {
+            Log::error('Web interface from app error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+            
+            return response()->json([
+                'error' => 'Server error: ' . $e->getMessage()
+            ], 500);
         }
-        
-        // Get categories and menu items for this specific restaurant
-        $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
-        
-        Log::info('Web interface loaded successfully', [
-            'restaurant_id' => $restaurant->id,
-            'restaurant_name' => $restaurant->name,
-            'categories_count' => $categories->count(),
-            'bot_token' => $botToken
-        ]);
-        
-        return view('web-interface.index', compact('restaurant', 'user', 'categories', 'botToken'));
     }
 
     /**

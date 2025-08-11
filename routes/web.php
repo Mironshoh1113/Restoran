@@ -86,6 +86,9 @@ Route::middleware('auth')->group(function () {
         Route::get('bots/{restaurant}/users/{telegramUser}/messages', [BotController::class, 'getNewMessages'])->name('bots.get-new-messages');
         Route::post('bots/{restaurant}/users/{telegramUser}/read', [BotController::class, 'markMessagesAsRead'])->name('bots.mark-as-read');
         
+        // Real-time message updates
+        Route::get('bots/{restaurant}/users/{telegramUser}/messages/new', [BotController::class, 'getNewMessages'])->name('bots.get-new-messages-rt');
+        
         // Project routes
         Route::get('restaurants/{restaurant}/projects', [ProjectController::class, 'index'])->name('projects.index');
         Route::get('restaurants/{restaurant}/projects/create', [ProjectController::class, 'create'])->name('projects.create');
