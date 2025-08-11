@@ -16,6 +16,110 @@
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: none; }
         .quantity-btn { width: 35px; height: 35px; border-radius: 50%; }
         .cart-fixed { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        
+        /* Product image styles */
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .product-image-placeholder {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 24px;
+        }
+        
+        /* Card improvements */
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 0.25rem;
+        }
+        
+        .card-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+        
+        /* Responsive improvements */
+        @media (max-width: 576px) {
+            .product-image, .product-image-placeholder {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .card-body {
+                padding: 0.75rem;
+            }
+            
+            .card-title {
+                font-size: 0.9rem;
+            }
+            
+            .card-text {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Telegram dark theme */
+        .telegram-dark {
+            background: #1a1a1a !important;
+            color: #ffffff !important;
+        }
+        
+        .telegram-dark .navbar {
+            background: #2a2a2a !important;
+        }
+        
+        .telegram-dark .card {
+            background: #2a2a2a !important;
+            color: #ffffff !important;
+        }
+        
+        .telegram-dark .card-title {
+            color: #ffffff !important;
+        }
+        
+        .telegram-dark .card-text {
+            color: #cccccc !important;
+        }
+        
+        .telegram-dark .cart-fixed {
+            background: #2a2a2a !important;
+            color: #ffffff !important;
+        }
+        
+        .telegram-dark .modal-content {
+            background: #2a2a2a !important;
+            color: #ffffff !important;
+        }
+        
+        .telegram-dark .form-control {
+            background: #3a3a3a !important;
+            color: #ffffff !important;
+            border-color: #4a4a4a !important;
+        }
+        
+        .telegram-dark .form-control:focus {
+            background: #3a3a3a !important;
+            color: #ffffff !important;
+            border-color: #667eea !important;
+        }
     </style>
 </head>
 <body>
@@ -50,7 +154,24 @@
                     <div class="card mb-3" data-item-id="{{ $item->id }}" data-price="{{ $item->price }}">
                         <div class="card-body">
                             <div class="row align-items-center">
-                                <div class="col-8">
+                                <div class="col-3">
+                                    <!-- Product Image -->
+                                    @if($item->hasImage())
+                                        <img src="{{ asset('storage/' . $item->image) }}" 
+                                             alt="{{ $item->name }}" 
+                                             class="product-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="product-image-placeholder" 
+                                             style="display: none;">
+                                            <i class="fas fa-utensils text-muted"></i>
+                                        </div>
+                                    @else
+                                        <div class="product-image-placeholder">
+                                            <i class="fas fa-utensils text-muted"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="col-5">
                                     <h6 class="card-title mb-1">{{ $item->name }}</h6>
                                     <p class="card-text text-muted small mb-2">{{ $item->description }}</p>
                                     <strong class="text-success">{{ number_format($item->price) }} so'm</strong>
@@ -186,18 +307,45 @@
                     telegramChatId = tg.initDataUnsafe.user.id;
                 }
                 console.log('Telegram Web App initialized');
+                
+                // Set Telegram theme
+                if (tg.colorScheme === 'dark') {
+                    document.body.classList.add('telegram-dark');
+                }
             }
 
             // Category switching
             document.querySelectorAll('input[name="category"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     document.querySelectorAll('.category-content').forEach(content => {
-                        content.classList.add('d-none');
+                        content.classList.remove('d-none');
                     });
                     document.getElementById('cat-content-' + this.id.replace('cat-', '')).classList.remove('d-none');
                 });
             });
+            
+            // Initialize product images
+            initializeProductImages();
         });
+        
+        // Initialize product images with error handling
+        function initializeProductImages() {
+            const images = document.querySelectorAll('.product-image');
+            images.forEach(img => {
+                img.addEventListener('load', function() {
+                    console.log('Image loaded successfully:', this.src);
+                });
+                
+                img.addEventListener('error', function() {
+                    console.log('Image failed to load:', this.src);
+                    this.style.display = 'none';
+                    const placeholder = this.nextElementSibling;
+                    if (placeholder && placeholder.classList.contains('product-image-placeholder')) {
+                        placeholder.style.display = 'flex';
+                    }
+                });
+            });
+        }
 
         // Cart functions
         function changeQuantity(itemId, change) {
@@ -251,10 +399,24 @@
                     const subtotal = price * qty;
                     total += subtotal;
                     
+                    // Get image if available
+                    const imageElement = itemElement.querySelector('.product-image');
+                    const imageHtml = imageElement ? 
+                        `<img src="${imageElement.src}" alt="${name}" class="product-image" style="width: 40px; height: 40px;">` :
+                        `<div class="product-image-placeholder" style="width: 40px; height: 40px; font-size: 16px;"><i class="fas fa-utensils"></i></div>`;
+                    
                     html += `
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>${name} x${qty}</span>
-                            <span>${subtotal.toLocaleString()} so'm</span>
+                        <div class="d-flex align-items-center mb-3 p-2 border rounded">
+                            <div class="me-3">
+                                ${imageHtml}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">${name}</div>
+                                <div class="text-muted small">${qty} ta x ${price.toLocaleString()} so'm</div>
+                            </div>
+                            <div class="text-end">
+                                <strong class="text-success">${subtotal.toLocaleString()} so'm</strong>
+                            </div>
                         </div>
                     `;
                 }
