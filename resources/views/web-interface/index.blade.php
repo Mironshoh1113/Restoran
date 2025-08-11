@@ -156,11 +156,23 @@
                             <div class="row align-items-center">
                                 <div class="col-3">
                                     <!-- Product Image -->
-                                    @if($item->hasImage())
-                                        <img src="{{ asset('storage/' . $item->image) }}" 
+                                    @if($item->image)
+                                        @php
+                                            $imagePath = $item->image;
+                                            $imageUrl = asset('storage/' . $imagePath);
+                                            \Log::info('Rendering menu item image', [
+                                                'item_id' => $item->id,
+                                                'item_name' => $item->name,
+                                                'image_path' => $imagePath,
+                                                'image_url' => $imageUrl,
+                                                'storage_path' => storage_path('app/public/' . $imagePath),
+                                                'public_path' => public_path('storage/' . $imagePath)
+                                            ]);
+                                        @endphp
+                                        <img src="{{ $imageUrl }}" 
                                              alt="{{ $item->name }}" 
                                              class="product-image"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                             onerror="console.log('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <div class="product-image-placeholder" 
                                              style="display: none;">
                                             <i class="fas fa-utensils text-muted"></i>
@@ -317,10 +329,18 @@
             // Category switching
             document.querySelectorAll('input[name="category"]').forEach(radio => {
                 radio.addEventListener('change', function() {
+                    // Hide all category contents first
                     document.querySelectorAll('.category-content').forEach(content => {
-                        content.classList.remove('d-none');
+                        content.classList.add('d-none');
                     });
-                    document.getElementById('cat-content-' + this.id.replace('cat-', '')).classList.remove('d-none');
+                    
+                    // Show only selected category
+                    const selectedCategoryId = this.id.replace('cat-', '');
+                    const selectedContent = document.getElementById('cat-content-' + selectedCategoryId);
+                    if (selectedContent) {
+                        selectedContent.classList.remove('d-none');
+                        console.log('Switched to category:', selectedCategoryId);
+                    }
                 });
             });
             
