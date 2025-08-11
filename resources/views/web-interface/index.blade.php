@@ -1420,8 +1420,10 @@
                 customer_phone: document.getElementById('modal-customer-phone').value,
                 delivery_address: document.getElementById('modal-delivery-address').value,
                 payment_method: document.getElementById('modal-payment-method').value,
-                telegram_chat_id: telegramChatId
+                telegram_chat_id: telegramChatId || null
             };
+            
+            console.log('Submitting order:', orderData);
             // Get bot token from meta tag or URL parameters
             const botToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content') || 
                             new URLSearchParams(window.location.search).get('bot_token');
@@ -1442,16 +1444,24 @@
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const headers = { 'Content-Type': 'application/json' };
             if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+            console.log('Sending request to:', endpoint);
+            console.log('Request headers:', headers);
+            console.log('Request body:', orderData);
+            
             fetch(endpoint, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(orderData)
             })
             .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
                 if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 return response.json();
             })
             .then(data => {
+                console.log('Order response:', data);
+                
                 if (data.success) {
                     document.getElementById('modal-checkout-form').classList.add('hidden');
                     document.getElementById('modal-success-message').classList.remove('hidden');

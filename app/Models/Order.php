@@ -34,7 +34,9 @@ class Order extends Model
 
     protected $casts = [
         'total_price' => 'decimal:2',
+        'total_amount' => 'decimal:2',
         'delivered_at' => 'datetime',
+        'items' => 'array',
     ];
 
     protected static function boot()

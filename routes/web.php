@@ -163,6 +163,23 @@ Route::get('/test-api', function () {
     ]);
 });
 
+// Test order placement endpoint
+Route::post('/test-order', function(\Illuminate\Http\Request $request) {
+    \Illuminate\Support\Facades\Log::info('Test order request', $request->all());
+    
+    $restaurant = \App\Models\Restaurant::first();
+    if (!$restaurant) {
+        return response()->json(['error' => 'No restaurant found'], 404);
+    }
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Test order endpoint working',
+        'restaurant' => $restaurant->name,
+        'request_data' => $request->all()
+    ]);
+});
+
 // Test web interface with different bot tokens
 Route::get('/test-web-interface', function (Request $request) {
     $restaurants = \App\Models\Restaurant::all();

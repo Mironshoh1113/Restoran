@@ -731,8 +731,8 @@ class TelegramController extends Controller
                 'total_amount' => $total,
                 'delivery_address' => $request->delivery_address,
                 'payment_method' => $request->payment_method,
-                'status' => 'pending',
-                'items' => json_encode($orderItems),
+                'status' => 'new',
+                'items' => $orderItems,
                 'customer_name' => $request->customer_name,
                 'customer_phone' => $request->customer_phone,
                 'order_number' => 'WEB-' . time(),
@@ -863,8 +863,8 @@ class TelegramController extends Controller
                 'total_amount' => $total,
                 'delivery_address' => $request->delivery_address,
                 'payment_method' => $request->payment_method,
-                'status' => 'pending',
-                'items' => json_encode($orderItems),
+                'status' => 'new',
+                'items' => $orderItems,
                 'customer_name' => $request->customer_name,
                 'customer_phone' => $request->customer_phone,
                 // Add required fields from original schema
@@ -934,13 +934,13 @@ class TelegramController extends Controller
         $restaurant = $order->restaurant;
         
         $message = "🆕 *Yangi buyurtma!*\n\n";
-        $message .= "📋 Buyurtma raqami: *#{$order->id}*\n";
+        $message .= "📋 Buyurtma raqami: *#{$order->order_number}*\n";
         $message .= "🏪 Restoran: *{$restaurant->name}*\n";
         $message .= "👤 Mijoz: *{$order->customer_name}*\n";
         $message .= "📞 Telefon: *{$order->customer_phone}*\n";
-        $message .= "📍 Manzil: *{$order->delivery_address}*\n";
-        $message .= "💰 Jami: *{$order->total_amount} so'm*\n";
-        $message .= "💳 To'lov: *" . ($order->payment_method === 'card' ? 'Karta' : 'Naqd pul') . "*\n\n";
+        $message .= "📍 Manzil: *" . ($order->delivery_address ?: $order->address) . "*\n";
+        $message .= "💰 Jami: *" . ($order->total_amount ?: $order->total_price) . " so'm*\n";
+        $message .= "💳 To'lov: *" . (($order->payment_method ?: $order->payment_type) === 'card' ? 'Karta' : 'Naqd pul') . "*\n\n";
         
         // Send to admin if admin has telegram chat id
         if ($restaurant->admin_telegram_chat_id) {
