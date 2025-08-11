@@ -28,28 +28,80 @@ class TelegramController extends Controller
      */
     public function webhook(Request $request, $token)
     {
-        $update = $request->all();
-        Log::info('Telegram Webhook', $update);
+        try {
+            // Rate limiting
+            $rateLimitKey = "webhook_rate_limit_{$token}";
+            if (Cache::get($rateLimitKey, 0) > 100) { // Max 100 requests per minute
+                Log::warning('Webhook rate limit exceeded', ['token' => $token]);
+                return response('Too Many Requests', 429);
+            }
+            Cache::increment($rateLimitKey);
+            Cache::expire($rateLimitKey, 60); // 1 minute
 
-        // Find restaurant by bot token
-        $restaurant = Restaurant::where('bot_token', $token)->first();
-        
-        if (!$restaurant) {
-            Log::error('Restaurant not found for bot token: ' . $token);
+            // Validate token format
+            if (!preg_match('/^\d+:[A-Za-z0-9_-]+$/', $token)) {
+                Log::warning('Invalid token format', ['token' => $token]);
+                return response('Bad Request', 400);
+            }
+
+            // Find restaurant by bot token
+            $restaurant = Restaurant::where('bot_token', $token)->first();
+            
+            if (!$restaurant) {
+                Log::error('Restaurant not found for bot token: ' . $token);
+                return response('OK'); // Return OK to prevent Telegram from retrying
+            }
+
+            // Validate request data
+            $update = $request->validate([
+                'message' => 'nullable|array',
+                'callback_query' => 'nullable|array',
+                'edited_message' => 'nullable|array',
+                'channel_post' => 'nullable|array',
+                'edited_channel_post' => 'nullable|array',
+                'inline_query' => 'nullable|array',
+                'chosen_inline_result' => 'nullable|array',
+                'shipping_query' => 'nullable|array',
+                'pre_checkout_query' => 'nullable|array',
+                'poll' => 'nullable|array',
+                'poll_answer' => 'nullable|array',
+                'my_chat_member' => 'nullable|array',
+                'chat_member' => 'nullable|array',
+                'chat_join_request' => 'nullable|array',
+            ]);
+
+            Log::info('Telegram Webhook validated', [
+                'restaurant_id' => $restaurant->id,
+                'restaurant_name' => $restaurant->name,
+                'update_type' => array_keys(array_filter($update))
+            ]);
+
+            // Set bot token for this request
+            $this->telegramService->setBotToken($token);
+
+            // Handle different types of updates
+            if (isset($update['message'])) {
+                $this->handleMessage($update['message']);
+            } elseif (isset($update['callback_query'])) {
+                $this->handleCallbackQuery($update['callback_query']);
+            }
+
             return response('OK');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Webhook validation error', [
+                'token' => $token,
+                'errors' => $e->errors()
+            ]);
+            return response('Bad Request', 400);
+        } catch (\Exception $e) {
+            Log::error('Webhook error', [
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response('Internal Server Error', 500);
         }
-
-        // Set bot token for this request
-        $this->telegramService->setBotToken($token);
-
-        // Handle different types of updates
-        if (isset($update['message'])) {
-            $this->handleMessage($update['message']);
-        } elseif (isset($update['callback_query'])) {
-            $this->handleCallbackQuery($update['callback_query']);
-        }
-
-        return response('OK');
     }
 
     /**
@@ -677,11 +729,23 @@ class TelegramController extends Controller
                 'request_data' => $request->all()
             ]);
             
+            // Validate token format
+            if (!preg_match('/^[a-zA-Z0-9]{32,}$/', $token)) {
+                Log::warning('Invalid token format for order placement', ['token' => $token]);
+                return response()->json(['error' => 'Invalid token format'], 400);
+            }
+            
             $sessionData = Cache::get("web_session_{$token}");
             
             if (!$sessionData) {
                 Log::error('Session expired for order placement', ['token' => $token]);
-                return response()->json(['error' => 'Session expired'], 404);
+                return response()->json(['error' => 'Session expired or invalid'], 401);
+            }
+            
+            // Validate session data structure
+            if (!isset($sessionData['restaurant_id']) || !isset($sessionData['user_id'])) {
+                Log::error('Invalid session data structure', ['session_data' => $sessionData]);
+                return response()->json(['error' => 'Invalid session data'], 400);
             }
             
             $restaurant = Restaurant::find($sessionData['restaurant_id']);
@@ -693,7 +757,7 @@ class TelegramController extends Controller
                     'restaurant_found' => !!$restaurant,
                     'user_found' => !!$user
                 ]);
-                return response()->json(['error' => 'Invalid session'], 404);
+                return response()->json(['error' => 'Invalid session data'], 400);
             }
             
             Log::info('Session validation passed', [
@@ -1425,41 +1489,65 @@ class TelegramController extends Controller
      */
     protected function saveTelegramUser($userData)
     {
-        // Get current bot token
-        $botToken = $this->telegramService->getBotToken();
-        
-        // Find restaurant by bot token
-        $restaurant = Restaurant::where('bot_token', $botToken)->first();
-        
-        if (!$restaurant) {
-            Log::error('Restaurant not found for bot token: ' . $botToken);
+        try {
+            // Get current bot token
+            $botToken = $this->telegramService->getBotToken();
+            
+            // Find restaurant by bot token
+            $restaurant = Restaurant::where('bot_token', $botToken)->first();
+            
+            if (!$restaurant) {
+                Log::error('Restaurant not found for bot token: ' . $botToken);
+                return null;
+            }
+
+            // First, save or update global telegram user
+            $globalUser = \App\Models\GlobalTelegramUser::updateOrCreate(
+                ['telegram_id' => $userData['id']],
+                [
+                    'username' => $userData['username'] ?? null,
+                    'first_name' => $userData['first_name'] ?? null,
+                    'last_name' => $userData['last_name'] ?? null,
+                    'language_code' => $userData['language_code'] ?? 'uz',
+                    'is_bot' => $userData['is_bot'] ?? false,
+                    'last_activity' => now(),
+                ]
+            );
+
+            // Then, save or update restaurant-specific user
+            $telegramUser = \App\Models\TelegramUser::updateOrCreate(
+                [
+                    'restaurant_id' => $restaurant->id,
+                    'telegram_id' => $userData['id']
+                ],
+                [
+                    'username' => $userData['username'] ?? null,
+                    'first_name' => $userData['first_name'] ?? null,
+                    'last_name' => $userData['last_name'] ?? null,
+                    'language_code' => $userData['language_code'] ?? 'uz',
+                    'is_bot' => $userData['is_bot'] ?? false,
+                    'last_activity' => now(),
+                ]
+            );
+
+            Log::info('Telegram user saved/updated', [
+                'global_user_id' => $globalUser->id,
+                'restaurant_id' => $restaurant->id,
+                'restaurant_name' => $restaurant->name,
+                'telegram_id' => $userData['id'],
+                'username' => $userData['username'] ?? null
+            ]);
+
+            return $telegramUser;
+
+        } catch (\Exception $e) {
+            Log::error('Error saving telegram user', [
+                'user_data' => $userData,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
-
-        // Save or update telegram user
-        $telegramUser = \App\Models\TelegramUser::updateOrCreate(
-            [
-                'restaurant_id' => $restaurant->id,
-                'telegram_id' => $userData['id']
-            ],
-            [
-                'username' => $userData['username'] ?? null,
-                'first_name' => $userData['first_name'] ?? null,
-                'last_name' => $userData['last_name'] ?? null,
-                'language_code' => $userData['language_code'] ?? 'uz',
-                'is_bot' => $userData['is_bot'] ?? false,
-                'last_activity' => now(),
-            ]
-        );
-
-        Log::info('Telegram user saved/updated', [
-            'restaurant_id' => $restaurant->id,
-            'restaurant_name' => $restaurant->name,
-            'telegram_id' => $userData['id'],
-            'username' => $userData['username'] ?? null
-        ]);
-
-        return $telegramUser;
     }
 
     /**

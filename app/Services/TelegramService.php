@@ -42,32 +42,52 @@ class TelegramService
      */
     public function sendMessage($chatId, $text, $keyboard = null, $parseMode = 'HTML')
     {
-        if (!$this->botToken) {
-            Log::error('Telegram bot token not set');
-            return ['ok' => false, 'error' => 'Bot token not set'];
-        }
+        try {
+            if (!$this->botToken) {
+                throw new \InvalidArgumentException('Bot token not set');
+            }
 
-        $data = [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'parse_mode' => $parseMode,
-        ];
+            // Validate chat ID
+            if (!is_numeric($chatId) || $chatId <= 0) {
+                throw new \InvalidArgumentException('Invalid chat ID');
+            }
 
-        if ($keyboard) {
-            $data['reply_markup'] = json_encode($keyboard);
-        }
+            // Validate text length (Telegram limit is 4096 characters)
+            if (strlen($text) > 4096) {
+                throw new \InvalidArgumentException('Message text too long (max 4096 characters)');
+            }
 
-        $result = $this->makeRequest('sendMessage', $data);
-        
-        if (!$result['ok']) {
-            Log::error('Telegram sendMessage failed', [
+            $data = [
                 'chat_id' => $chatId,
-                'error' => $result['error'] ?? 'Unknown error',
-                'bot_token' => $this->botToken
-            ]);
-        }
+                'text' => $text,
+                'parse_mode' => $parseMode,
+            ];
 
-        return $result;
+            if ($keyboard) {
+                $data['reply_markup'] = json_encode($keyboard);
+            }
+
+            $result = $this->makeRequest('sendMessage', $data);
+            
+            if (!$result['ok']) {
+                Log::error('Telegram sendMessage failed', [
+                    'chat_id' => $chatId,
+                    'error' => $result['error'] ?? 'Unknown error',
+                    'bot_token' => $this->botToken
+                ]);
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('Telegram sendMessage error', [
+                'chat_id' => $chatId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
     }
 
     /**

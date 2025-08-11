@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\BotController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\MenuItemController;
+use App\Http\Controllers\Admin\GlobalTelegramController;
 use App\Http\Controllers\TelegramController;
 
 /*
@@ -56,6 +57,15 @@ Route::middleware('auth')->group(function () {
         Route::get('bots/users/all', [BotController::class, 'getAllUsers'])->name('bots.all-users');
         Route::post('bots/test-multiple', [BotController::class, 'testMultipleBots'])->name('bots.test-multiple');
         Route::post('bots/set-webhooks-multiple', [BotController::class, 'setMultipleWebhooks'])->name('bots.set-webhooks-multiple');
+        
+        // Global Telegram Users Management
+        Route::prefix('global-telegram')->name('global-telegram.')->group(function () {
+            Route::get('/', [GlobalTelegramController::class, 'index'])->name('index');
+            Route::get('/stats', [GlobalTelegramController::class, 'getGlobalStats'])->name('stats');
+            Route::get('/{globalUser}', [GlobalTelegramController::class, 'show'])->name('show');
+            Route::get('/{globalUser}/stats', [GlobalTelegramController::class, 'getUserStats'])->name('user-stats');
+            Route::post('/{globalUser}/send-message', [GlobalTelegramController::class, 'sendMessageToAllRestaurants'])->name('send-message');
+        });
         
         // New bot management routes
         Route::post('bots/{restaurant}/update-name', [BotController::class, 'updateBotName'])->name('bots.update-name');

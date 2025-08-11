@@ -19,6 +19,10 @@
                class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
                 <i class="fas fa-users mr-2"></i>Barcha foydalanuvchilar
             </a>
+            <a href="{{ route('admin.global-telegram.index') }}" 
+               class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                <i class="fas fa-globe mr-2"></i>Global foydalanuvchilar
+            </a>
         </div>
     </div>
 
