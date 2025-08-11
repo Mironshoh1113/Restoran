@@ -337,7 +337,7 @@ Route::post('/test-order', function (Request $request) {
             'total_amount' => 1000,
             'delivery_address' => 'Test address',
             'payment_method' => 'cash',
-            'items' => json_encode([])
+            'items' => [] // Store as empty array directly
         ]);
         
         return response()->json([
@@ -404,7 +404,7 @@ Route::post('/test-order-placement', function (Request $request) {
             'delivery_address' => $request->delivery_address,
             'payment_method' => $request->payment_method,
             'status' => 'pending',
-            'items' => json_encode($orderItems),
+            'items' => $orderItems, // Store as array directly
             'customer_name' => $request->customer_name,
             'customer_phone' => $request->customer_phone,
             'order_number' => 'TEST-' . time(),

@@ -43,7 +43,12 @@ class OrderController extends Controller
         
         // If order has items JSON (from web interface), decode it
         if ($order->items) {
-            $order->decoded_items = json_decode($order->items, true);
+            // Check if items is already an array or needs to be decoded
+            if (is_array($order->items)) {
+                $order->decoded_items = $order->items;
+            } else {
+                $order->decoded_items = json_decode($order->items, true);
+            }
         }
         
         return view('admin.orders.show', compact('order'));

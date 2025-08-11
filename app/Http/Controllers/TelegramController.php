@@ -366,7 +366,7 @@ class TelegramController extends Controller
             'delivery_address' => $orderData['address'] ?? '',
             'payment_method' => $orderData['payment_method'] ?? 'cash',
             'status' => 'pending',
-            'items' => json_encode($orderData['items'] ?? []),
+            'items' => $orderData['items'] ?? [], // Store as array directly
             'customer_name' => $orderData['customer_name'] ?? '',
             'customer_phone' => $orderData['customer_phone'] ?? ''
         ]);

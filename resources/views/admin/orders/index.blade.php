@@ -168,8 +168,13 @@
                                 @php
                                     $itemCount = 0;
                                     if ($order->items) {
-                                        $items = json_decode($order->items, true);
-                                        $itemCount = count($items);
+                                        // Check if items is already an array or needs to be decoded
+                                        if (is_array($order->items)) {
+                                            $items = $order->items;
+                                        } else {
+                                            $items = json_decode($order->items, true);
+                                        }
+                                        $itemCount = is_array($items) ? count($items) : 0;
                                     } elseif ($order->orderItems) {
                                         $itemCount = $order->orderItems->count();
                                     }
