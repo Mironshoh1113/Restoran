@@ -651,17 +651,31 @@ class TelegramController extends Controller
             // Get bot token from request
             $botToken = $request->get('bot_token');
             
+            Log::info('Bot token received for order placement', [
+                'bot_token' => $botToken,
+                'bot_token_length' => $botToken ? strlen($botToken) : 0,
+                'request_data' => $request->all()
+            ]);
+            
             // Find restaurant by bot token
             if ($botToken) {
                 $restaurant = Restaurant::where('bot_token', $botToken)->first();
+                
+                if (!$restaurant) {
+                    Log::error('Restaurant not found for bot token', [
+                        'bot_token' => $botToken,
+                        'available_restaurants' => Restaurant::pluck('name', 'bot_token')->toArray()
+                    ]);
+                    return response()->json(['error' => 'Restaurant not found for bot token: ' . substr($botToken, 0, 10) . '...'], 404);
+                }
             } else {
-                // Fallback to first restaurant for testing
+                Log::warning('No bot token provided, using first restaurant as fallback');
                 $restaurant = Restaurant::first();
-            }
-            
-            if (!$restaurant) {
-                Log::error('Restaurant not found for order placement', ['bot_token' => $botToken]);
-                return response()->json(['error' => 'Restaurant not found'], 404);
+                
+                if (!$restaurant) {
+                    Log::error('No restaurants found in database');
+                    return response()->json(['error' => 'No restaurants available'], 500);
+                }
             }
             
             Log::info('Restaurant found for order placement', [
@@ -735,10 +749,18 @@ class TelegramController extends Controller
                 'items' => $orderItems,
                 'customer_name' => $request->customer_name,
                 'customer_phone' => $request->customer_phone,
-                'order_number' => 'WEB-' . time(),
+                'order_number' => 'WEB-' . str_pad(time(), 10, '0', STR_PAD_LEFT),
                 'total_price' => $total,
                 'payment_type' => $request->payment_method,
                 'address' => $request->delivery_address
+            ]);
+            
+            Log::info('Order created successfully', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'restaurant_id' => $restaurant->id,
+                'total_amount' => $total,
+                'items_count' => count($orderItems)
             ]);
             
             Log::info('Order created successfully', [
@@ -881,7 +903,10 @@ class TelegramController extends Controller
             
             Log::info('Order created successfully', [
                 'order_id' => $order->id,
-                'order_number' => $order->order_number
+                'order_number' => $order->order_number,
+                'restaurant_id' => $restaurant->id,
+                'total_amount' => $total,
+                'items_count' => count($orderItems)
             ]);
             
             // Send confirmation to Telegram

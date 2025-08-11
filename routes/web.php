@@ -180,6 +180,74 @@ Route::post('/test-order', function(\Illuminate\Http\Request $request) {
     ]);
 });
 
+// Test order creation endpoint
+Route::post('/test-create-order', function(\Illuminate\Http\Request $request) {
+    try {
+        \Illuminate\Support\Facades\Log::info('Test order creation request', $request->all());
+        
+        $restaurant = \App\Models\Restaurant::first();
+        if (!$restaurant) {
+            return response()->json(['error' => 'No restaurant found'], 404);
+        }
+        
+        // Simulate order creation
+        $orderData = [
+            'restaurant_id' => $restaurant->id,
+            'items' => $request->get('items', []),
+            'customer_name' => $request->get('customer_name', 'Test Customer'),
+            'customer_phone' => $request->get('customer_phone', '123456789'),
+            'delivery_address' => $request->get('delivery_address', 'Test Address'),
+            'payment_method' => $request->get('payment_method', 'cash'),
+            'total_amount' => 10000,
+            'status' => 'new'
+        ];
+        
+        \Illuminate\Support\Facades\Log::info('Test order data prepared', $orderData);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Test order creation successful',
+            'order_data' => $orderData,
+            'restaurant' => $restaurant->name
+        ]);
+        
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('Test order creation failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'error' => 'Test order creation failed: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
+// Debug restaurants and bot tokens
+Route::get('/debug-restaurants', function() {
+    $restaurants = \App\Models\Restaurant::select('id', 'name', 'bot_token', 'is_active')
+        ->get()
+        ->map(function($restaurant) {
+            return [
+                'id' => $restaurant->id,
+                'name' => $restaurant->name,
+                'bot_token' => $restaurant->bot_token ? substr($restaurant->bot_token, 0, 20) . '...' : 'NULL',
+                'bot_token_length' => $restaurant->bot_token ? strlen($restaurant->bot_token) : 0,
+                'is_active' => $restaurant->is_active,
+                'web_interface_url' => url("/web-interface/direct/{$restaurant->bot_token}")
+            ];
+        });
+    
+    return response()->json([
+        'success' => true,
+        'restaurants' => $restaurants,
+        'total_restaurants' => $restaurants->count(),
+        'active_restaurants' => $restaurants->where('is_active', true)->count(),
+        'restaurants_with_bot_tokens' => $restaurants->where('bot_token', '!=', null)->count()
+    ]);
+});
+
 // Test web interface with different bot tokens
 Route::get('/test-web-interface', function (Request $request) {
     $restaurants = \App\Models\Restaurant::all();

@@ -865,7 +865,14 @@
         <div class="restaurant-name">{{ $restaurant->name }}</div>
         <div class="restaurant-description">{{ $restaurant->description ?? 'Restoran menyusi' }}</div>
         @if(isset($botToken))
-            <div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">Bot Token: {{ substr($botToken, 0, 10) }}...</div>
+            <div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">
+                Bot Token: {{ substr($botToken, 0, 10) }}...<br>
+                <span style="color: #10b981;">✓ Bot token mavjud</span>
+            </div>
+        @else
+            <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; color: #ef4444;">
+                ⚠ Bot token topilmadi
+            </div>
         @endif
     </div>
     
@@ -1399,10 +1406,42 @@
         function submitModalOrder() {
             const items = [];
             for (let itemId in cart) {
-                items.push({ id: parseInt(itemId), quantity: cart[itemId] });
+                const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+                const price = itemElement ? parseInt(itemElement.dataset.price) : 0;
+                const name = itemElement ? itemElement.querySelector('.item-name').textContent : 'Unknown Item';
+                
+                items.push({ 
+                    id: parseInt(itemId), 
+                    quantity: cart[itemId],
+                    price: price,
+                    name: name
+                });
             }
             if (items.length === 0) {
                 alert('Savat bo\'sh!');
+                return;
+            }
+            
+            // Validate form fields
+            const customerName = document.getElementById('modal-customer-name').value.trim();
+            const customerPhone = document.getElementById('modal-customer-phone').value.trim();
+            const deliveryAddress = document.getElementById('modal-delivery-address').value.trim();
+            
+            if (!customerName) {
+                alert('Iltimos, ismingizni kiriting!');
+                document.getElementById('modal-customer-name').focus();
+                return;
+            }
+            
+            if (!customerPhone) {
+                alert('Iltimos, telefon raqamingizni kiriting!');
+                document.getElementById('modal-customer-phone').focus();
+                return;
+            }
+            
+            if (!deliveryAddress) {
+                alert('Iltimos, yetkazib berish manzilini kiriting!');
+                document.getElementById('modal-delivery-address').focus();
                 return;
             }
             
@@ -1416,9 +1455,9 @@
             submitSpinner.classList.remove('hidden');
             const orderData = {
                 items: items,
-                customer_name: document.getElementById('modal-customer-name').value,
-                customer_phone: document.getElementById('modal-customer-phone').value,
-                delivery_address: document.getElementById('modal-delivery-address').value,
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                delivery_address: deliveryAddress,
                 payment_method: document.getElementById('modal-payment-method').value,
                 telegram_chat_id: telegramChatId || null
             };
@@ -1428,16 +1467,24 @@
             const botToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content') || 
                             new URLSearchParams(window.location.search).get('bot_token');
             
+            console.log('Bot token found:', botToken);
+            
             // Determine endpoint based on available data
             let endpoint = '/web-interface/order';
             if (botToken) {
                 orderData.bot_token = botToken;
+                console.log('Using bot token for order:', botToken);
             } else {
                 // Try to get from current URL path
                 const currentUrl = window.location.pathname;
                 const token = currentUrl.split('/').pop();
                 if (token && token !== 'web-interface') {
                     endpoint = `/web-interface/${token}/order`;
+                    console.log('Using URL token for order:', token);
+                } else {
+                    console.error('No bot token or URL token found!');
+                    alert('Xatolik: Bot token topilmadi. Iltimos, qaytadan urinib ko\'ring.');
+                    return;
                 }
             }
             // Get CSRF token
@@ -1463,24 +1510,52 @@
                 console.log('Order response:', data);
                 
                 if (data.success) {
+                    console.log('Order placed successfully:', data);
+                    
+                    // Hide form and show success message
                     document.getElementById('modal-checkout-form').classList.add('hidden');
                     document.getElementById('modal-success-message').classList.remove('hidden');
                     
+                    // Update success message with order details
+                    const successMessage = document.getElementById('modal-success-message');
+                    if (data.order_number) {
+                        successMessage.innerHTML = `
+                            <i class="fas fa-check-circle"></i><br>
+                            <strong>Buyurtma qabul qilindi!</strong><br>
+                            Buyurtma raqami: #${data.order_number}<br>
+                            Tez orada siz bilan bog'lanamiz.
+                        `;
+                    }
+                    
                     // Send data back to Telegram if available
                     if (tg && tg.sendData) {
+                        const totalAmount = orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
                         tg.sendData(JSON.stringify({ 
                             action: 'order_placed', 
                             order_id: data.order_id,
                             order_number: data.order_number,
-                            total_amount: orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+                            total_amount: totalAmount,
+                            customer_name: orderData.customer_name,
+                            delivery_address: orderData.delivery_address
                         }));
+                        console.log('Data sent to Telegram:', { order_id: data.order_id, total_amount: totalAmount });
                     }
                     
                     // Close web app after 3 seconds if in Telegram
                     if (tg && tg.close) {
-                        setTimeout(() => { tg.close(); }, 3000);
+                        setTimeout(() => { 
+                            console.log('Closing Telegram Web App');
+                            tg.close(); 
+                        }, 3000);
                     }
+                    
+                    // Clear cart
+                    cart = {};
+                    updateCartTotal();
+                    renderModalCart();
+                    
                 } else {
+                    console.error('Order failed:', data);
                     alert('Xatolik yuz berdi: ' + (data.error || 'Noma\'lum xatolik'));
                 }
             })
@@ -1496,9 +1571,27 @@
                     errorMessage += 'Server xatosi. Iltimos, keyinroq urinib ko\'ring.';
                 } else if (error.message.includes('422')) {
                     errorMessage += 'Ma\'lumotlarni to\'g\'ri kiriting. Iltimos, barcha maydonlarni to\'ldiring.';
+                } else if (error.message.includes('Restaurant not found')) {
+                    errorMessage += 'Restoran topilmadi. Bot token noto\'g\'ri yoki restoran mavjud emas.';
+                    console.error('Bot token issue:', {
+                        botToken: botToken,
+                        endpoint: endpoint,
+                        currentUrl: window.location.href
+                    });
+                } else if (error.message.includes('NetworkError')) {
+                    errorMessage += 'Internet aloqasi muammosi. Iltimos, internet aloqasini tekshiring.';
                 } else {
                     errorMessage += error.message;
                 }
+                
+                console.error('Full error details:', {
+                    error: error,
+                    message: error.message,
+                    stack: error.stack,
+                    orderData: orderData,
+                    endpoint: endpoint,
+                    botToken: botToken
+                });
                 
                 alert(errorMessage);
             })
