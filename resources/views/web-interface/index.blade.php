@@ -1471,49 +1471,79 @@
                 paymentMethod: document.getElementById('modal-payment-method').value
             });
             
-            // Get bot token from meta tag or URL parameters
-            let botToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content') || 
-                          new URLSearchParams(window.location.search).get('bot_token');
+            // Get bot token from multiple sources
+            let botToken = null;
             
-            // If no bot token in meta tag, try to get from current URL
-            if (!botToken || botToken.trim() === '') {
-                const currentUrl = window.location.pathname;
-                const pathParts = currentUrl.split('/');
-                if (pathParts.length > 2 && pathParts[1] === 'web-interface') {
-                    botToken = pathParts[2];
+            // 1. Try from meta tag
+            const metaBotToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content');
+            if (metaBotToken && metaBotToken.trim() !== '') {
+                botToken = metaBotToken.trim();
+                console.log('Bot token from meta tag:', botToken);
+            }
+            
+            // 2. Try from URL parameters
+            if (!botToken) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlBotToken = urlParams.get('bot_token');
+                if (urlBotToken && urlBotToken.trim() !== '') {
+                    botToken = urlBotToken.trim();
+                    console.log('Bot token from URL params:', botToken);
                 }
             }
             
-            console.log('Bot token found:', botToken);
+            // 3. Try from URL path
+            if (!botToken) {
+                const currentUrl = window.location.pathname;
+                const pathMatch = currentUrl.match(/\/web-interface\/direct\/([^\/]+)/);
+                if (pathMatch && pathMatch[1]) {
+                    botToken = pathMatch[1];
+                    console.log('Bot token from URL path:', botToken);
+                }
+            }
+            
+            // 4. For Telegram Web App, try from URL token
+            if (!botToken) {
+                const currentUrl = window.location.pathname;
+                const pathParts = currentUrl.split('/');
+                if (pathParts.length > 2 && pathParts[1] === 'web-interface' && pathParts[2] !== 'direct') {
+                    botToken = pathParts[2];
+                    console.log('Bot token from web-interface path:', botToken);
+                }
+            }
+            
+            console.log('Final bot token:', botToken);
             console.log('Current URL:', window.location.href);
             
-            // Determine endpoint based on available data
+            // Determine endpoint
             let endpoint = '/web-interface/order';
+            
             if (botToken && botToken.trim() !== '') {
                 orderData.bot_token = botToken;
                 console.log('Using bot token for order:', botToken);
             } else {
-                // Try to get from current URL path
-                const currentUrl = window.location.pathname;
-                const token = currentUrl.split('/').pop();
-                if (token && token !== 'web-interface') {
-                    endpoint = `/web-interface/${token}/order`;
-                    console.log('Using URL token for order:', token);
-                } else {
-                    console.error('No bot token or URL token found!');
-                    console.log('Meta tag content:', document.querySelector('meta[name="bot-token"]')?.getAttribute('content'));
-                    console.log('URL search params:', window.location.search);
-                    alert('Xatolik: Bot token topilmadi. Iltimos, qaytadan urinib ko\'ring.');
-                    return;
-                }
+                console.error('WARNING: No bot token found!');
+                console.log('Meta tag:', metaBotToken);
+                console.log('URL params:', window.location.search);
+                console.log('URL path:', window.location.pathname);
+                
+                // Try to get from restaurant ID from PHP if available
+                @if(isset($restaurant))
+                orderData.restaurant_id = {{ $restaurant->id }};
+                console.log('Using restaurant ID as fallback:', {{ $restaurant->id }});
+                @endif
             }
+            
             // Get CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const headers = { 'Content-Type': 'application/json' };
+            const headers = { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
             if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+            
             console.log('Sending request to:', endpoint);
             console.log('Request headers:', headers);
-            console.log('Request body:', orderData);
+            console.log('Request body:', JSON.stringify(orderData, null, 2));
             
             fetch(endpoint, {
                 method: 'POST',
@@ -1523,7 +1553,19 @@
             .then(response => {
                 console.log('Response status:', response.status);
                 console.log('Response headers:', response.headers);
-                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                
+                if (!response.ok) {
+                    // Try to get error message from response
+                    return response.text().then(text => {
+                        let errorData;
+                        try {
+                            errorData = JSON.parse(text);
+                        } catch (e) {
+                            errorData = { error: text || `HTTP ${response.status}: ${response.statusText}` };
+                        }
+                        throw errorData;
+                    });
+                }
                 return response.json();
             })
             .then(data => {
@@ -1567,6 +1609,11 @@
                             console.log('Closing Telegram Web App');
                             tg.close(); 
                         }, 3000);
+                    } else {
+                        // If not in Telegram, redirect after 3 seconds
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
                     }
                     
                     // Clear cart
@@ -1576,38 +1623,39 @@
                     
                 } else {
                     console.error('Order failed:', data);
-                    alert('Xatolik yuz berdi: ' + (data.error || 'Noma\'lum xatolik'));
+                    alert('Xatolik yuz berdi: ' + (data.error || data.message || 'Noma\'lum xatolik'));
                 }
             })
             .catch(error => {
                 console.error('Order submission error:', error);
                 
                 let errorMessage = 'Xatolik yuz berdi: ';
-                if (error.name === 'TypeError' && error.message.includes('JSON')) {
-                    errorMessage += 'Server javob qaytarmayapti. Iltimos, qaytadan urinib ko\'ring.';
-                } else if (error.message.includes('404')) {
-                    errorMessage += 'Sahifa topilmadi. Iltimos, qaytadan urinib ko\'ring.';
-                } else if (error.message.includes('500')) {
-                    errorMessage += 'Server xatosi. Iltimos, keyinroq urinib ko\'ring.';
-                } else if (error.message.includes('422')) {
-                    errorMessage += 'Ma\'lumotlarni to\'g\'ri kiriting. Iltimos, barcha maydonlarni to\'ldiring.';
-                } else if (error.message.includes('Restaurant not found')) {
-                    errorMessage += 'Restoran topilmadi. Bot token noto\'g\'ri yoki restoran mavjud emas.';
-                    console.error('Bot token issue:', {
-                        botToken: botToken,
-                        endpoint: endpoint,
-                        currentUrl: window.location.href
-                    });
-                } else if (error.message.includes('NetworkError')) {
-                    errorMessage += 'Internet aloqasi muammosi. Iltimos, internet aloqasini tekshiring.';
-                } else {
+                
+                if (error.error) {
+                    errorMessage += error.error;
+                } else if (error.message) {
                     errorMessage += error.message;
+                } else if (typeof error === 'string') {
+                    errorMessage += error;
+                } else {
+                    errorMessage += 'Server bilan bog\'lanishda xatolik';
+                }
+                
+                // Add more specific error messages
+                if (errorMessage.includes('Restaurant not found')) {
+                    errorMessage = 'Restoran topilmadi. Iltimos, sahifani yangilang va qaytadan urinib ko\'ring.';
+                } else if (errorMessage.includes('Menu item not found')) {
+                    errorMessage = 'Tanlangan mahsulot topilmadi. Iltimos, sahifani yangilang.';
+                } else if (errorMessage.includes('422')) {
+                    errorMessage = 'Ma\'lumotlarni to\'g\'ri kiriting. Barcha maydonlar to\'ldirilgan bo\'lishi kerak.';
+                } else if (errorMessage.includes('500')) {
+                    errorMessage = 'Server xatosi. Iltimos, keyinroq urinib ko\'ring.';
+                } else if (errorMessage.includes('404')) {
+                    errorMessage = 'Sahifa topilmadi. Iltimos, sahifani yangilang.';
                 }
                 
                 console.error('Full error details:', {
                     error: error,
-                    message: error.message,
-                    stack: error.stack,
                     orderData: orderData,
                     endpoint: endpoint,
                     botToken: botToken

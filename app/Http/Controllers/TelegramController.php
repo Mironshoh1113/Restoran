@@ -659,14 +659,18 @@ class TelegramController extends Controller
             
             // Get bot token from request
             $botToken = $request->get('bot_token');
+            $restaurantId = $request->get('restaurant_id');
             
-            Log::info('Bot token received for order placement', [
+            Log::info('Bot token and restaurant ID received for order placement', [
                 'bot_token' => $botToken,
                 'bot_token_length' => $botToken ? strlen($botToken) : 0,
+                'restaurant_id' => $restaurantId,
                 'request_data' => $request->all()
             ]);
             
-            // Find restaurant by bot token
+            // Find restaurant by bot token or ID
+            $restaurant = null;
+            
             if ($botToken) {
                 $restaurant = Restaurant::where('bot_token', $botToken)->first();
                 
@@ -675,22 +679,35 @@ class TelegramController extends Controller
                         'bot_token' => $botToken,
                         'available_restaurants' => Restaurant::pluck('name', 'bot_token')->toArray()
                     ]);
-                    return response()->json(['error' => 'Restaurant not found for bot token: ' . substr($botToken, 0, 10) . '...'], 404);
                 }
-            } else {
-                Log::warning('No bot token provided, using first restaurant as fallback');
-                $restaurant = Restaurant::first();
+            }
+            
+            // If no restaurant found by token, try by ID
+            if (!$restaurant && $restaurantId) {
+                $restaurant = Restaurant::find($restaurantId);
+                if (!$restaurant) {
+                    Log::error('Restaurant not found for ID', [
+                        'restaurant_id' => $restaurantId
+                    ]);
+                }
+            }
+            
+            // If still no restaurant, use first active restaurant as last resort
+            if (!$restaurant) {
+                Log::warning('No restaurant found by token or ID, using first active restaurant as fallback');
+                $restaurant = Restaurant::where('is_active', true)->first();
                 
                 if (!$restaurant) {
-                    Log::error('No restaurants found in database');
-                    return response()->json(['error' => 'No restaurants available'], 500);
+                    Log::error('No active restaurants found in database');
+                    return response()->json(['error' => 'No active restaurants available'], 500);
                 }
             }
             
             Log::info('Restaurant found for order placement', [
                 'restaurant_id' => $restaurant->id,
                 'restaurant_name' => $restaurant->name,
-                'bot_token' => $botToken
+                'bot_token' => $botToken,
+                'used_fallback' => (!$botToken && !$restaurantId)
             ]);
             
             // Validate request
@@ -702,7 +719,9 @@ class TelegramController extends Controller
                 'payment_method' => 'required|in:cash,card',
                 'customer_name' => 'required|string',
                 'customer_phone' => 'required|string',
-                'telegram_chat_id' => 'nullable|numeric'
+                'telegram_chat_id' => 'nullable|numeric',
+                'bot_token' => 'nullable|string',
+                'restaurant_id' => 'nullable|integer'
             ]);
             
             Log::info('Request validation passed', ['validated_data' => $validated]);
