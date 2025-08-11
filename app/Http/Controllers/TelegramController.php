@@ -246,12 +246,40 @@ class TelegramController extends Controller
         $user = \App\Models\User::where('telegram_chat_id', $chatId)->first();
         
         if (!$user) {
-            // User is not registered, request contact
-            $this->requestContact($chatId);
-        } else {
-            // User is registered, send welcome message with web interface
-            $this->sendWelcomeWithWebInterface($chatId, $restaurant, $user);
+            // Create new user
+            $user = \App\Models\User::create([
+                'name' => 'Telegram User',
+                'email' => 'telegram_' . $chatId . '@example.com',
+                'telegram_chat_id' => $chatId,
+                'password' => bcrypt(Str::random(16)),
+                'role' => 'customer'
+            ]);
+            
+            Log::info('New Telegram user created', [
+                'chat_id' => $chatId,
+                'user_id' => $user->id,
+                'restaurant_id' => $restaurant->id
+            ]);
         }
+
+        // Create web interface URL for Telegram Web App
+        $webAppUrl = url("/web-interface/app/{$restaurant->bot_token}");
+        
+        $message = "🍽 *{$restaurant->name}*\n\n";
+        $message .= "Xush kelibsiz! Restoran menyusini ko'rish va buyurtma berish uchun quyidagi tugmani bosing:\n\n";
+        $message .= "📱 *Menyuni ochish* - mahsulotlarni ko'rish va buyurtma berish uchun";
+        
+        $keyboard = [
+            [
+                ['text' => '🍽 Menyuni ochish', 'web_app' => ['url' => $webAppUrl]]
+            ],
+            [
+                ['text' => '📞 Aloqa', 'callback_data' => 'contact'],
+                ['text' => '📍 Manzil', 'callback_data' => 'location']
+            ]
+        ];
+        
+        $this->telegramService->sendMessageWithKeyboard($chatId, $message, $keyboard);
     }
 
     /**
@@ -371,24 +399,18 @@ class TelegramController extends Controller
     public function webInterfaceFromApp(Request $request)
     {
         try {
-            Log::info('Web interface from app request received', [
+            Log::info('Web interface from Telegram Web App request received', [
                 'request_data' => $request->all(),
-                'headers' => $request->headers->all()
+                'headers' => $request->headers->all(),
+                'user_agent' => $request->header('User-Agent')
             ]);
             
-            // Get init data from Telegram Web App
-            $initData = $request->get('_tgInitData') ?? $request->get('tgInitData') ?? $request->get('_tgWebAppData');
-            
-            // Get bot token from query parameter or init data
+            // Get bot token from query parameter
             $botToken = $request->get('bot_token');
-            
-            if (!$botToken && $initData) {
-                $botToken = $this->extractBotTokenFromInitData($initData);
-            }
             
             // For testing purposes, if no bot token, use first restaurant's bot token
             if (!$botToken) {
-                $firstRestaurant = Restaurant::first();
+                $firstRestaurant = Restaurant::where('is_active', true)->first();
                 if ($firstRestaurant && $firstRestaurant->bot_token) {
                     $botToken = $firstRestaurant->bot_token;
                     Log::info('Using first restaurant bot token for testing', ['bot_token' => $botToken]);
@@ -406,7 +428,7 @@ class TelegramController extends Controller
                 $restaurant = Restaurant::where('bot_token', $botToken)->first();
             } else {
                 // Fallback to first restaurant for testing
-                $restaurant = Restaurant::first();
+                $restaurant = Restaurant::where('is_active', true)->first();
             }
             
             if (!$restaurant) {
@@ -426,50 +448,22 @@ class TelegramController extends Controller
                 'bot_token' => $botToken
             ]);
             
-            // Parse init data to get user info if available
-            $user = null;
-            $chatId = null;
-            
-            if ($initData) {
-                $data = [];
-                parse_str($initData, $data);
-                
-                $user = $data['user'] ?? null;
-                $chatId = $data['chat_instance'] ?? null;
-            }
-            
-            // If no user data from init, create a test user
-            if (!$user) {
-                $user = (object) [
-                    'id' => 123456789,
-                    'first_name' => 'Test User',
-                    'username' => 'testuser'
-                ];
-            }
-            
-            // Get or create user in database
-            $dbUser = null;
-            if ($chatId) {
-                $dbUser = \App\Models\User::where('telegram_chat_id', $chatId)->first();
-                
-                if (!$dbUser && $user) {
-                    // Create user from Telegram data
-                    $userData = is_string($user) ? json_decode($user, true) : (array) $user;
-                    $dbUser = \App\Models\User::create([
-                        'name' => $userData['first_name'] ?? 'User',
-                        'email' => 'telegram_' . $chatId . '@example.com',
-                        'telegram_chat_id' => $chatId,
-                        'password' => bcrypt(Str::random(16))
-                    ]);
-                }
-            }
-            
             // Get categories and menu items for this specific restaurant
-            $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
+            $categories = Category::where('restaurant_id', $restaurant->id)
+                ->with(['menuItems' => function($query) {
+                    $query->where('is_active', true);
+                }])
+                ->get();
             
-            Log::info('Web interface loaded successfully', [
+            // Create a mock user for direct access
+            $user = (object) [
+                'id' => 0,
+                'name' => 'Telegram User',
+                'phone' => null
+            ];
+            
+            Log::info('Web interface loaded successfully for Telegram Web App', [
                 'restaurant_id' => $restaurant->id,
-                'restaurant_name' => $restaurant->name,
                 'categories_count' => $categories->count(),
                 'bot_token' => $botToken
             ]);
@@ -477,10 +471,9 @@ class TelegramController extends Controller
             return view('web-interface.index', compact('restaurant', 'user', 'categories', 'botToken'));
             
         } catch (\Exception $e) {
-            Log::error('Web interface from app error', [
+            Log::error('Web interface error for Telegram Web App', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
+                'trace' => $e->getTraceAsString()
             ]);
             
             return response()->json([
