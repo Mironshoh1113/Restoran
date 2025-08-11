@@ -156,23 +156,11 @@
                             <div class="row align-items-center">
                                 <div class="col-3">
                                     <!-- Product Image -->
-                                    @if($item->image)
-                                        @php
-                                            $imagePath = $item->image;
-                                            $imageUrl = asset('storage/' . $imagePath);
-                                            \Log::info('Rendering menu item image', [
-                                                'item_id' => $item->id,
-                                                'item_name' => $item->name,
-                                                'image_path' => $imagePath,
-                                                'image_url' => $imageUrl,
-                                                'storage_path' => storage_path('app/public/' . $imagePath),
-                                                'public_path' => public_path('storage/' . $imagePath)
-                                            ]);
-                                        @endphp
-                                        <img src="{{ $imageUrl }}" 
+                                    @if($item->image && !empty(trim($item->image)))
+                                        <img src="{{ asset('storage/' . $item->image) }}" 
                                              alt="{{ $item->name }}" 
                                              class="product-image"
-                                             onerror="console.log('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <div class="product-image-placeholder" 
                                              style="display: none;">
                                             <i class="fas fa-utensils text-muted"></i>
