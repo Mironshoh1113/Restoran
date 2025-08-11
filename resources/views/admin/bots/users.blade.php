@@ -93,6 +93,11 @@
                     <i class="fas fa-user-friends"></i>
                     <span>Tanlanganlarga xabar yuborish</span>
                 </button>
+                <button onclick="testModal()" 
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center space-x-2">
+                    <i class="fas fa-bug"></i>
+                    <span>Test Modal</span>
+                </button>
             </div>
         </div>
     </div>
@@ -322,8 +327,18 @@ function showSendToAllModal() {
 }
 
 function closeSendToAllModal() {
-    document.getElementById('sendToAllModal').classList.add('hidden');
-    document.getElementById('sendToAllMessage').value = '';
+    const modal = document.getElementById('sendToAllModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        // Clear the message field
+        const messageField = document.getElementById('sendToAllMessage');
+        if (messageField) {
+            messageField.value = '';
+        }
+        console.log('Modal closed successfully');
+    } else {
+        console.error('Modal element not found');
+    }
 }
 
 function showSendToSelectedModal() {
@@ -340,6 +355,26 @@ function closeSendToSelectedModal() {
     document.getElementById('sendToSelectedMessage').value = '';
 }
 
+// Local notification function to ensure it works
+function showNotification(message, type = 'success') {
+    // Try to use global notification first
+    if (typeof window.showNotification === 'function') {
+        window.showNotification(message, type);
+    } else if (typeof window.utils !== 'undefined' && typeof window.utils.showNotification === 'function') {
+        window.utils.showNotification(message, type);
+    } else {
+        // Fallback to simple alert
+        alert(message);
+    }
+}
+
+// Test function to check if everything is working
+function testModal() {
+    console.log('Testing modal functionality...');
+    showNotification('Test notification', 'info');
+    showSendToAllModal();
+}
+
 // Send message functions
 function sendToAllUsers() {
     const message = document.getElementById('sendToAllMessage').value.trim();
@@ -347,6 +382,12 @@ function sendToAllUsers() {
         showNotification('Xabar matnini kiriting', 'warning');
         return;
     }
+    
+    // Show loading state
+    const sendButton = document.querySelector('#sendToAllModal button[onclick="sendToAllUsers()"]');
+    const originalText = sendButton.innerHTML;
+    sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuborilmoqda...';
+    sendButton.disabled = true;
     
     fetch(`/admin/bots/{{ $restaurant->id }}/users/send-all`, {
         method: 'POST',
@@ -363,6 +404,8 @@ function sendToAllUsers() {
         if (data.success) {
             showNotification('✅ ' + data.message, 'success');
             closeSendToAllModal();
+            // Clear the message field
+            document.getElementById('sendToAllMessage').value = '';
         } else {
             showNotification('❌ ' + data.message, 'error');
         }
@@ -370,6 +413,11 @@ function sendToAllUsers() {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Xatolik yuz berdi', 'error');
+    })
+    .finally(() => {
+        // Reset button state
+        sendButton.innerHTML = originalText;
+        sendButton.disabled = false;
     });
 }
 
@@ -388,6 +436,12 @@ function sendToSelectedUsers() {
         return;
     }
     
+    // Show loading state
+    const sendButton = document.querySelector('#sendToSelectedModal button[onclick="sendToSelectedUsers()"]');
+    const originalText = sendButton.innerHTML;
+    sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuborilmoqda...';
+    sendButton.disabled = true;
+
     fetch(`/admin/bots/{{ $restaurant->id }}/users/send`, {
         method: 'POST',
         headers: {
@@ -414,6 +468,11 @@ function sendToSelectedUsers() {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Xatolik yuz berdi', 'error');
+    })
+    .finally(() => {
+        // Reset button state
+        sendButton.innerHTML = originalText;
+        sendButton.disabled = false;
     });
 }
 

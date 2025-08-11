@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modal Debug Test</title>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Modal Debug Test</h1>
+    
+    <button class="btn btn-primary" onclick="showModal()">Show Modal</button>
+    <button class="btn btn-success" onclick="testSend()">Test Send</button>
+    
+    <!-- Modal -->
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <h3>Test Modal</h3>
+            <textarea id="testMessage" placeholder="Enter message..."></textarea>
+            <div>
+                <button class="btn btn-success" onclick="sendMessage()">Send</button>
+                <button class="btn btn-danger" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="notifications"></div>
+    
+    <script>
+        function showModal() {
+            console.log('Showing modal...');
+            document.getElementById('testModal').style.display = 'block';
+        }
+        
+        function closeModal() {
+            console.log('Closing modal...');
+            document.getElementById('testModal').style.display = 'none';
+            document.getElementById('testMessage').value = '';
+        }
+        
+        function sendMessage() {
+            const message = document.getElementById('testMessage').value.trim();
+            if (!message) {
+                showNotification('Please enter a message', 'error');
+                return;
+            }
+            
+            console.log('Sending message:', message);
+            
+            // Simulate API call
+            setTimeout(() => {
+                showNotification('Message sent successfully!', 'success');
+                closeModal();
+            }, 1000);
+        }
+        
+        function testSend() {
+            showModal();
+            document.getElementById('testMessage').value = 'Test message';
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px;
+                margin: 10px;
+                border-radius: 5px;
+                color: white;
+                z-index: 1001;
+                background-color: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, testing modal functionality...');
+            showNotification('Page loaded successfully', 'success');
+        });
+    </script>
+</body>
+</html> 
