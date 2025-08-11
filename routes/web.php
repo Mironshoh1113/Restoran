@@ -129,6 +129,31 @@ Route::post('/web-interface/order', [TelegramController::class, 'placeOrderWitho
 Route::get('/web-interface/{token}/menu', [TelegramController::class, 'getMenu'])->name('web.get-menu');
 Route::get('/web-interface/menu', [TelegramController::class, 'getMenuWithoutToken'])->name('web.get-menu-no-token');
 
+// Direct web interface access with bot token
+Route::get('/web-interface/direct/{botToken}', function($botToken) {
+    $restaurant = \App\Models\Restaurant::where('bot_token', $botToken)->first();
+    
+    if (!$restaurant || !$restaurant->is_active) {
+        return response('Restaurant not found or not active', 404);
+    }
+    
+    // Get categories and menu items
+    $categories = \App\Models\Category::where('restaurant_id', $restaurant->id)
+        ->with(['menuItems' => function($query) {
+            $query->where('is_active', true);
+        }])
+        ->get();
+    
+    // Create a mock user for direct access
+    $user = (object) [
+        'id' => 0,
+        'name' => 'Guest User',
+        'phone' => null
+    ];
+    
+    return view('web-interface.index', compact('restaurant', 'user', 'categories', 'botToken'));
+})->name('web.interface.direct');
+
 // Test endpoint for debugging
 Route::get('/test-api', function () {
     return response()->json([

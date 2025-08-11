@@ -518,27 +518,63 @@ class TelegramController extends Controller
      */
     public function webInterface($token)
     {
-        // Get session data from cache
-        $sessionData = Cache::get("web_session_{$token}");
-        
-        if (!$sessionData) {
-            return response('Session expired', 404);
+        try {
+            // Get session data from cache
+            $sessionData = Cache::get("web_session_{$token}");
+            
+            if (!$sessionData) {
+                Log::error('Session expired for web interface', ['token' => $token]);
+                return response('Session expired', 404);
+            }
+            
+            $restaurant = Restaurant::find($sessionData['restaurant_id']);
+            $user = \App\Models\User::find($sessionData['user_id']);
+            
+            if (!$restaurant || !$user) {
+                Log::error('Invalid session data for web interface', [
+                    'token' => $token,
+                    'session_data' => $sessionData,
+                    'restaurant_found' => !!$restaurant,
+                    'user_found' => !!$user
+                ]);
+                return response('Invalid session', 404);
+            }
+            
+            // Check if restaurant is active
+            if (!$restaurant->is_active) {
+                Log::error('Restaurant is not active for web interface', ['restaurant_id' => $restaurant->id]);
+                return response('Restaurant is not active', 400);
+            }
+            
+            // Get categories and menu items for this specific restaurant
+            $categories = Category::where('restaurant_id', $restaurant->id)
+                ->with(['menuItems' => function($query) {
+                    $query->where('is_active', true);
+                }])
+                ->get();
+            
+            // Pass bot token to view
+            $botToken = $restaurant->bot_token;
+            
+            Log::info('Web interface loaded successfully', [
+                'token' => $token,
+                'restaurant_id' => $restaurant->id,
+                'user_id' => $user->id,
+                'categories_count' => $categories->count(),
+                'bot_token' => $botToken
+            ]);
+            
+            return view('web-interface.index', compact('restaurant', 'user', 'categories', 'token', 'botToken'));
+            
+        } catch (\Exception $e) {
+            Log::error('Web interface error', [
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response('Server error', 500);
         }
-        
-        $restaurant = Restaurant::find($sessionData['restaurant_id']);
-        $user = \App\Models\User::find($sessionData['user_id']);
-        
-        if (!$restaurant || !$user) {
-            return response('Invalid session', 404);
-        }
-        
-        // Get categories and menu items for this specific restaurant
-        $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
-        
-        // Pass bot token to view for debugging
-        $botToken = $sessionData['bot_token'] ?? $restaurant->bot_token;
-        
-        return view('web-interface.index', compact('restaurant', 'user', 'categories', 'token', 'botToken'));
     }
 
     /**

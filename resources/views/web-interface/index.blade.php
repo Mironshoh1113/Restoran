@@ -7,6 +7,7 @@
     <title>{{ $restaurant->name }} - Menyu</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta name="bot-token" content="{{ $botToken ?? '' }}">
     <style>
         * {
             margin: 0;
@@ -834,13 +835,27 @@
         font-weight: 700;
         margin: 0 8px;
     }
-    .modal-cart-item-price {
-        color: #059669;
-        font-weight: 700;
-        min-width: 60px;
-        text-align: right;
-    }
-    </style>
+            .modal-cart-item-price {
+            color: #059669;
+            font-weight: 700;
+            min-width: 60px;
+            text-align: right;
+        }
+        
+        .checkout-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        </style>
 </head>
 <body>
     <div class="header">
@@ -947,8 +962,13 @@
                             </div>
                             <input type="hidden" id="modal-payment-method" value="cash">
                         </div>
-                        <button type="submit" class="checkout-btn" style="width: 100%; margin-top: 15px;">
-                            <i class="fas fa-shopping-cart"></i> Buyurtma berish
+                        <button type="submit" class="checkout-btn" id="modal-submit-btn" style="width: 100%; margin-top: 15px;">
+                            <span id="modal-submit-text">
+                                <i class="fas fa-shopping-cart"></i> Buyurtma berish
+                            </span>
+                            <span id="modal-submit-spinner" class="hidden">
+                                <i class="fas fa-spinner fa-spin"></i> Yuborilmoqda...
+                            </span>
                         </button>
                     </form>
                 </div>
@@ -996,6 +1016,18 @@
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 telegramChatId = tg.initDataUnsafe.user.id;
             }
+            
+            // Get bot token from meta tag or URL
+            const botToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content') || 
+                            new URLSearchParams(window.location.search).get('bot_token');
+            
+            // Log initialization
+            console.log('Telegram Web App initialized:', {
+                user: tg.initDataUnsafe?.user,
+                chatId: telegramChatId,
+                botToken: botToken,
+                initData: tg.initData
+            });
         } else {
             // We're not in Telegram, create a mock object for testing
             tg = {
@@ -1373,6 +1405,15 @@
                 alert('Savat bo\'sh!');
                 return;
             }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('modal-submit-btn');
+            const submitText = document.getElementById('modal-submit-text');
+            const submitSpinner = document.getElementById('modal-submit-spinner');
+            
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            submitSpinner.classList.remove('hidden');
             const orderData = {
                 items: items,
                 customer_name: document.getElementById('modal-customer-name').value,
@@ -1381,15 +1422,21 @@
                 payment_method: document.getElementById('modal-payment-method').value,
                 telegram_chat_id: telegramChatId
             };
-            // Get bot token from URL parameters or use the current token
-            const urlParams = new URLSearchParams(window.location.search);
-            const botToken = urlParams.get('bot_token');
-            const currentUrl = window.location.pathname;
-            const token = currentUrl.split('/').pop();
-            let endpoint = token && token !== 'web-interface' ? `/web-interface/${token}/order` : '/web-interface/order';
+            // Get bot token from meta tag or URL parameters
+            const botToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content') || 
+                            new URLSearchParams(window.location.search).get('bot_token');
+            
+            // Determine endpoint based on available data
+            let endpoint = '/web-interface/order';
             if (botToken) {
-                endpoint = '/web-interface/order';
                 orderData.bot_token = botToken;
+            } else {
+                // Try to get from current URL path
+                const currentUrl = window.location.pathname;
+                const token = currentUrl.split('/').pop();
+                if (token && token !== 'web-interface') {
+                    endpoint = `/web-interface/${token}/order`;
+                }
             }
             // Get CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -1408,15 +1455,56 @@
                 if (data.success) {
                     document.getElementById('modal-checkout-form').classList.add('hidden');
                     document.getElementById('modal-success-message').classList.remove('hidden');
-                    tg.sendData(JSON.stringify({ action: 'order_placed', order_id: data.order_id }));
-                    setTimeout(() => { tg.close(); }, 3000);
+                    
+                    // Send data back to Telegram if available
+                    if (tg && tg.sendData) {
+                        tg.sendData(JSON.stringify({ 
+                            action: 'order_placed', 
+                            order_id: data.order_id,
+                            order_number: data.order_number,
+                            total_amount: orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+                        }));
+                    }
+                    
+                    // Close web app after 3 seconds if in Telegram
+                    if (tg && tg.close) {
+                        setTimeout(() => { tg.close(); }, 3000);
+                    }
                 } else {
                     alert('Xatolik yuz berdi: ' + (data.error || 'Noma\'lum xatolik'));
                 }
             })
             .catch(error => {
-                alert('Xatolik yuz berdi: ' + error.message);
+                console.error('Order submission error:', error);
+                
+                let errorMessage = 'Xatolik yuz berdi: ';
+                if (error.name === 'TypeError' && error.message.includes('JSON')) {
+                    errorMessage += 'Server javob qaytarmayapti. Iltimos, qaytadan urinib ko\'ring.';
+                } else if (error.message.includes('404')) {
+                    errorMessage += 'Sahifa topilmadi. Iltimos, qaytadan urinib ko\'ring.';
+                } else if (error.message.includes('500')) {
+                    errorMessage += 'Server xatosi. Iltimos, keyinroq urinib ko\'ring.';
+                } else if (error.message.includes('422')) {
+                    errorMessage += 'Ma\'lumotlarni to\'g\'ri kiriting. Iltimos, barcha maydonlarni to\'ldiring.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                alert(errorMessage);
+            })
+            .finally(() => {
+                // Re-enable modal submit button
+                const submitBtn = document.getElementById('modal-submit-btn');
+                const submitText = document.getElementById('modal-submit-text');
+                const submitSpinner = document.getElementById('modal-submit-spinner');
+                
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitText.classList.remove('hidden');
+                    submitSpinner.classList.add('hidden');
+                }
             });
+            
             saveModalCustomerData();
         }
         // Save/load customer data for modal
