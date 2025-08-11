@@ -386,6 +386,15 @@ class TelegramController extends Controller
                 $botToken = $this->extractBotTokenFromInitData($initData);
             }
             
+            // For testing purposes, if no bot token, use first restaurant's bot token
+            if (!$botToken) {
+                $firstRestaurant = Restaurant::first();
+                if ($firstRestaurant && $firstRestaurant->bot_token) {
+                    $botToken = $firstRestaurant->bot_token;
+                    Log::info('Using first restaurant bot token for testing', ['bot_token' => $botToken]);
+                }
+            }
+            
             // Validate bot token format
             if ($botToken && !preg_match('/^\d+:[A-Za-z0-9_-]+$/', $botToken)) {
                 Log::error('Invalid bot token format: ' . $botToken);
@@ -752,7 +761,8 @@ class TelegramController extends Controller
                 'order_number' => 'WEB-' . str_pad(time(), 10, '0', STR_PAD_LEFT),
                 'total_price' => $total,
                 'payment_type' => $request->payment_method,
-                'address' => $request->delivery_address
+                'address' => $request->delivery_address,
+                'notes' => 'Web interface orqali zakaz qilindi'
             ]);
             
             Log::info('Order created successfully', [
@@ -893,7 +903,8 @@ class TelegramController extends Controller
                 'order_number' => 'WEB-' . time(),
                 'total_price' => $total,
                 'payment_type' => $request->payment_method,
-                'address' => $request->delivery_address
+                'address' => $request->delivery_address,
+                'notes' => 'Web interface orqali zakaz qilindi'
             ];
             
             Log::info('Order data prepared', ['order_data' => $orderData]);

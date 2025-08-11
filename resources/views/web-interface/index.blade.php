@@ -1463,15 +1463,33 @@
             };
             
             console.log('Submitting order:', orderData);
+            console.log('Cart items:', cart);
+            console.log('Form data:', {
+                customerName,
+                customerPhone,
+                deliveryAddress,
+                paymentMethod: document.getElementById('modal-payment-method').value
+            });
+            
             // Get bot token from meta tag or URL parameters
-            const botToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content') || 
-                            new URLSearchParams(window.location.search).get('bot_token');
+            let botToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content') || 
+                          new URLSearchParams(window.location.search).get('bot_token');
+            
+            // If no bot token in meta tag, try to get from current URL
+            if (!botToken || botToken.trim() === '') {
+                const currentUrl = window.location.pathname;
+                const pathParts = currentUrl.split('/');
+                if (pathParts.length > 2 && pathParts[1] === 'web-interface') {
+                    botToken = pathParts[2];
+                }
+            }
             
             console.log('Bot token found:', botToken);
+            console.log('Current URL:', window.location.href);
             
             // Determine endpoint based on available data
             let endpoint = '/web-interface/order';
-            if (botToken) {
+            if (botToken && botToken.trim() !== '') {
                 orderData.bot_token = botToken;
                 console.log('Using bot token for order:', botToken);
             } else {
@@ -1483,6 +1501,8 @@
                     console.log('Using URL token for order:', token);
                 } else {
                     console.error('No bot token or URL token found!');
+                    console.log('Meta tag content:', document.querySelector('meta[name="bot-token"]')?.getAttribute('content'));
+                    console.log('URL search params:', window.location.search);
                     alert('Xatolik: Bot token topilmadi. Iltimos, qaytadan urinib ko\'ring.');
                     return;
                 }
