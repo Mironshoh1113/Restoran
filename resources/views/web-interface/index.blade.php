@@ -146,7 +146,7 @@
                 </div>
             </div>
         </div>
-
+        {{ asset('storage/' . $item->image) }}
         <!-- Menu Items -->
         @foreach($categories as $category)
             <div class="category-content {{ $loop->first ? '' : 'd-none' }}" id="cat-content-{{ $category->id }}">
