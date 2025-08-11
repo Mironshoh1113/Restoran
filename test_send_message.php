@@ -36,24 +36,39 @@ if ($users->count() == 0) {
     exit;
 }
 
+// Show user details
+foreach ($users as $user) {
+    echo "- User ID: {$user->id}, Telegram ID: {$user->telegram_id}, Name: {$user->full_name}, Active: " . ($user->is_active ? 'Yes' : 'No') . "\n";
+}
+
 // Test telegram service
 try {
     $telegramService = new TelegramService($restaurant->bot_token);
     
+    echo "\nTesting bot connection...\n";
+    
     // Test bot connection
     $botInfo = $telegramService->getMe();
+    echo "Bot info response: " . json_encode($botInfo, JSON_PRETTY_PRINT) . "\n";
+    
     if ($botInfo['ok']) {
         echo "Bot connection successful: " . $botInfo['result']['first_name'] . "\n";
     } else {
         echo "Bot connection failed: " . ($botInfo['description'] ?? 'Unknown error') . "\n";
+        echo "This might be because:\n";
+        echo "1. Bot token is invalid\n";
+        echo "2. Bot token is a test token\n";
+        echo "3. Network issues\n";
         exit;
     }
     
     // Test sending message to first user
     $firstUser = $users->first();
-    echo "Testing message to user: " . $firstUser->telegram_id . "\n";
+    echo "\nTesting message to user: " . $firstUser->telegram_id . "\n";
     
-    $result = $telegramService->sendMessage($firstUser->telegram_id, "Test message from admin panel");
+    $result = $telegramService->sendMessage($firstUser->telegram_id, "Test message from admin panel - " . date('Y-m-d H:i:s'));
+    
+    echo "Send message response: " . json_encode($result, JSON_PRETTY_PRINT) . "\n";
     
     if ($result['ok']) {
         echo "Message sent successfully!\n";
@@ -64,6 +79,7 @@ try {
     
 } catch (Exception $e) {
     echo "Error: " . $e->getMessage() . "\n";
+    echo "Stack trace:\n" . $e->getTraceAsString() . "\n";
 }
 
-echo "Test completed\n"; 
+echo "\nTest completed\n"; 

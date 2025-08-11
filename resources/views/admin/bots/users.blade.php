@@ -383,6 +383,8 @@ function sendToAllUsers() {
         return;
     }
     
+    console.log('Sending message to all users:', message);
+    
     // Show loading state
     const sendButton = document.querySelector('#sendToAllModal button[onclick="sendToAllUsers()"]');
     const originalText = sendButton.innerHTML;
@@ -399,20 +401,25 @@ function sendToAllUsers() {
             message: message
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
+        
         if (data.success) {
             showNotification('✅ ' + data.message, 'success');
             closeSendToAllModal();
             // Clear the message field
             document.getElementById('sendToAllMessage').value = '';
         } else {
-            showNotification('❌ ' + data.message, 'error');
+            showNotification('❌ ' + (data.message || 'Xatolik yuz berdi'), 'error');
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        showNotification('Xatolik yuz berdi', 'error');
+        console.error('Fetch error:', error);
+        showNotification('❌ Xatolik yuz berdi: ' + error.message, 'error');
     })
     .finally(() => {
         // Reset button state

@@ -7,6 +7,7 @@ use App\Models\Restaurant;
 use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Storage;
 use App\Models\TelegramUser;
@@ -542,6 +543,11 @@ class BotController extends Controller
             // Test bot connection first
             $botInfo = $telegramService->getMe();
             if (!$botInfo['ok']) {
+                \Log::error('Bot connection failed', [
+                    'restaurant_id' => $restaurant->id,
+                    'bot_token' => $restaurant->bot_token,
+                    'error' => $botInfo['description'] ?? 'Unknown error'
+                ]);
                 return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
             }
             
@@ -550,30 +556,49 @@ class BotController extends Controller
                 ->where('is_active', true)
                 ->get();
             
+            if ($users->count() == 0) {
+                return response()->json(['success' => false, 'message' => 'Faol foydalanuvchilar topilmadi']);
+            }
+            
             $successCount = 0;
             $errorCount = 0;
             $errors = [];
             
             foreach ($users as $user) {
-                $result = $telegramService->sendMessage($user->telegram_id, $request->message);
-                
-                if ($result['ok']) {
-                    $successCount++;
+                try {
+                    $result = $telegramService->sendMessage($user->telegram_id, $request->message);
                     
-                    // Save outgoing message to database
-                    TelegramMessage::create([
-                        'restaurant_id' => $restaurant->id,
-                        'telegram_user_id' => $user->id,
-                        'message_id' => $result['result']['message_id'] ?? null,
-                        'direction' => 'outgoing',
-                        'message_text' => $request->message,
-                        'message_data' => $result['result'] ?? null,
-                        'message_type' => 'text',
-                        'is_read' => false,
-                    ]);
-                } else {
+                    if ($result['ok']) {
+                        $successCount++;
+                        
+                        // Save outgoing message to database
+                        TelegramMessage::create([
+                            'restaurant_id' => $restaurant->id,
+                            'telegram_user_id' => $user->id,
+                            'message_id' => $result['result']['message_id'] ?? null,
+                            'direction' => 'outgoing',
+                            'message_text' => $request->message,
+                            'message_data' => $result['result'] ?? null,
+                            'message_type' => 'text',
+                            'is_read' => false,
+                        ]);
+                    } else {
+                        $errorCount++;
+                        $errors[] = "User {$user->telegram_id}: " . ($result['description'] ?? 'Unknown error');
+                        \Log::warning('Failed to send message to user', [
+                            'user_id' => $user->id,
+                            'telegram_id' => $user->telegram_id,
+                            'error' => $result['description'] ?? 'Unknown error'
+                        ]);
+                    }
+                } catch (\Exception $e) {
                     $errorCount++;
-                    $errors[] = "User {$user->telegram_id}: " . ($result['description'] ?? 'Unknown error');
+                    $errors[] = "User {$user->telegram_id}: " . $e->getMessage();
+                    \Log::error('Exception sending message to user', [
+                        'user_id' => $user->id,
+                        'telegram_id' => $user->telegram_id,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
             
@@ -581,6 +606,14 @@ class BotController extends Controller
             if ($errorCount > 0) {
                 $message .= " {$errorCount} ta xatolik yuz berdi.";
             }
+            
+            \Log::info('Message sent to all users', [
+                'restaurant_id' => $restaurant->id,
+                'success_count' => $successCount,
+                'error_count' => $errorCount,
+                'total_users' => $users->count(),
+                'message_length' => strlen($request->message)
+            ]);
             
             return response()->json([
                 'success' => true,
@@ -593,6 +626,11 @@ class BotController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
+            \Log::error('Exception in sendMessageToAllUsers', [
+                'restaurant_id' => $restaurant->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
         }
     }

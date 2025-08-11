@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Dashboard')
 
@@ -23,15 +23,15 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Restoranlar</p>
-                    <p class="text-3xl font-bold text-orange-600">{{ Auth::user()->ownedRestaurants()->count() }}</p>
+                    <p class="text-3xl font-bold text-orange-600">{{ $stats['restaurants']['count'] ?? 0 }}</p>
                 </div>
                 <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-store text-orange-600 dark:text-orange-400 text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 flex items-center text-sm text-green-600 dark:text-green-400">
-                <i class="fas fa-arrow-up mr-1"></i>
-                <span>12% o'tgan oydan</span>
+            <div class="mt-4 flex items-center text-sm {{ $stats['restaurants']['change_type'] ?? 'increase' === 'increase' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                <i class="fas fa-arrow-{{ $stats['restaurants']['change_type'] ?? 'increase' === 'increase' ? 'up' : 'down' }} mr-1"></i>
+                <span>{{ $stats['restaurants']['change'] ?? 0 }}% o'tgan oydan</span>
             </div>
         </div>
 
@@ -40,18 +40,16 @@
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Buyurtmalar</p>
                     <p class="text-3xl font-bold text-green-600 dark:text-green-400">
-                        {{ \App\Models\Order::whereHas('project', function($query) {
-                            $query->whereIn('restaurant_id', Auth::user()->ownedRestaurants()->pluck('id'));
-                        })->count() }}
+                        {{ $stats['orders']['count'] ?? 0 }}
                     </p>
                 </div>
                 <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-shopping-cart text-green-600 dark:text-green-400 text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 flex items-center text-sm text-green-600 dark:text-green-400">
-                <i class="fas fa-arrow-up mr-1"></i>
-                <span>8% o'tgan oydan</span>
+            <div class="mt-4 flex items-center text-sm {{ $stats['orders']['change_type'] ?? 'increase' === 'increase' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                <i class="fas fa-arrow-{{ $stats['orders']['change_type'] ?? 'increase' === 'increase' ? 'up' : 'down' }} mr-1"></i>
+                <span>{{ $stats['orders']['change'] ?? 0 }}% o'tgan oydan</span>
             </div>
         </div>
 
@@ -60,16 +58,16 @@
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Kuryerlar</p>
                     <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                        {{ \App\Models\Courier::whereIn('restaurant_id', Auth::user()->ownedRestaurants()->pluck('id'))->count() }}
+                        {{ $stats['couriers']['count'] ?? 0 }}
                     </p>
                 </div>
                 <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-users text-yellow-600 dark:text-yellow-400 text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 flex items-center text-sm text-green-600 dark:text-green-400">
-                <i class="fas fa-arrow-up mr-1"></i>
-                <span>5% o'tgan oydan</span>
+            <div class="mt-4 flex items-center text-sm {{ $stats['couriers']['change_type'] ?? 'increase' === 'increase' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                <i class="fas fa-arrow-{{ $stats['couriers']['change_type'] ?? 'increase' === 'increase' ? 'up' : 'down' }} mr-1"></i>
+                <span>{{ $stats['couriers']['change'] ?? 0 }}% o'tgan oydan</span>
             </div>
         </div>
 
@@ -78,19 +76,59 @@
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Taomlar</p>
                     <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                        {{ \App\Models\MenuItem::whereHas('category.project', function($query) {
-                            $query->whereIn('restaurant_id', Auth::user()->ownedRestaurants()->pluck('id'));
-                        })->count() }}
+                        {{ $stats['menu_items']['count'] ?? 0 }}
                     </p>
                 </div>
                 <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-utensils text-purple-600 dark:text-purple-400 text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 flex items-center text-sm text-green-600 dark:text-green-400">
-                <i class="fas fa-arrow-up mr-1"></i>
-                <span>15% o'tgan oydan</span>
+            <div class="mt-4 flex items-center text-sm {{ $stats['menu_items']['change_type'] ?? 'increase' === 'increase' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                <i class="fas fa-arrow-{{ $stats['menu_items']['change_type'] ?? 'increase' === 'increase' ? 'up' : 'down' }} mr-1"></i>
+                <span>{{ $stats['menu_items']['change'] ?? 0 }}% o'tgan oydan</span>
             </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends Chart -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Oylik tendentsiyalar</h3>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Buyurtmalar va daromad</span>
+            </div>
+        </div>
+        <div class="p-6">
+            @if(isset($monthlyTrends) && $monthlyTrends->count() > 0)
+                <div class="space-y-4">
+                    <div class="grid grid-cols-6 gap-4">
+                        @foreach($monthlyTrends as $trend)
+                            <div class="text-center">
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ $trend['month'] }}</div>
+                                <div class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ $trend['orders'] }}</div>
+                                <div class="text-xs text-gray-400 dark:text-gray-500">{{ number_format($trend['revenue']) }} so'm</div>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="mt-4 h-32 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-end justify-between p-4">
+                        @foreach($monthlyTrends as $trend)
+                            @php
+                                $maxOrders = $monthlyTrends->max('orders');
+                                $height = $maxOrders > 0 ? ($trend['orders'] / $maxOrders) * 100 : 0;
+                            @endphp
+                            <div class="flex flex-col items-center">
+                                <div class="w-4 bg-blue-500 rounded-t" style="height: {{ $height }}%"></div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-2">{{ $trend['orders'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @else
+                <div class="text-center py-8">
+                    <i class="fas fa-chart-line text-gray-300 dark:text-gray-600 text-4xl mb-4"></i>
+                    <p class="text-gray-500 dark:text-gray-400">Ma'lumotlar mavjud emas</p>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -107,13 +145,7 @@
                 </div>
             </div>
             <div class="p-6">
-                @php
-                    $recentOrders = \App\Models\Order::whereHas('project', function($query) {
-                        $query->whereIn('restaurant_id', Auth::user()->ownedRestaurants()->pluck('id'));
-                    })->with(['project.restaurant'])->latest()->limit(5)->get();
-                @endphp
-                
-                @if($recentOrders->count() > 0)
+                @if(isset($recentOrders) && $recentOrders->count() > 0)
                     <div class="space-y-4">
                         @foreach($recentOrders as $order)
                             <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
@@ -123,12 +155,18 @@
                                     </div>
                                     <div>
                                         <p class="font-medium text-gray-800 dark:text-gray-200">#{{ $order->order_number }}</p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $order->customer_name }}</p>
-                                        <p class="text-xs text-gray-400 dark:text-gray-500">{{ $order->project->restaurant->name }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $order->customer_name ?? 'Mijoz' }}</p>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500">
+                                            @if(isset($order->project) && isset($order->project->restaurant))
+                                                {{ $order->project->restaurant->name }}
+                                            @else
+                                                Restoran
+                                            @endif
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <p class="font-semibold text-gray-800 dark:text-gray-200">{{ number_format($order->total_price) }} so'm</p>
+                                    <p class="font-semibold text-gray-800 dark:text-gray-200">{{ number_format($order->total_price ?? 0) }} so'm</p>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">{{ $order->created_at->diffForHumans() }}</p>
                                     @php
                                         $statusColors = [
@@ -193,7 +231,7 @@
                         <i class="fas fa-chevron-right ml-auto text-gray-400 dark:text-gray-500 group-hover:text-green-600 dark:group-hover:text-green-400"></i>
                     </a>
 
-                    <a href="#" 
+                    <a href="{{ route('admin.couriers.index') }}" 
                        class="flex items-center p-3 text-gray-700 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:text-yellow-600 dark:hover:text-yellow-400 rounded-lg transition-colors group">
                         <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 dark:group-hover:bg-yellow-800 transition-colors">
                             <i class="fas fa-users text-yellow-600 dark:text-yellow-400"></i>
@@ -205,7 +243,7 @@
                         <i class="fas fa-chevron-right ml-auto text-gray-400 dark:text-gray-500 group-hover:text-yellow-600 dark:group-hover:text-yellow-400"></i>
                     </a>
 
-                    <a href="#" 
+                    <a href="{{ route('dashboard.stats') }}" 
                        class="flex items-center p-3 text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 rounded-lg transition-colors group">
                         <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center group-hover:bg-purple-200 dark:group-hover:bg-purple-800 transition-colors">
                             <i class="fas fa-chart-bar text-purple-600 dark:text-purple-400"></i>
@@ -227,40 +265,27 @@
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Faollik tarixi</h3>
         </div>
         <div class="p-6">
-            <div class="space-y-4">
-                <div class="flex items-start space-x-4">
-                    <div class="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
-                        <i class="fas fa-check text-green-600 dark:text-green-400 text-sm"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium text-gray-800 dark:text-gray-200">Yangi buyurtma qabul qilindi</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">#1234 - Oshxona Restaurant</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500">2 daqiqa oldin</p>
-                    </div>
+            @if(isset($activityFeed) && $activityFeed->count() > 0)
+                <div class="space-y-4">
+                    @foreach($activityFeed as $activity)
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-{{ $activity['icon_color'] }}-100 dark:bg-{{ $activity['icon_color'] }}-900/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-{{ $activity['icon'] }} text-{{ $activity['icon_color'] }}-600 dark:text-{{ $activity['icon_color'] }}-400 text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $activity['title'] }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $activity['subtitle'] }}</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500">{{ $activity['time'] }}</p>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-
-                <div class="flex items-start space-x-4">
-                    <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                        <i class="fas fa-truck text-blue-600 dark:text-blue-400 text-sm"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium text-gray-800 dark:text-gray-200">Buyurtma kuryerga tayinlandi</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">#1230 - Kuryer Ahmad</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500">15 daqiqa oldin</p>
-                    </div>
+            @else
+                <div class="text-center py-8">
+                    <i class="fas fa-history text-gray-300 dark:text-gray-600 text-4xl mb-4"></i>
+                    <p class="text-gray-500 dark:text-gray-400">Faollik tarixi mavjud emas</p>
                 </div>
-
-                <div class="flex items-start space-x-4">
-                    <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
-                        <i class="fas fa-plus text-purple-600 dark:text-purple-400 text-sm"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium text-gray-800 dark:text-gray-200">Yangi taom qo'shildi</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Lag'mon - Oshxona Restaurant</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500">1 soat oldin</p>
-                    </div>
-                </div>
-            </div>
+            @endif
         </div>
     </div>
 </div>

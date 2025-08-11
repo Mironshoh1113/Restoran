@@ -47,13 +47,13 @@
                             Bot sozlamalari
                         </a>
                         
-                        <a href="#" 
+                        <a href="{{ route('admin.couriers.index') }}" 
                            class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
                             <i class="fas fa-users mr-2"></i>
                             Kuryerlar
                         </a>
                         
-                        <a href="#" 
+                        <a href="{{ route('dashboard.stats') }}" 
                            class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
                             <i class="fas fa-chart-bar mr-2"></i>
                             Statistika
@@ -159,13 +159,13 @@
                     Bot sozlamalari
                 </a>
                 
-                <a href="#" 
+                <a href="{{ route('admin.couriers.index') }}" 
                    class="block px-3 py-2 text-base font-medium rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
                     <i class="fas fa-users mr-2"></i>
                     Kuryerlar
                 </a>
                 
-                <a href="#" 
+                <a href="{{ route('dashboard.stats') }}" 
                    class="block px-3 py-2 text-base font-medium rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
                     <i class="fas fa-chart-bar mr-2"></i>
                     Statistika
