@@ -544,6 +544,83 @@
         html {
             scroll-behavior: smooth;
         }
+        
+        /* Telegram Web App specific styles */
+        .telegram-dark {
+            background: #1a1a1a !important;
+            color: #ffffff !important;
+        }
+        
+        .telegram-dark .header {
+            background: #2a2a2a !important;
+            color: #ffffff !important;
+        }
+        
+        .telegram-dark .container {
+            background: #1a1a1a !important;
+        }
+        
+        .telegram-dark .menu-item {
+            background: #2a2a2a !important;
+            color: #ffffff !important;
+            border-color: #3a3a3a !important;
+        }
+        
+        .telegram-dark .item-name {
+            color: #ffffff !important;
+        }
+        
+        .telegram-dark .item-description {
+            color: #cccccc !important;
+        }
+        
+        .telegram-dark .cart {
+            background: #2a2a2a !important;
+            color: #ffffff !important;
+        }
+        
+        .telegram-dark .cart-order-modal-content {
+            background: #2a2a2a !important;
+            color: #ffffff !important;
+        }
+        
+        .telegram-dark .form-input {
+            background: #3a3a3a !important;
+            color: #ffffff !important;
+            border-color: #4a4a4a !important;
+        }
+        
+        .telegram-dark .form-input:focus {
+            border-color: #667eea !important;
+        }
+        
+        /* Telegram Web App button improvements */
+        .telegram-webapp .checkout-btn {
+            background: var(--tg-theme-button-color, #667eea) !important;
+            color: var(--tg-theme-button-text-color, #ffffff) !important;
+        }
+        
+        .telegram-webapp .quantity-btn {
+            background: var(--tg-theme-secondary-bg-color, #e0e7ff) !important;
+            color: var(--tg-theme-text-color, #4f46e5) !important;
+        }
+        
+        .telegram-webapp .quantity-btn.plus {
+            background: var(--tg-theme-button-color, #4f46e5) !important;
+            color: var(--tg-theme-button-text-color, #ffffff) !important;
+        }
+        
+        /* Add Telegram Web App class to body when detected */
+        body.telegram-webapp {
+            /* Use Telegram theme variables if available */
+            --tg-theme-bg-color: var(--tg-theme-bg-color, #ffffff);
+            --tg-theme-text-color: var(--tg-theme-text-color, #000000);
+            --tg-theme-hint-color: var(--tg-theme-hint-color, #999999);
+            --tg-theme-link-color: var(--tg-theme-link-color, #2481cc);
+            --tg-theme-button-color: var(--tg-theme-button-color, #2481cc);
+            --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --tg-theme-secondary-bg-color: var(--tg-theme-secondary-bg-color, #f1f1f1);
+        }
         /* --- Modern Mobile Redesign Additions --- */
         body {
             background: #f3f4f6;
@@ -1012,39 +1089,59 @@
         // Initialize Telegram Web App
         let tg = null;
         let telegramChatId = null;
+        let isTelegramWebApp = false;
         
         // Check if we're in Telegram Web App
         if (window.Telegram && window.Telegram.WebApp) {
-            tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-            
-            // Get chat ID from Telegram Web App
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                telegramChatId = tg.initDataUnsafe.user.id;
+            try {
+                tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                isTelegramWebApp = true;
+                
+                // Get chat ID from Telegram Web App
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    telegramChatId = tg.initDataUnsafe.user.id;
+                    console.log('Telegram user ID found:', telegramChatId);
+                }
+                
+                // Get bot token from meta tag or URL
+                const botToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content') || 
+                                new URLSearchParams(window.location.search).get('bot_token');
+                
+                // Log initialization
+                console.log('Telegram Web App initialized successfully:', {
+                    user: tg.initDataUnsafe?.user,
+                    chatId: telegramChatId,
+                    botToken: botToken,
+                    initData: tg.initData,
+                    platform: tg.platform,
+                    version: tg.version
+                });
+                
+                // Set theme
+                if (tg.colorScheme === 'dark') {
+                    document.body.classList.add('telegram-dark');
+                }
+                
+            } catch (error) {
+                console.error('Error initializing Telegram Web App:', error);
+                isTelegramWebApp = false;
+                tg = null;
             }
-            
-            // Get bot token from meta tag or URL
-            const botToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content') || 
-                            new URLSearchParams(window.location.search).get('bot_token');
-            
-            // Log initialization
-            console.log('Telegram Web App initialized:', {
-                user: tg.initDataUnsafe?.user,
-                chatId: telegramChatId,
-                botToken: botToken,
-                initData: tg.initData
-            });
         } else {
+            console.log('Not in Telegram Web App - running in browser mode');
             // We're not in Telegram, create a mock object for testing
             tg = {
-                ready: function() {},
-                expand: function() {},
+                ready: function() { console.log('Mock Telegram ready() called'); },
+                expand: function() { console.log('Mock Telegram expand() called'); },
                 sendData: function(data) {
                     console.log('Mock Telegram sendData:', data);
                 },
                 close: function() {
-                    console.log('Mock Telegram close');
+                    console.log('Mock Telegram close() called');
+                    // In browser mode, show success message instead of closing
+                    alert('Buyurtma muvaffaqiyatli qabul qilindi!');
                 }
             };
         }
@@ -1052,12 +1149,37 @@
         // Add error handling for network issues
         window.addEventListener('error', function(e) {
             console.error('Global error:', e.error);
+            if (isTelegramWebApp && tg && tg.showAlert) {
+                tg.showAlert('Xatolik yuz berdi: ' + e.error.message);
+            }
         });
         
         // Add unhandled promise rejection handler
         window.addEventListener('unhandledrejection', function(e) {
             console.error('Unhandled promise rejection:', e.reason);
+            if (isTelegramWebApp && tg && tg.showAlert) {
+                tg.showAlert('Xatolik yuz berdi: ' + e.reason);
+            }
         });
+        
+        // Add Telegram Web App event listeners
+        if (isTelegramWebApp && tg) {
+            // Add Telegram Web App class to body
+            document.body.classList.add('telegram-webapp');
+            
+            tg.onEvent('viewportChanged', function() {
+                console.log('Telegram viewport changed');
+            });
+            
+            tg.onEvent('themeChanged', function() {
+                console.log('Telegram theme changed to:', tg.colorScheme);
+                if (tg.colorScheme === 'dark') {
+                    document.body.classList.add('telegram-dark');
+                } else {
+                    document.body.classList.remove('telegram-dark');
+                }
+            });
+        }
         
         let cart = {};
         let selectedPaymentMethod = 'cash';
@@ -1470,6 +1592,11 @@
                 deliveryAddress,
                 paymentMethod: document.getElementById('modal-payment-method').value
             });
+            console.log('Telegram Web App status:', {
+                isTelegramWebApp: isTelegramWebApp,
+                telegramChatId: telegramChatId,
+                tg: !!tg
+            });
             
             // Get bot token from multiple sources
             let botToken = null;
@@ -1591,23 +1718,40 @@
                     
                     // Send data back to Telegram if available
                     if (tg && tg.sendData) {
-                        const totalAmount = orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                        tg.sendData(JSON.stringify({ 
-                            action: 'order_placed', 
-                            order_id: data.order_id,
-                            order_number: data.order_number,
-                            total_amount: totalAmount,
-                            customer_name: orderData.customer_name,
-                            delivery_address: orderData.delivery_address
-                        }));
-                        console.log('Data sent to Telegram:', { order_id: data.order_id, total_amount: totalAmount });
+                        try {
+                            const totalAmount = orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                            const telegramData = { 
+                                action: 'order_placed', 
+                                order_id: data.order_id,
+                                order_number: data.order_number,
+                                total_amount: totalAmount,
+                                customer_name: orderData.customer_name,
+                                delivery_address: orderData.delivery_address
+                            };
+                            
+                            tg.sendData(JSON.stringify(telegramData));
+                            console.log('Data sent to Telegram successfully:', telegramData);
+                            
+                            // Show success message in Telegram
+                            if (isTelegramWebApp && tg.showAlert) {
+                                tg.showAlert('✅ Buyurtma muvaffaqiyatli qabul qilindi!');
+                            }
+                            
+                        } catch (telegramError) {
+                            console.error('Error sending data to Telegram:', telegramError);
+                            // Don't fail the order if Telegram communication fails
+                        }
                     }
                     
                     // Close web app after 3 seconds if in Telegram
-                    if (tg && tg.close) {
+                    if (isTelegramWebApp && tg && tg.close) {
                         setTimeout(() => { 
                             console.log('Closing Telegram Web App');
-                            tg.close(); 
+                            try {
+                                tg.close();
+                            } catch (closeError) {
+                                console.error('Error closing Telegram Web App:', closeError);
+                            }
                         }, 3000);
                     } else {
                         // If not in Telegram, redirect after 3 seconds
@@ -1661,7 +1805,17 @@
                     botToken: botToken
                 });
                 
-                alert(errorMessage);
+                // Show error message in Telegram if available
+                if (isTelegramWebApp && tg && tg.showAlert) {
+                    try {
+                        tg.showAlert(errorMessage);
+                    } catch (telegramError) {
+                        console.error('Error showing alert in Telegram:', telegramError);
+                        alert(errorMessage);
+                    }
+                } else {
+                    alert(errorMessage);
+                }
             })
             .finally(() => {
                 // Re-enable modal submit button
