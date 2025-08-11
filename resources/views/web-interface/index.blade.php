@@ -1286,123 +1286,124 @@
         }
         
         // Payment method selection
-        document.querySelectorAll('.payment-method').forEach(method => {
-            method.addEventListener('click', function() {
-                document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedPaymentMethod = this.dataset.method;
-                document.getElementById('payment-method').value = selectedPaymentMethod;
+        const paymentMethods = document.querySelectorAll('.payment-method');
+        if (paymentMethods.length > 0) {
+            paymentMethods.forEach(method => {
+                method.addEventListener('click', function() {
+                    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedPaymentMethod = this.dataset.method;
+                    const paymentMethodInput = document.getElementById('payment-method');
+                    if (paymentMethodInput) {
+                        paymentMethodInput.value = selectedPaymentMethod;
+                    }
+                });
             });
-        });
-        
-        // Set default payment method
-        document.querySelector('[data-method="cash"]').classList.add('selected');
+            
+            // Set default payment method
+            const defaultCashMethod = document.querySelector('[data-method="cash"]');
+            if (defaultCashMethod) {
+                defaultCashMethod.classList.add('selected');
+            }
+        } else {
+            console.log('Payment methods not found');
+        }
         
         // Handle form submission
-        document.getElementById('checkout-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const items = [];
-            for (let itemId in cart) {
-                items.push({
-                    id: parseInt(itemId),
-                    quantity: cart[itemId]
+        const checkoutForm = document.getElementById('checkout-form');
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const items = [];
+                for (let itemId in cart) {
+                    items.push({
+                        id: parseInt(itemId),
+                        quantity: cart[itemId]
+                    });
+                }
+                
+                const orderData = {
+                    items: items,
+                    customer_name: document.getElementById('customer-name')?.value || '',
+                    customer_phone: document.getElementById('customer-phone')?.value || '',
+                    delivery_address: document.getElementById('delivery-address')?.value || '',
+                    payment_method: selectedPaymentMethod,
+                    telegram_chat_id: telegramChatId
+                };
+                
+                // Get bot token from URL parameters or use the current token
+                const urlParams = new URLSearchParams(window.location.search);
+                const botToken = urlParams.get('bot_token');
+                
+                // Get the current URL to determine the endpoint
+                const currentUrl = window.location.pathname;
+                const token = currentUrl.split('/').pop();
+                let endpoint = token && token !== 'web-interface' ? 
+                    `/web-interface/${token}/order` : 
+                    '/web-interface/order';
+                
+                // If we have a bot token, use the no-token endpoint with bot_token parameter
+                if (botToken) {
+                    endpoint = '/web-interface/order';
+                    orderData.bot_token = botToken;
+                }
+                
+                console.log('Submitting order to endpoint:', endpoint);
+                    
+                // Get CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (csrfToken) {
+                    headers['X-CSRF-TOKEN'] = csrfToken;
+                }
+                
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(orderData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        alert('Buyurtma muvaffaqiyatli qabul qilindi!');
+                        
+                        // Send data back to Telegram
+                        if (tg && tg.sendData) {
+                            tg.sendData(JSON.stringify({
+                                action: 'order_placed',
+                                order_id: data.order_id
+                            }));
+                        }
+                        
+                        // Close web app after 3 seconds
+                        if (tg && tg.close) {
+                            setTimeout(() => {
+                                tg.close();
+                            }, 3000);
+                        }
+                    } else {
+                        alert('Xatolik yuz berdi: ' + (data.error || 'Noma\'lum xatolik'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Order submission error:', error);
+                    alert('Xatolik yuz berdi: ' + error.message);
                 });
-            }
-            
-            const orderData = {
-                items: items,
-                customer_name: document.getElementById('customer-name').value,
-                customer_phone: document.getElementById('customer-phone').value,
-                delivery_address: document.getElementById('delivery-address').value,
-                payment_method: selectedPaymentMethod,
-                telegram_chat_id: telegramChatId
-            };
-            
-            // Get bot token from URL parameters or use the current token
-            const urlParams = new URLSearchParams(window.location.search);
-            const botToken = urlParams.get('bot_token');
-            
-            // Get the current URL to determine the endpoint
-            const currentUrl = window.location.pathname;
-            const token = currentUrl.split('/').pop();
-            let endpoint = token && token !== 'web-interface' ? 
-                `/web-interface/${token}/order` : 
-                '/web-interface/order';
-            
-            // If we have a bot token, use the no-token endpoint with bot_token parameter
-            if (botToken) {
-                endpoint = '/web-interface/order';
-                orderData.bot_token = botToken;
-            }
-            
-            console.log('Submitting order to endpoint:', endpoint);
-                
-            // Get CSRF token
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            
-            if (csrfToken) {
-                headers['X-CSRF-TOKEN'] = csrfToken;
-            }
-            
-            fetch(endpoint, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(orderData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('order-form').classList.add('hidden');
-                    document.getElementById('success-message').classList.remove('hidden');
-                    
-                    // Send data back to Telegram
-                    tg.sendData(JSON.stringify({
-                        action: 'order_placed',
-                        order_id: data.order_id
-                    }));
-                    
-                    // Close web app after 3 seconds
-                    setTimeout(() => {
-                        tg.close();
-                    }, 3000);
-                } else {
-                    alert('Xatolik yuz berdi: ' + (data.error || 'Noma\'lum xatolik'));
-                }
-            })
-            .catch(error => {
-                console.error('Order submission error:', error);
-                
-                // Show more detailed error message
-                let errorMessage = 'Xatolik yuz berdi: ';
-                if (error.name === 'TypeError' && error.message.includes('JSON')) {
-                    errorMessage += 'Server javob qaytarmayapti. Iltimos, qaytadan urinib ko\'ring.';
-                } else if (error.message.includes('404')) {
-                    errorMessage += 'Sahifa topilmadi. Iltimos, qaytadan urinib ko\'ring.';
-                } else if (error.message.includes('500')) {
-                    errorMessage += 'Server xatosi. Iltimos, keyinroq urinib ko\'ring.';
-                } else if (error.message.includes('422')) {
-                    errorMessage += 'Ma\'lumotlarni to\'g\'ri kiriting. Iltimos, barcha maydonlarni to\'ldiring.';
-                } else {
-                    errorMessage += error.message;
-                }
-                
-                // Log additional details for debugging
-                console.log('Order data that failed:', orderData);
-                console.log('Endpoint that failed:', endpoint);
-                
-                alert(errorMessage);
             });
-        });
+        } else {
+            console.log('Main checkout form not found - using modal only');
+        }
         
         // Initialize cart total
         updateCartTotal();
@@ -1426,35 +1427,51 @@
             });
         });
         
-        // Save customer data when form is submitted
-        document.getElementById('checkout-form').addEventListener('submit', function(e) {
-            saveCustomerData();
-        });
+        // Save customer data when form is submitted - check if element exists first
+        const checkoutForm = document.getElementById('checkout-form');
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', function(e) {
+                saveCustomerData();
+            });
+        } else {
+            console.log('Checkout form not found - this is normal for modal-only interface');
+        }
         
         function loadCustomerData() {
             const savedName = localStorage.getItem('customer_name');
             const savedPhone = localStorage.getItem('customer_phone');
             const savedAddress = localStorage.getItem('delivery_address');
             
-            if (savedName) {
-                document.getElementById('customer-name').value = savedName;
+            // Check if elements exist before setting values
+            const nameInput = document.getElementById('customer-name');
+            const phoneInput = document.getElementById('customer-phone');
+            const addressInput = document.getElementById('customer-delivery-address');
+            
+            if (nameInput && savedName) {
+                nameInput.value = savedName;
             }
-            if (savedPhone) {
-                document.getElementById('customer-phone').value = savedPhone;
+            if (phoneInput && savedPhone) {
+                phoneInput.value = savedPhone;
             }
-            if (savedAddress) {
-                document.getElementById('delivery-address').value = savedAddress;
+            if (addressInput && savedAddress) {
+                addressInput.value = savedAddress;
             }
         }
         
         function saveCustomerData() {
-            const name = document.getElementById('customer-name').value;
-            const phone = document.getElementById('customer-phone').value;
-            const address = document.getElementById('delivery-address').value;
+            const nameInput = document.getElementById('customer-name');
+            const phoneInput = document.getElementById('customer-phone');
+            const addressInput = document.getElementById('customer-delivery-address');
             
-            if (name) localStorage.setItem('customer_name', name);
-            if (phone) localStorage.setItem('customer_phone', phone);
-            if (address) localStorage.setItem('delivery_address', address);
+            if (nameInput && nameInput.value) {
+                localStorage.setItem('customer_name', nameInput.value);
+            }
+            if (phoneInput && phoneInput.value) {
+                localStorage.setItem('customer_phone', phoneInput.value);
+            }
+            if (addressInput && addressInput.value) {
+                localStorage.setItem('delivery_address', addressInput.value);
+            }
         }
 
         // Floating cart button logic
@@ -1481,9 +1498,14 @@
         document.addEventListener('DOMContentLoaded', handleFloatingCartBtn);
 
         // Cart & Order Modal Logic
-        document.getElementById('checkout-btn').onclick = function() {
-            openCartOrderModal();
-        };
+        const cartCheckoutBtn = document.getElementById('checkout-btn');
+        if (cartCheckoutBtn) {
+            cartCheckoutBtn.onclick = function() {
+                openCartOrderModal();
+            };
+        } else {
+            console.log('Cart checkout button not found');
+        }
         function openCartOrderModal() {
             renderModalCart();
             loadModalCustomerData();
@@ -1513,18 +1535,31 @@
             updateModalCheckoutBtn();
         }
         // Payment method selection in modal
-        document.querySelectorAll('#cart-order-modal .payment-method').forEach(method => {
-            method.addEventListener('click', function() {
-                document.querySelectorAll('#cart-order-modal .payment-method').forEach(m => m.classList.remove('selected'));
-                this.classList.add('selected');
-                document.getElementById('modal-payment-method').value = this.dataset.method;
+        const modalPaymentMethods = document.querySelectorAll('#cart-order-modal .payment-method');
+        if (modalPaymentMethods.length > 0) {
+            modalPaymentMethods.forEach(method => {
+                method.addEventListener('click', function() {
+                    document.querySelectorAll('#cart-order-modal .payment-method').forEach(m => m.classList.remove('selected'));
+                    this.classList.add('selected');
+                    const paymentMethodInput = document.getElementById('modal-payment-method');
+                    if (paymentMethodInput) {
+                        paymentMethodInput.value = this.dataset.method;
+                    }
+                });
             });
-        });
+        } else {
+            console.log('Modal payment methods not found');
+        }
         // Modal checkout form submit
-        document.getElementById('modal-checkout-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitModalOrder();
-        });
+        const modalCheckoutForm = document.getElementById('modal-checkout-form');
+        if (modalCheckoutForm) {
+            modalCheckoutForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitModalOrder();
+            });
+        } else {
+            console.error('Modal checkout form not found!');
+        }
         function submitModalOrder() {
             const items = [];
             for (let itemId in cart) {
