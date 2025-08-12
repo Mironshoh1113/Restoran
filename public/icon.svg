@@ -1,0 +1,18 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="6" fill="url(#gradient)"/>
+  
+  <!-- Fork -->
+  <path d="M10 6v20M12 6v20M14 6v20M16 6v20M18 6v20M20 6v20M22 6v20" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M10 6h12v4H10V6z" fill="white"/>
+  
+  <!-- Knife -->
+  <path d="M24 8l-2 2v12l2 2V8z" fill="white"/>
+  <path d="M22 10l-1 1v10l1 1V10z" fill="url(#gradient)"/>
+  
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b35"/>
+      <stop offset="100%" style="stop-color:#f7931e"/>
+    </linearGradient>
+  </defs>
+</svg> 

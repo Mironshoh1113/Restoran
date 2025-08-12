@@ -27,16 +27,17 @@
   <link rel="canonical" href="{{ url()->current() }}" />
 
   <!-- Favicons -->
-  <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any" />
   <link rel="icon" href="{{ asset('icon.svg') }}" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}" />
+  <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any" />
+  <link rel="apple-touch-icon" href="{{ asset('icon.svg') }}" />
+  <link rel="shortcut icon" href="{{ asset('icon.svg') }}" type="image/svg+xml" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ url()->current() }}" />
   <meta property="og:title" content="ForkNow – Restoran Boshqaruv Tizimi | AI Powered Restaurant Management" />
   <meta property="og:description" content="ForkNow – zamonaviy AI texnologiyalari asosida qurilgan restoran boshqaruv tizimi. Buyurtmalar, menyu, mijozlar va kuryerlar boshqaruvi." />
-  <meta property="og:image" content="{{ asset('images/forknow-og-image.jpg') }}" />
+  <meta property="og:image" content="{{ asset('icon.svg') }}" />
   <meta property="og:site_name" content="ForkNow" />
   <meta property="og:locale" content="uz_UZ" />
 
@@ -45,7 +46,7 @@
   <meta name="twitter:url" content="{{ url()->current() }}" />
   <meta name="twitter:title" content="ForkNow – Restoran Boshqaruv Tizimi | AI Powered Restaurant Management" />
   <meta name="twitter:description" content="ForkNow – zamonaviy AI texnologiyalari asosida qurilgan restoran boshqaruv tizimi." />
-  <meta name="twitter:image" content="{{ asset('images/forknow-og-image.jpg') }}" />
+  <meta name="twitter:image" content="{{ asset('icon.svg') }}" />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
@@ -115,7 +116,7 @@
       'applicationCategory' => 'BusinessApplication',
       'operatingSystem' => 'Web',
       'offers' => ['@type' => 'Offer', 'price' => '29', 'priceCurrency' => 'USD'],
-      'publisher' => ['@type' => 'Organization', 'name' => 'ForkNow', 'url' => url('/'), 'logo' => asset('images/forknow-og-image.jpg')],
+      'publisher' => ['@type' => 'Organization', 'name' => 'ForkNow', 'url' => url('/'), 'logo' => asset('icon.svg')],
       'description' => "AI asosida restoran boshqaruv tizimi – buyurtma, menyu, mijozlar va kuryerlar boshqaruvi."
     ];
   @endphp
