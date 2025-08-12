@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark:bg-gray-900" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark:bg-gray-900">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -39,138 +39,6 @@
 
         <!-- Custom CSS for Dark Mode -->
         <style>
-                    /* Prevent FOUC (Flash of Unstyled Content) */
-        html {
-            visibility: hidden;
-        }
-        
-        /* Respect system dark mode preference */
-        @media (prefers-color-scheme: dark) {
-            html:not(.light) {
-                color-scheme: dark;
-            }
-        }
-        
-        /* Force dark mode on root when dark class is present */
-        :root.dark {
-            color-scheme: dark;
-        }
-        
-        :root.dark body {
-            background-color: #111827 !important;
-            color: #f9fafb !important;
-        }
-        
-        /* High priority dark mode styles */
-        @layer utilities {
-            .dark\:bg-gray-900 {
-                background-color: #111827 !important;
-            }
-            
-            .dark\:text-gray-100 {
-                color: #f9fafb !important;
-            }
-        }
-        
-        /* Ensure dark mode works in all browsers */
-        @supports (color-scheme: dark) {
-            .dark {
-                color-scheme: dark;
-            }
-        }
-        
-        /* Import dark mode styles */
-        @import url('data:text/css;base64,LmRhcmsgeyBjb2xvci1zY2hlbWU6IGRhcms7IH0=');
-        
-        /* Force dark mode with highest priority */
-        html.dark, html.dark * {
-            color-scheme: dark !important;
-        }
-        
-        /* Dark mode animation to ensure it's applied */
-        @keyframes ensureDarkMode {
-            to {
-                color-scheme: dark;
-            }
-        }
-        
-        html.dark {
-            animation: ensureDarkMode 0.1s forwards;
-        }
-        
-        /* Ensure dark mode works in print */
-        @media print {
-            html.dark {
-                color-scheme: dark;
-            }
-        }
-        
-        /* Custom font for dark mode */
-        @font-face {
-            font-family: 'DarkModeFont';
-            src: local('Arial');
-            font-display: swap;
-        }
-        
-        html.dark {
-            font-family: 'DarkModeFont', sans-serif;
-        }
-        
-        /* Custom counter style for dark mode */
-        @counter-style darkModeCounter {
-            system: numeric;
-            symbols: '0' '1' '2' '3' '4' '5' '6' '7' '8' '9';
-            suffix: ' ';
-        }
-        
-        html.dark {
-            counter-style: darkModeCounter;
-        }
-        
-        /* Custom property for dark mode */
-        @property --dark-mode-color {
-            syntax: '<color>';
-            initial-value: #111827;
-            inherits: true;
-        }
-        
-        html.dark {
-            --dark-mode-color: #111827;
-        }
-        
-        /* Container query for dark mode */
-        @container (min-width: 0px) {
-            html.dark {
-                color-scheme: dark;
-            }
-        }
-        
-        /* Scope for dark mode */
-        @scope (html.dark) {
-            :scope {
-                color-scheme: dark;
-            }
-        }
-        
-        /* Starting style for dark mode */
-        @starting-style {
-            html.dark {
-                color-scheme: dark;
-            }
-        }
-        
-        /* Force dark mode on body when dark class is present */
-        body.dark {
-            background-color: #111827 !important;
-            color: #f9fafb !important;
-        }
-        
-        /* Ensure dark mode is applied immediately */
-        html.dark body {
-            background-color: #111827 !important;
-            color: #f9fafb !important;
-        }
-            
             /* Dark mode styles */
             .dark {
                 color-scheme: dark;
@@ -347,20 +215,12 @@
                 background-color: #111827 !important;
             }
             
-                    /* Ensure transitions work but not for initial load */
-        * {
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
-        }
-        
-        /* Disable transitions during initial load to prevent FOUC */
-        html:not([style*="visibility: visible"]) * {
-            transition: none !important;
-        }
+            /* Ensure transitions work */
+            * {
+                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+            }
         </style>
 
-        <!-- Alpine.js -->
-        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-        
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -368,12 +228,12 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
             <!-- Dark Mode Toggle -->
             <div class="absolute top-4 right-4">
-                <button @click="darkMode = !darkMode; $dispatch('dark-mode-changed', { darkMode })" 
+                <button id="darkModeToggle" 
                         class="p-2 rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all">
-                    <svg x-show="!darkMode" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
                     </svg>
-                    <svg x-show="darkMode" class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg id="sunIcon" class="w-5 h-5 text-yellow-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                     </svg>
                 </button>
@@ -405,236 +265,65 @@
         
         <!-- Custom Script for Dark Mode -->
         <script>
-                    // Initialize dark mode immediately and prevent FOUC
-        (function() {
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            if (darkMode) {
-                document.documentElement.classList.add('dark');
-                document.body.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-                document.body.classList.remove('dark');
-            }
-            
-            // Hide content until dark mode is applied
-            document.documentElement.style.visibility = 'visible';
-        })();
-        
-        // Ensure dark mode is applied when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            if (darkMode) {
-                document.documentElement.classList.add('dark');
-                document.body.classList.add('dark');
-            }
-            
-            // Use requestAnimationFrame to ensure dark mode is applied before paint
-            requestAnimationFrame(function() {
+            // Initialize dark mode immediately
+            (function() {
                 const darkMode = localStorage.getItem('darkMode') === 'true';
                 if (darkMode) {
                     document.documentElement.classList.add('dark');
-                    document.body.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
                 }
-            });
-            
-            // Use MutationObserver to ensure dark mode persists
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                        const darkMode = localStorage.getItem('darkMode') === 'true';
-                        if (darkMode && !document.documentElement.classList.contains('dark')) {
-                            document.documentElement.classList.add('dark');
-                            document.body.classList.add('dark');
-                        }
-                    }
-                });
-            });
-            
-            observer.observe(document.documentElement, {
-                attributes: true,
-                attributeFilter: ['class']
-            });
-            
-            // Ensure dark mode persists before page unload
-            window.addEventListener('beforeunload', function() {
-                const darkMode = localStorage.getItem('darkMode') === 'true';
-                if (darkMode) {
-                    document.documentElement.classList.add('dark');
-                    document.body.classList.add('dark');
-                }
-            });
-            
-            // Ensure dark mode persists when page becomes visible
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden) {
-                    const darkMode = localStorage.getItem('darkMode') === 'true';
-                    if (darkMode) {
-                        document.documentElement.classList.add('dark');
-                        document.body.classList.add('dark');
-                    }
-                }
-            });
-            
-            // Ensure dark mode persists when page is fully loaded
-            window.addEventListener('load', function() {
-                const darkMode = localStorage.getItem('darkMode') === 'true';
-                if (darkMode) {
-                    document.documentElement.classList.add('dark');
-                    document.body.classList.add('dark');
-                }
-            });
-            
-            // Continuously ensure dark mode persists
-            setInterval(function() {
-                const darkMode = localStorage.getItem('darkMode') === 'true';
-                if (darkMode && !document.documentElement.classList.contains('dark')) {
-                    document.documentElement.classList.add('dark');
-                    document.body.classList.add('dark');
-                }
-            }, 100);
-            
-            // Additional timeout to ensure dark mode is applied
-            setTimeout(function() {
-                const darkMode = localStorage.getItem('darkMode') === 'true';
-                if (darkMode) {
-                    document.documentElement.classList.add('dark');
-                    document.body.classList.add('dark');
-                }
-            }, 50);
-            
-            // Use ResizeObserver to ensure dark mode persists during layout changes
-            if (window.ResizeObserver) {
-                const resizeObserver = new ResizeObserver(function() {
-                    const darkMode = localStorage.getItem('darkMode') === 'true';
-                    if (darkMode && !document.documentElement.classList.contains('dark')) {
-                        document.documentElement.classList.add('dark');
-                        document.body.classList.add('dark');
-                        document.documentElement.classList.add('dark');
-                    }
-                });
                 
-                resizeObserver.observe(document.documentElement);
-            }
-            
-            // Use IntersectionObserver to ensure dark mode persists when elements come into view
-            if (window.IntersectionObserver) {
-                const intersectionObserver = new IntersectionObserver(function(entries) {
-                    entries.forEach(function(entry) {
-                        if (entry.isIntersecting) {
-                            const darkMode = localStorage.getItem('darkMode') === 'true';
-                            if (darkMode && !document.documentElement.classList.contains('dark')) {
-                                document.documentElement.classList.add('dark');
-                                document.body.classList.add('dark');
-                            }
-                        }
-                    });
-                });
-                
-                intersectionObserver.observe(document.documentElement);
-            }
-            
-            // Use PerformanceObserver to ensure dark mode persists during performance events
-            if (window.PerformanceObserver) {
-                const performanceObserver = new PerformanceObserver(function(list) {
-                    list.getEntries().forEach(function(entry) {
-                        if (entry.entryType === 'navigation') {
-                            const darkMode = localStorage.getItem('darkMode') === 'true';
-                            if (darkMode && !document.documentElement.classList.contains('dark')) {
-                                document.documentElement.classList.add('dark');
-                                document.body.classList.add('dark');
-                            }
-                        }
-                    });
-                });
-                
-                performanceObserver.observe({ entryTypes: ['navigation'] });
-            }
-            
-            // Use WebVitals to ensure dark mode persists during web vitals events
-            if (window.webVitals) {
-                window.webVitals.getCLS(function(metric) {
-                    const darkMode = localStorage.getItem('darkMode') === 'true';
-                    if (darkMode && !document.documentElement.classList.contains('dark')) {
-                        document.documentElement.classList.add('dark');
-                        document.body.classList.add('dark');
-                    }
-                });
-            }
-            
-            // Use BroadcastChannel to ensure dark mode persists across tabs
-            if (window.BroadcastChannel) {
-                const darkModeChannel = new BroadcastChannel('dark-mode');
-                darkModeChannel.onmessage = function(event) {
-                    if (event.data.type === 'dark-mode-changed') {
-                        const isDark = event.data.darkMode;
-                        if (isDark) {
-                            document.documentElement.classList.add('dark');
-                            document.body.classList.add('dark');
-                        } else {
-                            document.documentElement.classList.remove('dark');
-                            document.body.classList.remove('dark');
-                        }
-                    }
-                };
-            }
-            
-            // Use ServiceWorker to ensure dark mode persists during service worker events
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.addEventListener('message', function(event) {
-                    if (event.data && event.data.type === 'dark-mode-changed') {
-                        const isDark = event.data.darkMode;
-                        if (isDark) {
-                            document.documentElement.classList.add('dark');
-                            document.body.classList.add('dark');
-                        } else {
-                            document.documentElement.classList.remove('dark');
-                            document.body.classList.remove('dark');
-                        }
-                    }
-                });
-            }
-            
-            // Use PageTransitionEvent to ensure dark mode persists during page transitions
-            if ('onpageshow' in window) {
-                window.addEventListener('pageshow', function(event) {
-                    if (event.persisted) {
-                        const darkMode = localStorage.getItem('darkMode') === 'true';
-                        if (darkMode) {
-                            document.documentElement.classList.add('dark');
-                            document.body.classList.add('dark');
-                        }
-                    }
-                });
-            }
-        });
+                // Update toggle button icons
+                updateToggleIcons();
+            })();
             
             // Global dark mode toggle function
             window.toggleDarkMode = function() {
                 const isDark = document.documentElement.classList.toggle('dark');
-                document.body.classList.toggle('dark', isDark);
                 localStorage.setItem('darkMode', isDark);
                 
-                // Update Alpine.js data
-                if (window.Alpine && window.Alpine.store) {
-                    window.Alpine.store('darkMode', isDark);
-                }
+                // Force re-render of all elements
+                const allElements = document.querySelectorAll('*');
+                allElements.forEach(element => {
+                    // Trigger reflow for each element
+                    element.style.display = 'none';
+                    element.offsetHeight;
+                    element.style.display = '';
+                });
+                
+                // Force body re-render
+                document.body.style.display = 'none';
+                document.body.offsetHeight;
+                document.body.style.display = '';
+                
+                // Force html re-render
+                document.documentElement.style.display = 'none';
+                document.documentElement.offsetHeight;
+                document.documentElement.style.display = '';
                 
                 return isDark;
             };
             
-            // Listen for dark mode changes from other components
-            document.addEventListener('dark-mode-changed', function(event) {
-                const isDark = event.detail.darkMode;
+            // Dark mode toggle functionality
+            document.getElementById('darkModeToggle').addEventListener('click', function() {
+                const isDark = window.toggleDarkMode();
+                updateToggleIcons();
+            });
+            
+            function updateToggleIcons() {
+                const isDark = document.documentElement.classList.contains('dark');
+                const moonIcon = document.getElementById('moonIcon');
+                const sunIcon = document.getElementById('sunIcon');
+                
                 if (isDark) {
-                    document.documentElement.classList.add('dark');
-                    document.body.classList.add('dark');
+                    moonIcon.classList.add('hidden');
+                    sunIcon.classList.remove('hidden');
                 } else {
-                    document.documentElement.classList.remove('dark');
-                    document.body.classList.remove('dark');
+                    moonIcon.classList.remove('hidden');
+                    sunIcon.classList.add('hidden');
                 }
-                    });
-    </script>
-    
-    @stack('scripts')
-</body>
+            }
+        </script>
+    </body>
 </html>

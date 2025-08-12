@@ -1,4 +1,4 @@
-<nav x-data="{ open: false, darkMode: localStorage.getItem('darkMode') === 'true' }" class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+<nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -66,12 +66,11 @@
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <!-- Dark Mode Toggle -->
                 <button id="navDarkModeToggle" 
-                        @click="darkMode = !darkMode; $dispatch('dark-mode-changed', { darkMode })"
                         class="p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all mr-4">
-                    <svg x-show="!darkMode" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg id="navMoonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
                     </svg>
-                    <svg x-show="darkMode" class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg id="navSunIcon" class="w-5 h-5 text-yellow-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                     </svg>
                 </button>
@@ -236,23 +235,33 @@
             });
         }
         
-        // Listen for dark mode changes from other components
-        document.addEventListener('dark-mode-changed', function(event) {
-            const isDark = event.detail.darkMode;
-            if (isDark) {
-                document.documentElement.classList.add('dark');
-                document.body.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-                document.body.classList.remove('dark');
+        function updateNavToggleIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            // Desktop icons
+            if (navMoonIcon && navSunIcon) {
+                if (isDark) {
+                    navMoonIcon.classList.add('hidden');
+                    navSunIcon.classList.remove('hidden');
+                } else {
+                    navMoonIcon.classList.remove('hidden');
+                    navSunIcon.classList.add('hidden');
+                }
             }
-        });
-        
-        // Initialize dark mode state
-        const initialDarkMode = localStorage.getItem('darkMode') === 'true';
-        if (initialDarkMode) {
-            document.documentElement.classList.add('dark');
-            document.body.classList.add('dark');
+            
+            // Mobile icons
+            if (navMoonIconMobile && navSunIconMobile) {
+                if (isDark) {
+                    navMoonIconMobile.classList.add('hidden');
+                    navSunIconMobile.classList.remove('hidden');
+                } else {
+                    navMoonIconMobile.classList.remove('hidden');
+                    navSunIconMobile.classList.add('hidden');
+                }
+            }
         }
+        
+        // Initialize icons
+        updateNavToggleIcons();
     });
 </script>
