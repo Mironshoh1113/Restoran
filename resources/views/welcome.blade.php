@@ -126,7 +126,7 @@
 
   <!-- Header -->
   <header class="sticky-top" role="banner" aria-label="Main navigation">
-    <nav class="navbar navbar-expand-lg" id="topNav">
+    <nav class="navbar navbar-expand-lg  fixed-top" id="topNav">
       <div class="container">
         <a class="navbar-brand d-flex align-items-center text-decoration-none" href="{{ url('/') }}">
           <span class="logo-icon me-3" aria-hidden="true">
