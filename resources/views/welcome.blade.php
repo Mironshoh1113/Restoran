@@ -1,891 +1,1459 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{{ config('app.name', 'ForkNow') }} - Restaurant Management System</title>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ config('app.name', 'ForkNow') }} - Restaurant Management System</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
-
-        <!-- Tailwind CSS CDN -->
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script>
-            tailwind.config = {
-                darkMode: 'class',
-                theme: {
-                    extend: {
-                        colors: {
-                            primary: {
-                                50: '#fff7ed',
-                                100: '#ffedd5',
-                                200: '#fed7aa',
-                                300: '#fdba74',
-                                400: '#fb923c',
-                                500: '#f97316',
-                                600: '#ea580c',
-                                700: '#c2410c',
-                                800: '#9a3412',
-                                900: '#7c2d12',
-                            }
-                        }
-                    }
-                }
-            }
-        </script>
-
-        <!-- Alpine.js -->
-        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
         
-        <!-- Custom CSS for Dark Mode -->
-        <style>
-            /* Dark mode styles */
-            .dark {
-                color-scheme: dark;
-            }
-            
-            .dark body {
-                background-color: #111827 !important;
-                color: #f9fafb !important;
-            }
-            
-            .dark .bg-white\/90 {
-                background-color: rgba(31, 41, 55, 0.9) !important;
-            }
-            
-            .dark .bg-gray-800\/90 {
-                background-color: rgba(31, 41, 55, 0.9) !important;
-            }
-            
-            .dark .border-gray-200 {
-                border-color: #374151 !important;
-            }
-            
-            .dark .border-gray-700 {
-                border-color: #4b5563 !important;
-            }
-            
-            .dark .text-gray-600 {
-                color: #d1d5db !important;
-            }
-            
-            .dark .text-gray-300 {
-                color: #d1d5db !important;
-            }
-            
-            .dark .text-gray-400 {
-                color: #9ca3af !important;
-            }
-            
-            .dark .text-gray-500 {
-                color: #6b7280 !important;
-            }
-            
-            .dark .hover\:text-orange-600:hover {
-                color: #ea580c !important;
-            }
-            
-            .dark .hover\:text-orange-400:hover {
-                color: #fb923c !important;
-            }
-            
-            .dark .text-gray-900 {
-                color: #f9fafb !important;
-            }
-            
-            .dark .text-gray-800 {
-                color: #f3f4f6 !important;
-            }
-            
-            .dark .text-gray-700 {
-                color: #d1d5db !important;
-            }
-            
-            .dark .text-gray-200 {
-                color: #e5e7eb !important;
-            }
-            
-            .dark .text-gray-100 {
-                color: #f3f4f6 !important;
-            }
-            
-            .dark .text-gray-50 {
-                color: #f9fafb !important;
-            }
-            
-            .dark .bg-white {
-                background-color: #1f2937 !important;
-            }
-            
-            .dark .bg-gray-100 {
-                background-color: #111827 !important;
-            }
-            
-            .dark .bg-gray-50 {
-                background-color: #1f2937 !important;
-            }
-            
-            .dark .bg-gray-200 {
-                background-color: #374151 !important;
-            }
-            
-            .dark .bg-gray-300 {
-                background-color: #4b5563 !important;
-            }
-            
-            .dark .bg-gray-400 {
-                background-color: #6b7280 !important;
-            }
-            
-            .dark .bg-gray-500 {
-                background-color: #9ca3af !important;
-            }
-            
-            .dark .bg-gray-600 {
-                background-color: #d1d5db !important;
-            }
-            
-            .dark .bg-gray-700 {
-                background-color: #e5e7eb !important;
-            }
-            
-            .dark .bg-gray-800 {
-                background-color: #f3f4f6 !important;
-            }
-            
-            .dark .bg-gray-900 {
-                background-color: #111827 !important;
-            }
-            
-            /* Footer specific override to ensure dark background */
-            .dark footer.bg-gray-900 {
-                background-color: #111827 !important;
-            }
-            
-            /* Ensure footer text is always visible */
-            footer {
-                background-color: #111827 !important;
-                color: #ffffff !important;
-            }
-            
-            /* Ensure navigation text is always visible */
-            nav {
-                background-color: rgba(31, 41, 55, 0.9) !important;
-            }
-            
-            nav .text-gray-600 {
-                color: #d1d5db !important;
-            }
-            
-            nav .text-gray-300 {
-                color: #e5e7eb !important;
-            }
-            
-            nav .text-gray-400 {
-                color: #d1d5db !important;
-            }
-            
-            nav .text-gray-500 {
-                color: #9ca3af !important;
-            }
-            
-            nav a:hover {
-                color: #fb923c !important;
-            }
-            
-            footer .text-gray-200 {
-                color: #e5e7eb !important;
-            }
-            
-            footer .text-gray-300 {
-                color: #d1d5db !important;
-            }
-            
-            footer .text-white {
-                color: #ffffff !important;
-            }
-            
-            footer .border-gray-700 {
-                border-color: #374151 !important;
-            }
-            
-            footer a:hover {
-                color: #ffffff !important;
-            }
-            
-            .dark .border-gray-300 {
-                border-color: #4b5563 !important;
-            }
-            
-            .dark .border-gray-400 {
-                border-color: #6b7280 !important;
-            }
-            
-            .dark .border-gray-500 {
-                border-color: #9ca3af !important;
-            }
-            
-            .dark .border-gray-600 {
-                border-color: #d1d5db !important;
-            }
-            
-            .dark .border-gray-800 {
-                border-color: #f3f4f6 !important;
-            }
-            
-            .dark .border-gray-900 {
-                border-color: #f9fafb !important;
-            }
-            
-            /* Gradient overrides */
-            .dark .bg-gradient-to-br {
-                background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%) !important;
-            }
-            
-            .dark .bg-gradient-to-r {
-                background: linear-gradient(to right, #111827 0%, #1f2937 100%) !important;
-            }
-            
-            .dark .bg-gradient-to-l {
-                background: linear-gradient(to left, #111827 0%, #1f2937 100%) !important;
-            }
-            
-            .dark .bg-gradient-to-t {
-                background: linear-gradient(to top, #111827 0%, #1f2937 100%) !important;
-            }
-            
-            .dark .bg-gradient-to-b {
-                background: linear-gradient(to bottom, #111827 0%, #1f2937 100%) !important;
-            }
-            
-            /* Force dark mode on html element */
-            html.dark {
-                background-color: #111827 !important;
-            }
-            
-            html.dark body {
-                background-color: #111827 !important;
-            }
-            
-            html.dark .min-h-screen {
-                background-color: #111827 !important;
-            }
-            
-            /* Footer dark mode fixes */
-            .dark footer {
-                background-color: #1f2937 !important;
-            }
-            
-            .dark footer .text-gray-400 {
-                color: #d1d5db !important;
-            }
-            
-            .dark footer .text-white {
-                color: #ffffff !important;
-            }
-            
-            .dark footer .border-gray-800 {
-                border-color: #374151 !important;
-            }
-            
-            .dark footer a:hover {
-                color: #ffffff !important;
-            }
-            
-            /* Additional footer dark mode overrides */
-            html.dark footer {
-                background-color: #1f2937 !important;
-            }
-            
-            html.dark footer * {
-                color: inherit !important;
-            }
-            
-            html.dark footer .text-gray-400 {
-                color: #d1d5db !important;
-            }
-            
-            html.dark footer .text-white {
-                color: #ffffff !important;
-            }
-            
-            html.dark footer .border-gray-800 {
-                border-color: #374151 !important;
-            }
-            
-            html.dark footer a:hover {
-                color: #ffffff !important;
-            }
-            
-            /* Force footer styles in dark mode */
-            body.dark footer,
-            .dark footer,
-            html.dark footer {
-                background-color: #1f2937 !important;
-                color: #ffffff !important;
-            }
-            
-            body.dark footer .text-gray-400,
-            .dark footer .text-gray-400,
-            html.dark footer .text-gray-400 {
-                color: #d1d5db !important;
-            }
-            
-            body.dark footer .text-white,
-            .dark footer .text-white,
-            html.dark footer .text-white {
-                color: #ffffff !important;
-            }
-            
-            body.dark footer .border-gray-800,
-            .dark footer .border-gray-800,
-            html.dark footer .border-gray-800 {
-                border-color: #374151 !important;
-            }
-            
-            /* Footer specific dark mode overrides */
-            .dark footer,
-            html.dark footer {
-                background-color: #111827 !important;
-            }
-            
-            .dark footer .text-gray-300,
-            html.dark footer .text-gray-300 {
-                color: #d1d5db !important;
-            }
-            
-            .dark footer .text-white,
-            html.dark footer .text-white {
-                color: #ffffff !important;
-            }
-            
-            .dark footer .border-gray-700,
-            html.dark footer .border-gray-700 {
-                border-color: #374151 !important;
-            }
-            
-            .dark footer a:hover,
-            html.dark footer a:hover {
-                color: #ffffff !important;
-            }
-            
-            /* Ensure transitions work */
-            * {
-                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
-            }
-        </style>
+        .hero-section {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
         
-        <!-- Custom Script for Dark Mode -->
-        <script>
-            // Initialize dark mode immediately
-            (function() {
-                const darkMode = localStorage.getItem('darkMode') === 'true';
-                if (darkMode) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            })();
-            
-            // Global dark mode toggle function
-            window.toggleDarkMode = function() {
-                const isDark = document.documentElement.classList.toggle('dark');
-                localStorage.setItem('darkMode', isDark);
-                
-                // Force re-render of all elements
-                const allElements = document.querySelectorAll('*');
-                allElements.forEach(element => {
-                    // Trigger reflow for each element
-                    element.style.display = 'none';
-                    element.offsetHeight;
-                    element.style.display = '';
-                });
-                
-                // Force body re-render
-                document.body.style.display = 'none';
-                document.body.offsetHeight;
-                document.body.style.display = '';
-                
-                // Force html re-render
-                document.documentElement.style.display = 'none';
-                document.documentElement.offsetHeight;
-                document.documentElement.style.display = '';
-                
-                return isDark;
-            };
-        </script>
-    </head>
-    <body class="font-sans antialiased bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-        <!-- Navigation -->
-        <nav class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex">
-                        <!-- Logo -->
-                        <div class="shrink-0 flex items-center">
-                            <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
-                                    </svg>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                                        ForkNow
-                                    </span>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Restaurant Management</span>
-                                </div>
-                            </a>
+        .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 20px;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .pricing-card {
+            border: none;
+            border-radius: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .pricing-card.featured {
+            border: 3px solid #ff6b35;
+            transform: scale(1.05);
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+        }
+        
+        .btn-outline-custom {
+            border: 2px solid #ff6b35;
+            color: #ff6b35;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-custom:hover {
+            background: #ff6b35;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .navbar {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.9) !important;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .section-padding {
+            padding: 80px 0;
+        }
+        
+        .contact-form {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 40px;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+        }
+        
+        .footer {
+            background: #2c3e50;
+            color: white;
+        }
+        
+        .footer a {
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer a:hover {
+            color: #ff6b35;
+        }
+        
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .icon-box i {
+            font-size: 24px;
+            color: white;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+        
+        .logo-svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+        
+        .brand-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .brand-subtitle {
+            font-size: 0.7rem;
+            color: #6c757d;
+            font-weight: 500;
+            line-height: 1;
+        }
+        
+        .hero-image {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero-image::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            z-index: -1;
+        }
+        
+        .hero-image::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: -20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            z-index: -1;
+        }
+        
+        .floating-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stats-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ff6b35;
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .feature-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid #e9ecef;
+        }
+        
+        .feature-card:hover {
+            background: linear-gradient(145deg, #ffffff 0%, #fff5f0 100%);
+            border-color: #ff6b35;
+        }
+        
+        .pricing-card.featured {
+            background: linear-gradient(145deg, #fff5f0 0%, #ffffff 100%);
+            border: 2px solid #ff6b35;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pricing-card.featured::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        }
+        
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        
+        .navbar.scrolled {
+            background-color: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-light {
+            background: #ffffff;
+            border: none;
+            color: #ff6b35;
+            font-weight: 600;
+        }
+        
+        .btn-light:hover {
+            background: #f8f9fa;
+            color: #ff6b35;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-outline-light:hover {
+            background: #ffffff;
+            color: #ff6b35;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Hero Section Animations */
+        .hero-bg-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .floating-icon {
+            position: absolute;
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .floating-icon-1 {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .floating-icon-2 {
+            top: 60%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+        
+        .floating-icon-3 {
+            top: 80%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+        
+        .floating-icon-4 {
+            top: 30%;
+            right: 25%;
+            animation-delay: 1s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        /* Tech Badge */
+        .tech-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        /* Text Gradient Animation */
+        .text-gradient-animated {
+            background: linear-gradient(45deg, #ff6b35, #f7931e, #ff6b35);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 3s ease infinite;
+        }
+        
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        /* Typewriter Effect */
+        .typewriter-text {
+            border-right: 3px solid #fff;
+            animation: typewriter 3s steps(20) infinite, blink 0.75s step-end infinite;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        @keyframes typewriter {
+            0% { width: 0; }
+            50% { width: 100%; }
+            100% { width: 100%; }
+        }
+        
+        @keyframes blink {
+            from, to { border-color: transparent; }
+            50% { border-color: #fff; }
+        }
+        
+        /* Highlight Text */
+        .highlight-text {
+            background: linear-gradient(120deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.2) 100%);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        
+        /* Tech Features */
+        .tech-features {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tech-feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #fff;
+        }
+        
+        /* App Interface */
+        .app-interface {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 20px;
+            width: 300px;
+            margin: 0 auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        }
+        
+        .app-header {
+            margin-bottom: 20px;
+        }
+        
+        .app-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+        }
+        
+        .status-icons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .app-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: center;
+        }
+        
+        .app-content {
+            space-y: 15px;
+        }
+        
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .order-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .order-details {
+            flex: 1;
+        }
+        
+        .order-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .order-status {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .order-time {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ffd700;
+        }
+        
+        /* Tech Elements */
+        .tech-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #fff;
+            animation: tech-float 4s ease-in-out infinite;
+        }
+        
+        .tech-element-1 {
+            top: -20px;
+            right: -80px;
+            animation-delay: 0s;
+        }
+        
+        .tech-element-2 {
+            bottom: 20px;
+            left: -60px;
+            animation-delay: 2s;
+        }
+        
+        .tech-element-3 {
+            top: 50%;
+            right: -100px;
+            animation-delay: 1s;
+        }
+        
+        @keyframes tech-float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
+        }
+        
+        /* Animated Stats */
+        .animated-stats {
+            position: absolute;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            min-width: 80px;
+            animation: stat-appear 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        .stat-card-1 { animation-delay: 0.2s; }
+        .stat-card-2 { animation-delay: 0.4s; }
+        .stat-card-3 { animation-delay: 0.6s; }
+        
+        @keyframes stat-appear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ff6b35;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.7rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+        
+        .scroll-arrow {
+            width: 2px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.5);
+            margin: 0 auto 10px;
+            position: relative;
+            animation: scroll-bounce 2s infinite;
+        }
+        
+        .scroll-arrow::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -3px;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid rgba(255, 255, 255, 0.5);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+            transform: rotate(45deg);
+        }
+        
+        @keyframes scroll-bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        /* Tech Button */
+        .tech-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tech-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .tech-btn:hover::before {
+            left: 100%;
+        }
+        
+        /* Debug styles for button */
+        .tech-btn {
+            position: relative;
+            z-index: 1000;
+        }
+        
+        .tech-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+        }
+        
+        /* Ensure button is clickable */
+        .btn-primary-custom {
+            position: relative;
+            z-index: 1000;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand text-gradient" href="{{ route('dashboard') }}">
+                                    <div class="d-flex align-items-center">
+                        <div class="logo-icon me-3">
+                            <svg class="logo-svg" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
+                            </svg>
                         </div>
-
-                        <!-- Navigation Links -->
-                        <div class="hidden md:flex items-center space-x-8 ml-10">
-                            <a href="#features" class="text-gray-200 dark:text-gray-200 hover:text-orange-400 dark:hover:text-orange-400 transition-colors">Xususiyatlar</a>
-                            <a href="#pricing" class="text-gray-200 dark:text-gray-200 hover:text-orange-400 dark:hover:text-orange-400 transition-colors">Narxlar</a>
-                            <a href="#contact" class="text-gray-200 dark:text-gray-200 hover:text-orange-400 dark:hover:text-orange-400 transition-colors">Aloqa</a>
+                        <div class="d-flex flex-column">
+                            <span class="brand-text">ForkNow</span>
+                            <small class="brand-subtitle">Restaurant Management</small>
                         </div>
                     </div>
-
-                    <div class="flex items-center space-x-4">
-                        <!-- Dark Mode Toggle -->
-                        <button id="welcomeDarkModeToggle" 
-                                class="p-2 rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all">
-                            <svg id="welcomeMoonIcon" class="w-5 h-5 text-gray-200 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                            </svg>
-                            <svg id="welcomeSunIcon" class="w-5 h-5 text-yellow-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                        </button>
-
-                        @if (Route::has('login'))
-                            <a href="{{ route('login') }}" class="text-gray-200 dark:text-gray-200 hover:text-orange-400 dark:hover:text-orange-400 transition-colors">Kirish</a>
-                            @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-lg">
-                                    Ro'yxatdan o'tish
-                                </a>
-                            @endif
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Xususiyatlar</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pricing">Narxlar</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Aloqa</a>
+                    </li>
+                    @if (Route::has('login'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('login') }}">Kirish</a>
+                        </li>
+                        @if (Route::has('register'))
+                            <li class="nav-item">
+                                <a class="btn btn-primary-custom text-white ms-2" href="{{ route('register') }}">Ro'yxatdan o'tish</a>
+                            </li>
                         @endif
+                    @endif
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-white position-relative overflow-hidden">
+        <!-- Animated Background Elements -->
+        <div class="hero-bg-animation">
+            <div class="floating-icon floating-icon-1">
+                <i class="bi bi-egg-fried"></i>
+            </div>
+            <div class="floating-icon floating-icon-2">
+                <i class="bi bi-cup-hot"></i>
+            </div>
+            <div class="floating-icon floating-icon-3">
+                <i class="bi bi-pizza-slice"></i>
+            </div>
+            <div class="floating-icon floating-icon-4">
+                <i class="bi bi-cake2"></i>
+            </div>
+        </div>
+        
+        <div class="container position-relative">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div class="hero-content" data-aos="fade-right" data-aos-duration="1000">
+                        <div class="tech-badge mb-3">
+                            <i class="bi bi-cpu me-2"></i>
+                            <span>AI Powered</span>
+                        </div>
+                        <h1 class="display-3 fw-bold mb-4">
+                            <span class="text-gradient-animated">Restoran</span> 
+                            <span class="text-warning">Biznesini</span>
+                            <br>
+                            <span class="typewriter-text">Raqamlashtiring</span>
+                        </h1>
+                        <p class="lead mb-4">
+                            <strong>ForkNow</strong> - zamonaviy texnologiyalar asosida qurilgan 
+                            <span class="highlight-text">restoran boshqaruv tizimi</span>. 
+                            AI, cloud computing va real-time analytics bilan.
+                        </p>
+                        <div class="tech-features mb-5">
+                            <div class="tech-feature">
+                                <i class="bi bi-lightning-charge text-warning"></i>
+                                <span>Real-time</span>
+                            </div>
+                            <div class="tech-feature">
+                                <i class="bi bi-cloud-check text-info"></i>
+                                <span>Cloud-based</span>
+                            </div>
+                            <div class="tech-feature">
+                                <i class="bi bi-shield-check text-success"></i>
+                                <span>Secure</span>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column flex-sm-row gap-3">
+                            <a href="{{ route('register') }}" class="btn btn-primary-custom btn-lg tech-btn" onclick="alert('Button clicked! Going to register page...')" style="cursor: pointer; text-decoration: none; display: inline-block;">
+                                <i class="bi bi-rocket-takeoff me-2"></i>
+                                Bepul sinab ko'ring
+                            </a>
+                            <!-- Fallback button for testing -->
+                        
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="hero-image position-relative" data-aos="fade-left" data-aos-duration="1000">
+                        <!-- Main App Interface -->
+                        <div class="app-interface">
+                            <div class="app-header">
+                                <div class="app-status-bar">
+                                    <span class="status-time">14:30</span>
+                                    <div class="status-icons">
+                                        <i class="bi bi-wifi"></i>
+                                        <i class="bi bi-battery-full"></i>
+                                    </div>
+                                </div>
+                                <div class="app-title">
+                                    <i class="bi bi-egg-fried me-2"></i>
+                                    ForkNow
+                                </div>
+                            </div>
+                            <div class="app-content">
+                                <div class="order-item">
+                                    <div class="order-icon">
+                                        <i class="bi bi-pizza-slice"></i>
+                                    </div>
+                                    <div class="order-details">
+                                        <div class="order-name">Pizza Margherita</div>
+                                        <div class="order-status">Tayyorlanmoqda...</div>
+                                    </div>
+                                    <div class="order-time">15 min</div>
+                                </div>
+                                <div class="order-item">
+                                    <div class="order-icon">
+                                        <i class="bi bi-cup-hot"></i>
+                                    </div>
+                                    <div class="order-details">
+                                        <div class="order-name">Latte</div>
+                                        <div class="order-status">Tayyor</div>
+                                    </div>
+                                    <div class="order-time">5 min</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Floating Tech Elements -->
+                        <div class="tech-element tech-element-1">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span>Analytics</span>
+                        </div>
+                        <div class="tech-element tech-element-2">
+                            <i class="bi bi-robot"></i>
+                            <span>AI Bot</span>
+                        </div>
+                        <div class="tech-element tech-element-3">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span>Cloud Sync</span>
+                        </div>
+                        
+                        <!-- Animated Stats -->
+                        <div class="animated-stats">
+                            <div class="stat-card stat-card-1">
+                                <div class="stat-icon">
+                                    <i class="bi bi-people"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number" data-count="500">0</div>
+                                    <div class="stat-label">Restoran</div>
+                                </div>
+                            </div>
+                            <div class="stat-card stat-card-2">
+                                <div class="stat-icon">
+                                    <i class="bi bi-cart-check"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number" data-count="10000">0</div>
+                                    <div class="stat-label">Buyurtma</div>
+                                </div>
+                            </div>
+                            <div class="stat-card stat-card-3">
+                                <div class="stat-icon">
+                                    <i class="bi bi-star"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number" data-count="99">0</div>
+                                    <div class="stat-label">% Mamnuniyat</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </nav>
+        </div>
+        
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <div class="scroll-arrow"></div>
+            <span>Batafsil ko'rish</span>
+        </div>
+    </section>
 
-        <!-- Hero Section -->
-        <section class="bg-gradient-to-br from-orange-50 via-white to-red-50 py-20 lg:py-32">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center">
-                    <h1 class="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
-                        Restoranlaringizni 
-                        <span class="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                            raqamlashtiring
-                        </span>
-                    </h1>
-                    <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                        ForkNow bilan restoranlaringizni boshqarish oson va samarali bo'ladi. 
-                        Buyurtmalar, menyu, mijozlar va kuryerlar barchasi bir joyda.
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a href="{{ route('register') }}" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all shadow-lg hover:shadow-xl">
-                            Bepul sinab ko'ring
-                        </a>
-                        <a href="#demo" class="border-2 border-orange-500 text-orange-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-orange-500 hover:text-white transition-all">
-                            Demo ko'rish
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Features Section -->
-        <section id="features" class="py-20 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                        Nima uchun ForkNow?
-                    </h2>
-                    <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+    <!-- Features Section -->
+    <section id="features" class="section-padding bg-light">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto">
+                    <h2 class="display-5 fw-bold mb-3">Nima uchun ForkNow?</h2>
+                    <p class="lead text-muted">
                         Zamonaviy restoran boshqaruvi uchun barcha kerakli vositalar
                     </p>
                 </div>
-
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Feature 1 -->
-                    <div class="bg-gradient-to-br from-orange-50 to-red-50 p-8 rounded-2xl border border-orange-100">
-                        <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-box mx-auto">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <h5 class="card-title fw-bold mb-3">Oson buyurtma boshqaruvi</h5>
+                            <p class="card-text text-muted">
+                                Buyurtmalarni real vaqtda qabul qiling, kuryerlarga yuboring va mijozlar bilan aloqada bo'ling.
+                            </p>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Oson buyurtma boshqaruvi</h3>
-                        <p class="text-gray-600">
-                            Buyurtmalarni real vaqtda qabul qiling, kuryerlarga yuboring va mijozlar bilan aloqada bo'ling.
-                        </p>
                     </div>
-
-                    <!-- Feature 2 -->
-                    <div class="bg-gradient-to-br from-orange-50 to-red-50 p-8 rounded-2xl border border-orange-100">
-                        <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-                            </svg>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-box mx-auto">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <h5 class="card-title fw-bold mb-3">Menyu boshqaruvi</h5>
+                            <p class="card-text text-muted">
+                                Mahsulotlaringizni osongina qo'shing, tahrirlang va narxlarni yangilang.
+                            </p>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Menyu boshqaruvi</h3>
-                        <p class="text-gray-600">
-                            Mahsulotlaringizni osongina qo'shing, tahrirlang va narxlarni yangilang.
-                        </p>
                     </div>
-
-                    <!-- Feature 3 -->
-                    <div class="bg-gradient-to-br from-orange-50 to-red-50 p-8 rounded-2xl border border-orange-100">
-                        <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-box mx-auto">
+                                <i class="bi bi-graph-up"></i>
+                            </div>
+                            <h5 class="card-title fw-bold mb-3">Batafsil hisobotlar</h5>
+                            <p class="card-text text-muted">
+                                Savdo, mijozlar va kuryerlar haqida batafsil ma'lumotlar va statistikalar.
+                            </p>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Batafsil hisobotlar</h3>
-                        <p class="text-gray-600">
-                            Savdo, mijozlar va kuryerlar haqida batafsil ma'lumotlar va statistikalar.
-                        </p>
                     </div>
-
-                    <!-- Feature 4 -->
-                    <div class="bg-gradient-to-br from-orange-50 to-red-50 p-8 rounded-2xl border border-orange-100">
-                        <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                            </svg>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-box mx-auto">
+                                <i class="bi bi-phone"></i>
+                            </div>
+                            <h5 class="card-title fw-bold mb-3">Mobil ilova</h5>
+                            <p class="card-text text-muted">
+                                Android va iOS qurilmalarida ishlaydigan mobil ilova bilan har joydan boshqaring.
+                            </p>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Mobil ilova</h3>
-                        <p class="text-gray-600">
-                            Android va iOS qurilmalarida ishlaydigan mobil ilova bilan har joydan boshqaring.
-                        </p>
                     </div>
-
-                    <!-- Feature 5 -->
-                    <div class="bg-gradient-to-br from-orange-50 to-red-50 p-8 rounded-2xl border border-orange-100">
-                        <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-box mx-auto">
+                                <i class="bi bi-lightning"></i>
+                            </div>
+                            <h5 class="card-title fw-bold mb-3">Tezkor ishlash</h5>
+                            <p class="card-text text-muted">
+                                Zamonaviy texnologiyalar asosida qurilgan tez va ishonchli tizim.
+                            </p>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Tezkor ishlash</h3>
-                        <p class="text-gray-600">
-                            Zamonaviy texnologiyalar asosida qurilgan tez va ishonchli tizim.
-                        </p>
                     </div>
-
-                    <!-- Feature 6 -->
-                    <div class="bg-gradient-to-br from-orange-50 to-red-50 p-8 rounded-2xl border border-orange-100">
-                        <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                            </svg>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-box mx-auto">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <h5 class="card-title fw-bold mb-3">Xavfsizlik</h5>
+                            <p class="card-text text-muted">
+                                Ma'lumotlaringiz to'liq himoyalangan va faqat sizga tegishli.
+                            </p>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Xavfsizlik</h3>
-                        <p class="text-gray-600">
-                            Ma'lumotlaringiz to'liq himoyalangan va faqat sizga tegishli.
-                        </p>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Pricing Section -->
-        <section id="pricing" class="py-20 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                        Narxlar
-                    </h2>
-                    <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+    <!-- Pricing Section -->
+    <section id="pricing" class="section-padding">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto">
+                    <h2 class="display-5 fw-bold mb-3">Narxlar</h2>
+                    <p class="lead text-muted">
                         Har xil o'lchamdagi restoranlar uchun mos narxlar
                     </p>
                 </div>
-
-                <div class="grid md:grid-cols-3 gap-8">
-                    <!-- Basic Plan -->
-                    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-lg">
-                        <div class="text-center mb-8">
-                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Boshlang'ich</h3>
-                            <div class="text-4xl font-bold text-orange-600 mb-2">$29</div>
-                            <div class="text-gray-600">oyiga</div>
+            </div>
+            
+            <div class="row g-4 justify-content-center">
+                <div class="col-lg-4 col-md-6">
+                    <div class="card pricing-card h-100 shadow">
+                        <div class="card-body text-center p-4">
+                            <h5 class="card-title fw-bold mb-3">Boshlang'ich</h5>
+                            <div class="display-4 fw-bold text-warning mb-2">$29</div>
+                            <div class="text-muted mb-4">oyiga</div>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Kunlik 50 ta buyurtma</li>
+                                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Asosiy hisobotlar</li>
+                                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Email qo'llab-quvvatlash</li>
+                            </ul>
+                            <a href="{{ route('register') }}" class="btn btn-primary-custom w-100">Tanlash</a>
                         </div>
-                        <ul class="space-y-4 mb-8">
-                            <li class="flex items-center">
-                                <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                                </svg>
-                                Kunlik 50 ta buyurtma
-                            </li>
-                            <li class="flex items-center">
-                                <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                                </svg>
-                                Asosiy hisobotlar
-                            </li>
-                            <li class="flex items-center">
-                                <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                                </svg>
-                                Email qo'llab-quvvatlash
-                            </li>
-                        </ul>
-                        <a href="{{ route('register') }}" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold text-center block hover:from-orange-600 hover:to-red-600 transition-all">
-                            Tanlash
-                        </a>
                     </div>
-
-                    <!-- Pro Plan -->
-                    <div class="bg-gradient-to-br from-orange-500 to-red-500 p-8 rounded-2xl text-white relative">
-                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                            <span class="bg-yellow-400 text-gray-900 px-4 py-2 rounded-full text-sm font-semibold">
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card pricing-card featured h-100 shadow">
+                        <div class="card-body text-center p-4 position-relative">
+                            <span class="badge bg-warning text-dark position-absolute top-0 start-50 translate-middle-x mt-3 px-3 py-2">
                                 Eng mashhur
                             </span>
+                            <h5 class="card-title fw-bold mb-3">Professional</h5>
+                            <div class="display-4 fw-bold text-warning mb-2">$79</div>
+                            <div class="text-muted mb-4">oyiga</div>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Cheksiz buyurtmalar</li>
+                                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Batafsil hisobotlar</li>
+                                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Telegram bot integratsiyasi</li>
+                                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>24/7 qo'llab-quvvatlash</li>
+                            </ul>
+                            <a href="{{ route('register') }}" class="btn btn-primary-custom w-100">Tanlash</a>
                         </div>
-                        <div class="text-center mb-8">
-                            <h3 class="text-2xl font-bold mb-4">Professional</h3>
-                            <div class="text-4xl font-bold mb-2">$79</div>
-                            <div class="text-orange-100">oyiga</div>
-                        </div>
-                        <ul class="space-y-4 mb-8">
-                            <li class="flex items-center">
-                                <svg class="w-5 h-5 text-white mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                                </svg>
-                                Cheksiz buyurtmalar
-                            </li>
-                            <li class="flex items-center">
-                                <svg class="w-5 h-5 text-white mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                                </svg>
-                                Batafsil hisobotlar
-                            </li>
-                            <li class="flex items-center">
-                                <svg class="w-5 h-5 text-white mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                                </svg>
-                                Telegram bot integratsiyasi
-                            </li>
-                            <li class="flex items-center">
-                                <svg class="w-5 h-5 text-white mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                                </svg>
-                                24/7 qo'llab-quvvatlash
-                            </li>
-                        </ul>
-                        <a href="{{ route('register') }}" class="w-full bg-white text-orange-600 py-3 rounded-lg font-semibold text-center block hover:bg-gray-50 transition-all">
-                            Tanlash
-                        </a>
                     </div>
-
-                    <!-- Enterprise Plan -->
-                    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-lg">
-                        <div class="text-center mb-8">
-                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Korxona</h3>
-                            <div class="text-4xl font-bold text-orange-600 mb-2">$199</div>
-                            <div class="text-gray-600">oyiga</div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card pricing-card h-100 shadow">
+                        <div class="card-body text-center p-4">
+                            <h5 class="card-title fw-bold mb-3">Korxona</h5>
+                            <div class="display-4 fw-bold text-warning mb-2">$199</div>
+                            <div class="text-muted mb-4">oyiga</div>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Ko'p filiallar</li>
+                                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>API integratsiyasi</li>
+                                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Maxsus yechimlar</li>
+                            </ul>
+                            <a href="#contact" class="btn btn-primary-custom w-100">Bog'lanish</a>
                         </div>
-                        <ul class="space-y-4 mb-8">
-                            <li class="flex items-center">
-                                <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                                </svg>
-                                Ko'p filiallar
-                            </li>
-                            <li class="flex items-center">
-                                <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                                </svg>
-                                API integratsiyasi
-                            </li>
-                            <li class="flex items-center">
-                                <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                                </svg>
-                                Maxsus yechimlar
-                            </li>
-                        </ul>
-                        <a href="#contact" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold text-center block hover:from-orange-600 hover:to-red-600 transition-all">
-                            Bog'lanish
-                        </a>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Contact Section -->
-        <section id="contact" class="py-20 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                        Biz bilan bog'laning
-                    </h2>
-                    <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-                        Savollaringiz bormi? Bizga yozing, tezda javob beramiz
+    <!-- Testimonials Section -->
+    <section class="section-padding bg-white">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto">
+                    <h2 class="display-5 fw-bold mb-3">Mijozlarimiz fikri</h2>
+                    <p class="lead text-muted">
+                        ForkNow bilan ishlayotgan restoranlarimizning tajribasi
                     </p>
                 </div>
-
-                <div class="grid lg:grid-cols-2 gap-12">
-                    <!-- Contact Info -->
-                    <div>
-                        <div class="space-y-8">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mr-4">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900">Email</h3>
-                                    <p class="text-gray-600">info@forknow.uz</p>
-                                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
                             </div>
-
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mr-4">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                                    </svg>
+                            <p class="card-text mb-3">
+                                "ForkNow bilan buyurtmalar boshqaruvi juda oson bo'ldi. Mijozlarimiz ham mamnun."
+                            </p>
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-person text-white"></i>
                                 </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900">Telefon</h3>
-                                    <p class="text-gray-600">+998 90 123 45 67</p>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mr-4">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900">Manzil</h3>
-                                    <p class="text-gray-600">Toshkent shahri, O'zbekiston</p>
+                                <div class="text-start">
+                                    <h6 class="mb-0 fw-bold">Aziz Karimov</h6>
+                                    <small class="text-muted">Pizza House</small>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                            </div>
+                            <p class="card-text mb-3">
+                                "Telegram bot orqali buyurtmalar qabul qilish juda qulay. Kuryerlar ham tez ishlaydi."
+                            </p>
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="rounded-circle bg-success d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-person text-white"></i>
+                                </div>
+                                <div class="text-start">
+                                    <h6 class="mb-0 fw-bold">Malika Yusupova</h6>
+                                    <small class="text-muted">Sushi Master</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                            </div>
+                            <p class="card-text mb-3">
+                                "Hisobotlar va statistikalar juda batafsil. Biznesimizni yaxshiroq boshqarish mumkin."
+                            </p>
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="rounded-circle bg-info d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-person text-white"></i>
+                                </div>
+                                <div class="text-start">
+                                    <h6 class="mb-0 fw-bold">Rustam Toshmatov</h6>
+                                    <small class="text-muted">Burger King</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                    <!-- Contact Form -->
-                    <div class="bg-gray-50 p-8 rounded-2xl">
-                        <form class="space-y-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Ism</label>
-                                <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+    <!-- Contact Section -->
+    <section id="contact" class="section-padding bg-light">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto">
+                    <h2 class="display-5 fw-bold mb-3">Biz bilan bog'laning</h2>
+                    <p class="lead text-muted">
+                        Savollaringiz bormi? Bizga yozing, tezda javob beramiz
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row g-5">
+                <div class="col-lg-6">
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-box me-4">
+                                    <i class="bi bi-envelope"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-1">Email</h5>
+                                    <p class="text-muted mb-0">info@forknow.uz</p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                <input type="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-box me-4">
+                                    <i class="bi bi-telephone"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-1">Telefon</h5>
+                                    <p class="text-muted mb-0">+998 90 123 45 67</p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Xabar</label>
-                                <textarea rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-box me-4">
+                                    <i class="bi bi-geo-alt"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-1">Manzil</h5>
+                                    <p class="text-muted mb-0">Toshkent shahri, O'zbekiston</p>
+                                </div>
                             </div>
-                            <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all">
-                                Yuborish
-                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="contact-form">
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Ism</label>
+                                <input type="text" class="form-control" placeholder="Ismingizni kiriting">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input type="email" class="form-control" placeholder="Email manzilingizni kiriting">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Xabar</label>
+                                <textarea class="form-control" rows="4" placeholder="Xabaringizni yozing"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary-custom w-100">Yuborish</button>
                         </form>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Footer -->
-        <footer class="bg-gray-900 text-white py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid md:grid-cols-4 gap-8">
-                    <div>
-                        <div class="flex items-center space-x-3 mb-4">
-                            <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
-                                </svg>
-                            </div>
-                            <span class="text-xl font-bold text-white">ForkNow</span>
-                        </div>
-                        <p class="text-gray-200">
-                            Restoranlaringizni raqamlashtirish uchun zamonaviy yechimlar.
-                        </p>
+    <!-- Call to Action Section -->
+    <section class="section-padding" style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-lg-8 mx-auto">
+                    <h2 class="display-5 fw-bold text-white mb-4">
+                        Restoranlaringizni bugun raqamlashtiring
+                    </h2>
+                    <p class="lead text-white-50 mb-5">
+                        ForkNow bilan birga bo'ling va restoran biznesingizni keyingi darajaga ko'taring
+                    </p>
+                    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                        <a href="{{ route('register') }}" class="btn btn-light btn-lg px-5 py-3 fw-bold">
+                            <i class="bi bi-rocket-takeoff me-2"></i>
+                            Bepul boshlash
+                        </a>
                     </div>
-
-                    <div>
-                        <h3 class="text-lg font-semibold mb-4 text-white">Mahsulot</h3>
-                        <ul class="space-y-2 text-gray-200">
-                            <li><a href="#" class="hover:text-white transition-colors">Xususiyatlar</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Narxlar</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">API</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Hujjatlar</a></li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h3 class="text-lg font-semibold mb-4 text-white">Kompaniya</h3>
-                        <ul class="space-y-2 text-gray-200">
-                            <li><a href="#" class="hover:text-white transition-colors">Haqida</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Karyera</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Yangiliklar</a></li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h3 class="text-lg font-semibold mb-4 text-white">Qo'llab-quvvatlash</h3>
-                        <ul class="space-y-2 text-gray-200">
-                            <li><a href="#" class="hover:text-white transition-colors">Yordam markazi</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Aloqa</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Status</a></li>
-                            <li><a href="#" class="hover:text-white transition-colors">Xavfsizlik</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-200">
-                    <p>&copy; 2024 ForkNow. Barcha huquqlar himoyalangan.</p>
                 </div>
             </div>
-        </footer>
+        </div>
+    </section>
 
-        <script>
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('app', () => ({
-                    mobileMenu: false
-                }))
-            })
-            
-            // Welcome page dark mode toggle
-            document.addEventListener('DOMContentLoaded', function() {
-                const welcomeToggle = document.getElementById('welcomeDarkModeToggle');
-                const welcomeMoonIcon = document.getElementById('welcomeMoonIcon');
-                const welcomeSunIcon = document.getElementById('welcomeSunIcon');
+    <!-- Footer -->
+    <footer class="footer py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-box me-3">
+                            <i class="bi bi-egg-fried"></i>
+                        </div>
+                        <span class="h4 fw-bold text-white mb-0">ForkNow</span>
+                    </div>
+                    <p class="text-muted">
+                        Restoranlaringizni raqamlashtirish uchun zamonaviy yechimlar.
+                    </p>
+                </div>
                 
-                if (welcomeToggle) {
-                    welcomeToggle.addEventListener('click', function() {
-                        const isDark = window.toggleDarkMode();
-                        updateWelcomeToggleIcons();
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-bold mb-3">Mahsulot</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#">Xususiyatlar</a></li>
+                        <li class="mb-2"><a href="#">Narxlar</a></li>
+                        <li class="mb-2"><a href="#">API</a></li>
+                        <li class="mb-2"><a href="#">Hujjatlar</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-bold mb-3">Kompaniya</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#">Haqida</a></li>
+                        <li class="mb-2"><a href="#">Blog</a></li>
+                        <li class="mb-2"><a href="#">Karyera</a></li>
+                        <li class="mb-2"><a href="#">Yangiliklar</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-bold mb-3">Qo'llab-quvvatlash</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#">Yordam markazi</a></li>
+                        <li class="mb-2"><a href="#">Aloqa</a></li>
+                        <li class="mb-2"><a href="#">Status</a></li>
+                        <li class="mb-2"><a href="#">Xavfsizlik</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-bold mb-3">Ijtimoiy tarmoqlar</h6>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="text-muted fs-4"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-muted fs-4"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="text-muted fs-4"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-muted fs-4"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4 border-secondary">
+            
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="text-muted mb-0">&copy; 2024 ForkNow. Barcha huquqlar himoyalangan.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="text-muted me-3">Maxfiylik siyosati</a>
+                    <a href="#" class="text-muted">Foydalanish shartlari</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- AOS Animation Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Smooth Scrolling -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
                     });
                 }
-                
-                function updateWelcomeToggleIcons() {
-                    const isDark = document.documentElement.classList.contains('dark');
-                    
-                    if (welcomeMoonIcon && welcomeSunIcon) {
-                        if (isDark) {
-                            welcomeMoonIcon.classList.add('hidden');
-                            welcomeSunIcon.classList.remove('hidden');
-                        } else {
-                            welcomeMoonIcon.classList.remove('hidden');
-                            welcomeSunIcon.classList.add('hidden');
-                        }
-                    }
-                }
-                
-                // Initialize icons
-                updateWelcomeToggleIcons();
             });
-        </script>
-    </body>
+        });
+        
+        // Navbar background change on scroll
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+        
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        // Observe all cards and sections
+        document.querySelectorAll('.feature-card, .pricing-card, .card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'all 0.6s ease';
+            observer.observe(el);
+        });
+        
+        // Animated Counter for Stats
+        function animateCounter(element, target, duration = 2000) {
+            let start = 0;
+            const increment = target / (duration / 16);
+            
+            function updateCounter() {
+                start += increment;
+                if (start < target) {
+                    element.textContent = Math.floor(start);
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    element.textContent = target;
+                }
+            }
+            
+            updateCounter();
+        }
+        
+        // Intersection Observer for Stats
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumber = entry.target.querySelector('.stat-number');
+                    const count = parseInt(statNumber.getAttribute('data-count'));
+                    animateCounter(statNumber, count);
+                    statsObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        // Observe stat cards
+        document.querySelectorAll('.stat-card').forEach(card => {
+            statsObserver.observe(card);
+        });
+        
+        // Parallax effect for floating icons
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.hero-bg-animation');
+            if (parallax) {
+                const speed = scrolled * 0.5;
+                parallax.style.transform = `translateY(${speed}px)`;
+            }
+        });
+        
+        // Add AOS library for scroll animations
+        if (typeof AOS !== 'undefined') {
+            AOS.init({
+                duration: 1000,
+                easing: 'ease-in-out',
+                once: true
+            });
+        }
+        
+        // Debug button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const registerButton = document.querySelector('a[href="{{ route("register") }}"]');
+            const testButton = document.querySelector('a[href="/register"]');
+            
+            if (registerButton) {
+                console.log('Register button found:', registerButton);
+                registerButton.addEventListener('click', function(e) {
+                    console.log('Register button clicked!');
+                });
+            }
+            
+            if (testButton) {
+                console.log('Test button found:', testButton);
+                testButton.addEventListener('click', function(e) {
+                    console.log('Test button clicked!');
+                });
+            }
+            
+            // Check if any elements are blocking the button
+            const buttonRect = registerButton ? registerButton.getBoundingClientRect() : null;
+            if (buttonRect) {
+                console.log('Button position:', buttonRect);
+                console.log('Button z-index:', window.getComputedStyle(registerButton).zIndex);
+            }
+        });
+    </script>
+</body>
 </html>
