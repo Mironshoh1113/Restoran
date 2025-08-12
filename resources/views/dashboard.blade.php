@@ -1,5 +1,17 @@
 @extends('admin.layouts.app')
 
+@stack('scripts')
+<script>
+    // Ensure dashboard respects dark mode state
+    document.addEventListener('DOMContentLoaded', function() {
+        const darkMode = localStorage.getItem('darkMode') === 'true';
+        if (darkMode) {
+            document.documentElement.classList.add('dark');
+            document.body.classList.add('dark');
+        }
+    });
+</script>
+
 @section('title', 'Dashboard')
 
 @section('content')
