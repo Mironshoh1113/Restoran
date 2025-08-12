@@ -238,11 +238,15 @@
             <div class="card pricing-card h-100">
               <div class="card-body text-center p-4">
                 <h5 class="fw-bold">Boshlang'ich</h5>
-                <div class="display-5 fw-bold text-warning mb-0">$29</div>
+                <div class="display-5 fw-bold text-warning mb-0">$0</div>
                 <small class="text-muted">/ oy</small>
                 <ul class="list-unstyled mt-3 mb-4 text-start mx-auto" style="max-width:260px">
-                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Kunlik 50 ta buyurtma</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Cheksiz buyurtmalar</li>
                   <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Asosiy hisobotlar</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Telegram bot integratsiyasi 1 ta</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Restoranlar soni 1 ta</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Taomnomalar soni 5 ta</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Taomlar soni 50 ta</li>
                   <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Email qo'llab-quvvatlash</li>
                 </ul>
                 @if (Route::has('register'))
@@ -254,15 +258,19 @@
 
           <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="120">
             <div class="card pricing-card featured h-100 position-relative">
-              <span class="badge bg-warning text-dark position-absolute top-0 start-50 translate-middle-x mt-3 px-3 py-2">Eng mashhur</span>
+              <span class="badge bg-warning text-dark position-absolute top-0 start-50 translate-middle-x mt-3 px-3 py-2">Eng mashhur</span><br>
               <div class="card-body text-center p-4">
                 <h5 class="fw-bold">Professional</h5>
-                <div class="display-5 fw-bold text-warning mb-0">$79</div>
+                <div class="display-5 fw-bold text-warning mb-0">$12</div>
                 <small class="text-muted">/ oy</small>
                 <ul class="list-unstyled mt-3 mb-4 text-start mx-auto" style="max-width:260px">
-                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Cheksiz buyurtmalar</li>
-                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Batafsil hisobotlar</li>
-                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Telegram bot integratsiyasi</li>
+                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Cheksiz buyurtmalar</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Asosiy hisobotlar</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Telegram bot integratsiya 3 ta</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Restoranlar soni 3 ta</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Taomnomalar soni 10 ta</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Taomlar soni 150 ta</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Email qo'llab-quvvatlash</li>
                   <li class="mb-2"><i class="bi bi-check text-success me-2"></i>24/7 qo'llab-quvvatlash</li>
                 </ul>
                 @if (Route::has('register'))
@@ -276,9 +284,17 @@
             <div class="card pricing-card h-100">
               <div class="card-body text-center p-4">
                 <h5 class="fw-bold">Korxona</h5>
-                <div class="display-5 fw-bold text-warning mb-0">$199</div>
+                <div class="display-5 fw-bold text-warning mb-0">$30</div>
                 <small class="text-muted">/ oy</small>
                 <ul class="list-unstyled mt-3 mb-4 text-start mx-auto" style="max-width:260px">
+                <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Cheksiz buyurtmalar</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Asosiy hisobotlar</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Telegram bot integratsiya cheksiz</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Restoranlar soni cheksiz</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Taomnomalar soni cheksiz</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Taomlar soni cheksiz</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Email qo'llab-quvvatlash</li>
+                  <li class="mb-2"><i class="bi bi-check text-success me-2"></i>24/7 qo'llab-quvvatlash</li>
                   <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Ko'p filiallar</li>
                   <li class="mb-2"><i class="bi bi-check text-success me-2"></i>API integratsiyasi</li>
                   <li class="mb-2"><i class="bi bi-check text-success me-2"></i>Maxsus yechimlar</li>
