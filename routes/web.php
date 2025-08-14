@@ -527,10 +527,10 @@ Route::get('/test-upload-limits', function() {
     ]);
 })->name('test.upload.limits');
 
-// Telegram Web App settings route
-Route::get('/admin/restaurants/{restaurant}/web-app-settings', [App\Http\Controllers\Admin\RestaurantController::class, 'webAppSettings'])
-    ->name('admin.restaurants.web-app-settings')
-    ->middleware(['auth', 'verified']);
+// Redirect Web App settings to edit page (merged functionality)
+Route::get('/admin/restaurants/{restaurant}/web-app-settings', function(App\Models\Restaurant $restaurant) {
+    return redirect()->route('admin.restaurants.edit', $restaurant);
+})->name('admin.restaurants.web-app-settings')->middleware(['auth', 'verified']);
 
 require __DIR__.'/auth.php';
 

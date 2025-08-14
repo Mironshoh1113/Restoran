@@ -146,12 +146,7 @@ class RestaurantController extends Controller
         return view('admin.restaurants.edit', compact('restaurant'));
     }
 
-    public function webAppSettings(Restaurant $restaurant)
-    {
-        $this->authorize('update', $restaurant);
-        
-        return view('admin.restaurants.web-app-settings', compact('restaurant'));
-    }
+
 
     public function update(Request $request, Restaurant $restaurant)
     {
