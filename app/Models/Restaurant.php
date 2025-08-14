@@ -37,6 +37,9 @@ class Restaurant extends Model
         'min_order_amount',
         'payment_methods',
         'social_links',
+        'web_app_title',
+        'web_app_description',
+        'web_app_button_text',
     ];
 
     protected $casts = [

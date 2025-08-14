@@ -57,7 +57,10 @@ class RestaurantController extends Controller
                 'delivery_fee',
                 'min_order_amount',
                 'payment_methods',
-                'social_links'
+                'social_links',
+                'web_app_title',
+                'web_app_description',
+                'web_app_button_text',
             ]);
             
             // Add owner user ID
@@ -66,13 +69,19 @@ class RestaurantController extends Controller
             // Handle checkbox properly
             $data['is_active'] = $request->has('is_active');
             
-            // Handle file uploads
+            // Handle file uploads with 10MB limit
             if ($request->hasFile('logo')) {
+                $request->validate([
+                    'logo' => 'image|mimes:jpeg,png,jpg,gif|max:10240' // 10MB = 10240 KB
+                ]);
                 $logoPath = $request->file('logo')->store('restaurants/logos', 'public');
                 $data['logo'] = $logoPath;
             }
             
             if ($request->hasFile('bot_image')) {
+                $request->validate([
+                    'bot_image' => 'image|mimes:jpeg,png,jpg,gif|max:10240' // 10MB = 10240 KB
+                ]);
                 $botImagePath = $request->file('bot_image')->store('restaurants/bot-images', 'public');
                 $data['bot_image'] = $botImagePath;
             }
@@ -137,6 +146,13 @@ class RestaurantController extends Controller
         return view('admin.restaurants.edit', compact('restaurant'));
     }
 
+    public function webAppSettings(Restaurant $restaurant)
+    {
+        $this->authorize('update', $restaurant);
+        
+        return view('admin.restaurants.web-app-settings', compact('restaurant'));
+    }
+
     public function update(Request $request, Restaurant $restaurant)
     {
         $this->authorize('update', $restaurant);
@@ -165,14 +181,20 @@ class RestaurantController extends Controller
                 'delivery_fee',
                 'min_order_amount',
                 'payment_methods',
-                'social_links'
+                'social_links',
+                'web_app_title',
+                'web_app_description',
+                'web_app_button_text',
             ]);
             
             // Handle checkbox properly
             $data['is_active'] = $request->has('is_active');
             
-            // Handle file uploads
+            // Handle file uploads with 10MB limit
             if ($request->hasFile('logo')) {
+                $request->validate([
+                    'logo' => 'image|mimes:jpeg,png,jpg,gif|max:10240' // 10MB = 10240 KB
+                ]);
                 // Delete old logo if exists
                 if ($restaurant->logo) {
                     \Storage::disk('public')->delete($restaurant->logo);
@@ -182,6 +204,9 @@ class RestaurantController extends Controller
             }
             
             if ($request->hasFile('bot_image')) {
+                $request->validate([
+                    'bot_image' => 'image|mimes:jpeg,png,jpg,gif|max:10240' // 10MB = 10240 KB
+                ]);
                 // Delete old bot image if exists
                 if ($restaurant->bot_image) {
                     \Storage::disk('public')->delete($restaurant->bot_image);
