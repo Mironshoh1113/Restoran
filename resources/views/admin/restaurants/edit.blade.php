@@ -191,7 +191,7 @@
                                 </div>
                                 
                                 <div id="botInfoSection">
-                                    @if($restaurant->bot_token && $restaurant->bot_username)
+                    @if($restaurant->bot_token && $restaurant->bot_username)
                                         <div class="space-y-3" id="botInfoDisplay" style="display: none;">
                                             <div class="flex justify-between">
                                                 <span class="text-gray-600">Nomi:</span>
@@ -367,7 +367,7 @@
                                                         <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                                                             @if($restaurant->logo)
                                                                 <img src="{{ asset('storage/' . $restaurant->logo) }}" alt="Logo" class="w-12 h-12 rounded-full object-cover" id="desktop-logo-preview">
-                                                            @else
+                    @else
                                                                 <i class="fas fa-utensils text-white text-2xl"></i>
                                                             @endif
                                                         </div>

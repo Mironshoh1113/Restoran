@@ -801,9 +801,6 @@
             <button class="checkout-btn" id="checkout-btn" onclick="openCheckoutModal()" disabled>
                 <i class="fas fa-shopping-cart me-2"></i>Buyurtma berish
             </button>
-            <button class="btn btn-secondary mt-2" onclick="debugOrder()" id="debug-btn" style="display: none;">
-                <i class="fas fa-bug me-2"></i>Debug Test
-            </button>
         </div>
     </div>
 
@@ -1076,54 +1073,6 @@
             updateCart();
         }
         
-        // Debug order function
-        function debugOrder() {
-            if (Object.keys(cart).length === 0) return;
-            
-            const botToken = '{{ $botToken ?? $restaurant->bot_token ?? "" }}';
-            
-            const orderData = {
-                restaurant_id: {{ $restaurant->id }},
-                items: Object.keys(cart).map(itemId => ({
-                    menu_item_id: parseInt(itemId),
-                    quantity: cart[itemId],
-                    price: parseFloat(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price)
-                })),
-                total_amount: Object.keys(cart).reduce((total, itemId) => {
-                    const qty = cart[itemId];
-                    const price = parseFloat(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price);
-                    return total + (qty * price);
-                }, 0),
-                bot_token: botToken
-            };
-            
-            console.log('🐛 DEBUG: Testing order data...', orderData);
-            
-            fetch('/api/debug-orders', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(orderData)
-            })
-            .then(response => {
-                console.log('🐛 DEBUG: Response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('🐛 DEBUG: Response data:', data);
-                if (data.success) {
-                    alert('✅ Debug test passed! Order data is valid.');
-                } else {
-                    alert('❌ Debug test failed: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('🐛 DEBUG: Error:', error);
-                alert('❌ Debug test error: ' + error.message);
-            });
-        }
-        
         // Update cart display
         function updateCart() {
             let totalPrice = 0;
@@ -1141,15 +1090,8 @@
             
             // Enable/disable checkout button
             const checkoutBtn = document.getElementById('checkout-btn');
-            const debugBtn = document.getElementById('debug-btn');
             
-            if (totalItems > 0) {
-                checkoutBtn.disabled = false;
-                debugBtn.style.display = 'block'; // Show debug button
-            } else {
-                checkoutBtn.disabled = true;
-                debugBtn.style.display = 'none'; // Hide debug button
-            }
+            checkoutBtn.disabled = totalItems === 0;
         }
         
         // Checkout modal functions

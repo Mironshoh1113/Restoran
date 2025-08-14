@@ -300,7 +300,7 @@ class TelegramController extends Controller
                 ]);
 
                 Log::info('Message stored in database', [
-                    'restaurant_id' => $restaurant->id,
+                'restaurant_id' => $restaurant->id,
                     'telegram_user_id' => $telegramUser->id,
                     'text' => $text
                 ]);
@@ -557,7 +557,7 @@ class TelegramController extends Controller
 
             // Find telegram user
             $telegramUser = TelegramUser::where('telegram_id', $chatId)
-                ->where('restaurant_id', $restaurant->id)
+                 ->where('restaurant_id', $restaurant->id)
                 ->first();
             
             if (!$telegramUser) {
@@ -756,9 +756,9 @@ class TelegramController extends Controller
                 'token' => substr($botToken, 0, 10) . '...'
             ]);
 
-            $restaurant = Restaurant::where('bot_token', $botToken)->first();
-            
-            if (!$restaurant) {
+        $restaurant = Restaurant::where('bot_token', $botToken)->first();
+        
+        if (!$restaurant) {
                 Log::error('Restaurant not found for web interface', [
                     'token' => substr($botToken, 0, 10) . '...',
                     'available_tokens' => Restaurant::whereNotNull('bot_token')->pluck('bot_token')->map(function($t) {
