@@ -329,7 +329,7 @@ class TelegramController extends Controller
 					return;
 				}
 				if (in_array($text, ['📊 Buyurtmalarim','Buyurtmalarim'])) {
-					$this->sendDefaultResponse($restaurant, $telegramUser);
+					$this->sendRecentOrders($restaurant, $telegramUser);
 					return;
 				}
 				if (in_array($text, ['ℹ Yordam','Yordam','Yordam'])) {
@@ -583,6 +583,50 @@ class TelegramController extends Controller
                 'error' => $e->getMessage(),
                 'restaurant_id' => $restaurant->id
             ]);
+        }
+    }
+
+    /**
+     * Send recent orders summary (last 5) for this user and restaurant
+     */
+    private function sendRecentOrders($restaurant, $telegramUser)
+    {
+        try {
+            $orders = \App\Models\Order::where('restaurant_id', $restaurant->id)
+                ->where('telegram_chat_id', (string) $telegramUser->telegram_id)
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+
+            if ($orders->isEmpty()) {
+                $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, "Sizda hali buyurtmalar yo'q.");
+                return;
+            }
+
+            $message = "📊 Oxirgi buyurtmalaringiz:\n\n";
+            foreach ($orders as $order) {
+                $orderNo = $order->order_number ?: ('#' . $order->id);
+                $total = number_format((float)($order->total_price ?? 0), 0, ',', ' ');
+                $date = optional($order->created_at)->format('d.m.Y H:i');
+                $statusMap = [
+                    'new' => '⏳ Yangi',
+                    'preparing' => '👨‍🍳 Tayyorlanmoqda',
+                    'on_way' => '🚚 Yolda',
+                    'delivered' => '✅ Yetkazildi',
+                    'cancelled' => '❌ Bekor'
+                ];
+                $status = $statusMap[$order->status] ?? '❓ Noma’lum';
+                $message .= "📦 {$orderNo} — {$status}\n💰 {$total} so'm\n📅 {$date}\n\n";
+            }
+
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message);
+        } catch (\Exception $e) {
+            Log::error('Error sending recent orders', [
+                'error' => $e->getMessage(),
+                'restaurant_id' => $restaurant->id,
+                'user_id' => $telegramUser->id
+            ]);
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, "Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.");
         }
     }
 

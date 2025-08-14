@@ -1209,6 +1209,8 @@
             document.body.style.overflow = 'hidden';
             const btn = document.getElementById('checkout-btn');
             if (btn) btn.style.display = 'none';
+            const cartBar = document.querySelector('.cart-fixed');
+            if (cartBar) cartBar.style.display = 'none';
             // Update totals in modal
             let subtotal = 0;
             let itemsList = '';
@@ -1232,6 +1234,8 @@
             document.body.style.overflow = 'auto';
             const btn = document.getElementById('checkout-btn');
             if (btn) btn.style.display = '';
+            const cartBar = document.querySelector('.cart-fixed');
+            if (cartBar) cartBar.style.display = '';
         }
         
         // Handle checkout form submission
