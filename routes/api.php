@@ -50,6 +50,16 @@ Route::post('/deploy', function () {
     }
 }); 
 
+// Debug route for testing orders API
+Route::post('/test-orders', function (Request $request) {
+    return response()->json([
+        'success' => true,
+        'message' => 'Test API is working',
+        'received_data' => $request->all(),
+        'timestamp' => now()->toISOString()
+    ]);
+});
+
 // Telegram Web App API routes
 Route::post('/orders', function (Request $request) {
     try {
@@ -144,7 +154,7 @@ Route::post('/orders', function (Request $request) {
             'error' => 'Failed to create order: ' . $e->getMessage()
         ], 500);
     }
-});
+}); 
 
 // Telegram webhook route
 Route::post('/telegram-webhook/{token}', [TelegramController::class, 'webhook']); 

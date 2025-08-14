@@ -8,7 +8,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <meta name="bot-token" content="{{ $botToken ?? '' }}">
+    <meta name="bot-token" content="{{ $botToken ?? $restaurant->bot_token ?? '' }}">
     
     <style>
         :root {
@@ -1127,6 +1127,9 @@
         function proceedToCheckout(customerData = null) {
             if (Object.keys(cart).length === 0) return;
             
+            const botToken = '{{ $botToken ?? $restaurant->bot_token ?? "" }}';
+            console.log('Bot token:', botToken);
+            
             // Prepare order data
             const orderData = {
                 restaurant_id: {{ $restaurant->id }},
@@ -1141,32 +1144,38 @@
                     return total + (qty * price);
                 }, 0),
                 telegram_chat_id: tg.initDataUnsafe?.user?.id || null,
-                bot_token: '{{ $botToken }}',
+                bot_token: botToken,
                 customer_name: customerData?.name || 'Anonim',
                 customer_phone: customerData?.phone || 'Kiritilmagan',
                 customer_address: customerData?.address || 'Kiritilmagan',
                 customer_notes: customerData?.notes || ''
             };
             
+            console.log('Order data:', orderData);
+            
             // Send order to server
             fetch('/api/orders', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                 },
                 body: JSON.stringify(orderData)
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data);
                 if (data.success) {
                     // Clear cart
                     cart = {};
                     updateCart();
                     
                     // Update all quantity displays
-                    Object.keys(cart).forEach(itemId => {
-                        document.getElementById(`qty-${itemId}`).textContent = '0';
+                    document.querySelectorAll('.quantity-display').forEach(display => {
+                        display.textContent = '0';
                     });
                     
                     // Close modal
@@ -1181,7 +1190,8 @@
                         order_id: data.order_id
                     }));
                 } else {
-                    tg.showAlert('Xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.');
+                    console.error('Order failed:', data);
+                    tg.showAlert('Xatolik yuz berdi: ' + (data.error || 'Noma\'lum xatolik'));
                 }
             })
             .catch(error => {

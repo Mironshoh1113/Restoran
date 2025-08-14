@@ -236,7 +236,7 @@ class RestaurantController extends Controller
                 ]);
             }
 
-            return redirect()->route('admin.restaurants.index')
+            return redirect()->route('admin.restaurants.edit', $restaurant)
                 ->with('success', 'Restoran muvaffaqiyatli yangilandi.');
                 
         } catch (\Exception $e) {
@@ -253,7 +253,7 @@ class RestaurantController extends Controller
                 ], 500);
             }
 
-            return redirect()->route('admin.restaurants.index')
+            return redirect()->route('admin.restaurants.edit', $restaurant)
                 ->with('error', 'Restoran yangilashda xatolik yuz berdi: ' . $e->getMessage());
         }
     }
