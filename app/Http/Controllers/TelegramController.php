@@ -46,7 +46,7 @@ class TelegramController extends Controller
                 'file' => basename($e->getFile())
             ]);
             return response('OK', 200);
-            }
+        }
     }
 
     /**
@@ -63,11 +63,11 @@ class TelegramController extends Controller
                     'message' => 'Invalid token format'
                 ], 200);
             }
-
-            // Find restaurant by bot token
+        
+        // Find restaurant by bot token
             $restaurant = Restaurant::where('bot_token', $token)->first();
-            
-            if (!$restaurant) {
+        
+        if (!$restaurant) {
                 Log::error('Restaurant not found for bot token in GET request');
                 return response()->json([
                     'success' => false,
@@ -127,7 +127,7 @@ class TelegramController extends Controller
                 ]);
                 return response('OK', 200);
             }
-
+            
             // Find restaurant by bot token
             $restaurant = Restaurant::where('bot_token', $token)->first();
             
@@ -171,7 +171,7 @@ class TelegramController extends Controller
             $this->processWebhookUpdate($restaurant, $requestData, $token);
 
             return response('OK', 200);
-
+            
         } catch (\Exception $e) {
             Log::error('Error in webhook POST request', [
                 'error' => $e->getMessage(),
@@ -258,7 +258,7 @@ class TelegramController extends Controller
             try {
                 $telegramUser = TelegramUser::updateOrCreate(
                     [
-                        'telegram_chat_id' => $chatId,
+                        'telegram_id' => $chatId,
                         'restaurant_id' => $restaurant->id
                     ],
                     [
@@ -267,7 +267,7 @@ class TelegramController extends Controller
                         'username' => $message['from']['username'] ?? '',
                         'language_code' => $message['from']['language_code'] ?? 'uz',
                         'is_active' => true,
-                        'last_activity_at' => now()
+                        'last_activity' => now()
                     ]
                 );
 
@@ -297,7 +297,7 @@ class TelegramController extends Controller
                 ]);
 
                 Log::info('Message stored in database', [
-                    'restaurant_id' => $restaurant->id,
+                'restaurant_id' => $restaurant->id,
                     'telegram_user_id' => $telegramUser->id,
                     'text' => $text
                 ]);
@@ -321,7 +321,7 @@ class TelegramController extends Controller
                 $this->handleCommand($restaurant, $telegramUser, $text);
             } else {
                 Log::info('Processing as regular message', [
-                    'restaurant_id' => $restaurant->id,
+                'restaurant_id' => $restaurant->id,
                     'text' => $text,
                     'chat_id' => $chatId
                 ]);
@@ -408,7 +408,7 @@ class TelegramController extends Controller
                 ]
             ];
 
-            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_chat_id, $message, $keyboard);
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message, $keyboard);
             
         } catch (\Exception $e) {
             Log::error('Error sending welcome message', [
@@ -450,7 +450,7 @@ class TelegramController extends Controller
                 ]
             ];
 
-            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_chat_id, $message, $keyboard);
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message, $keyboard);
             
         } catch (\Exception $e) {
             Log::error('Error sending menu message', [
@@ -474,7 +474,7 @@ class TelegramController extends Controller
                 $message .= "📍 Manzil: {$restaurant->address}\n";
             }
 
-            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_chat_id, $message);
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message);
 
         } catch (\Exception $e) {
             Log::error('Error sending help message', [
@@ -496,7 +496,7 @@ class TelegramController extends Controller
             $message .= "/menu - Menyuni ko'rish\n";
             $message .= "/help - Yordam\n";
 
-            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_chat_id, $message);
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message);
 
         } catch (\Exception $e) {
             Log::error('Error sending unknown command message', [
@@ -527,7 +527,7 @@ class TelegramController extends Controller
                 ]
             ];
 
-            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_chat_id, $message, $keyboard);
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message, $keyboard);
 
         } catch (\Exception $e) {
             Log::error('Error sending default response', [
@@ -553,7 +553,7 @@ class TelegramController extends Controller
             if (!$chatId) return;
 
             // Find telegram user
-            $telegramUser = TelegramUser::where('telegram_chat_id', $chatId)
+            $telegramUser = TelegramUser::where('telegram_id', $chatId)
                 ->where('restaurant_id', $restaurant->id)
                 ->first();
             
@@ -561,9 +561,9 @@ class TelegramController extends Controller
                 Log::warning('Telegram user not found for callback query', [
                 'restaurant_id' => $restaurant->id,
                     'chat_id' => $chatId
-                ]);
+            ]);
                 return;
-                }
+            }
 
             switch ($data) {
                 case 'show_menu':
@@ -614,7 +614,7 @@ class TelegramController extends Controller
         try {
             Log::info('Attempting to send Telegram message', [
                 'bot_token' => substr($botToken, 0, 10) . '...',
-                'chat_id' => $chatId,
+                    'chat_id' => $chatId,
                 'message_length' => strlen($message),
                 'has_keyboard' => $keyboard !== null,
                 'message_preview' => substr($message, 0, 100)
@@ -623,7 +623,7 @@ class TelegramController extends Controller
             $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
             
             $data = [
-                'chat_id' => $chatId,
+                    'chat_id' => $chatId,
                 'text' => $message,
                 'parse_mode' => 'HTML'
             ];
@@ -715,9 +715,9 @@ class TelegramController extends Controller
                 return response('Bot token not provided', 400);
             }
             
-            $restaurant = Restaurant::where('bot_token', $botToken)->first();
-            
-            if (!$restaurant) {
+        $restaurant = Restaurant::where('bot_token', $botToken)->first();
+        
+        if (!$restaurant) {
                 return response('Restaurant not found', 404);
             }
 

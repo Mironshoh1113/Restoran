@@ -66,69 +66,23 @@ class MenuItemController extends Controller
 
         if ($request->hasFile('image')) {
             try {
-                $file = $request->file('image');
-                
-                // Debug: Log file information
-                \Log::info('File upload attempt', [
-                    'original_name' => $file->getClientOriginalName(),
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                    'is_valid' => $file->isValid(),
-                    'error' => $file->getError(),
-                    'error_message' => $file->getErrorMessage(),
-                    'real_path' => $file->getRealPath(),
-                    'temporary_path' => $file->getPathname()
+                // Use Laravel validation
+                $request->validate([
+                    'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048' // 2MB = 2048 KB
                 ]);
                 
-                // Validate file
-                if (!$file->isValid()) {
-                    throw new \Exception('Fayl yuklashda xatolik yuz berdi: ' . $file->getErrorMessage());
-                }
+                // Store using Laravel Storage (consistent with Restaurant images)
+                $imagePath = $request->file('image')->store('menu-items', 'public');
+                $data['image'] = $imagePath;
                 
-                // Check file size (max 2MB)
-                if ($file->getSize() > 2 * 1024 * 1024) {
-                    throw new \Exception('Fayl hajmi 2MB dan katta bo\'lishi mumkin emas');
-                }
-                
-                // Check file type
-                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
-                if (!in_array($file->getMimeType(), $allowedTypes)) {
-                    throw new \Exception('Faqat rasm fayllari qabul qilinadi (JPEG, PNG, GIF)');
-                }
-                
-                // Create storage directory if it doesn't exist
-                $storagePath = public_path('img/menu');
-                if (!file_exists($storagePath)) {
-                    mkdir($storagePath, 0755, true);
-                }
-                
-                // Generate unique filename
-                $extension = $file->getClientOriginalExtension();
-                $filename = 'menu_' . time() . '_' . uniqid() . '.' . $extension;
-                $filepath = $storagePath . '/' . $filename;
-                
-                // Move file to storage
-                if ($file->move($storagePath, $filename)) {
-                    $data['image'] = 'img/menu/' . $filename;
-                    
-                    \Log::info('File uploaded successfully', [
-                        'filename' => $filename,
-                        'filepath' => $filepath,
-                        'stored_path' => $data['image'],
-                        'file_size' => filesize($filepath)
-                    ]);
-                } else {
-                    throw new \Exception('Faylni saqlashda xatolik yuz berdi');
-                }
+                \Log::info('Menu item image uploaded successfully', [
+                    'stored_path' => $imagePath,
+                    'full_url' => asset('storage/' . $imagePath)
+                ]);
                 
             } catch (\Exception $e) {
-                \Log::error('File upload failed', [
-                    'error' => $e->getMessage(),
-                    'file_info' => $file ? [
-                        'name' => $file->getClientOriginalName(),
-                        'size' => $file->getSize(),
-                        'type' => $file->getMimeType()
-                    ] : 'No file'
+                \Log::error('Menu item image upload failed', [
+                    'error' => $e->getMessage()
                 ]);
                 
                 return redirect()->back()

@@ -179,24 +179,104 @@
                             @enderror
                         </div>
 
-                        <!-- Bot Status -->
-                    @if($restaurant->bot_token && $restaurant->bot_username)
-                            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-check-circle text-green-600"></i>
-                                    <span class="text-sm text-green-800 font-medium">Bot to'liq sozlangan</span>
+                        <!-- Bot Status Overview Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <!-- Bot Info Card -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-info-circle text-blue-600"></i>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Bot Ma'lumotlari</h4>
                                 </div>
-                                <p class="text-xs text-green-600 mt-1">Barcha kerakli ma'lumotlar to'ldirilgan</p>
-                            </div>
-                        @else
-                            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                <div class="flex items-center space-x-2">
-                                    <i class="fas fa-exclamation-triangle text-yellow-600"></i>
-                                    <span class="text-sm text-yellow-800 font-medium">Bot to'liq sozlanmagan</span>
+                                
+                                <div id="botInfoSection">
+                                    @if($restaurant->bot_token && $restaurant->bot_username)
+                                        <div class="space-y-3" id="botInfoDisplay" style="display: none;">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">Nomi:</span>
+                                                <span class="font-medium" id="botNameDisplay">-</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">Username:</span>
+                                                <span class="font-medium" id="botUsernameDisplay">@{{ $restaurant->bot_username }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">Holat:</span>
+                                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full" id="botStatusDisplay">Yuklanmoqda...</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-center py-4" id="botInfoLoading">
+                                            <i class="fas fa-spinner fa-spin text-blue-500 text-2xl mb-2"></i>
+                                            <p class="text-gray-600">Ma'lumotlar yuklanmoqda...</p>
+                                        </div>
+                                    @else
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mb-2"></i>
+                                            <p class="text-gray-600">Bot ma'lumotlari yuklanmadi</p>
+                                            <p class="text-sm text-gray-500">Bot token va username ni to'ldiring</p>
+                                        </div>
+                                    @endif
                                 </div>
-                                <p class="text-xs text-yellow-600 mt-1">Bot token va username ni to'ldiring</p>
                             </div>
-                        @endif
+
+                            <!-- Webhook Status Card -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-link text-green-600"></i>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Webhook Holati</h4>
+                                </div>
+                                
+                                <div id="webhookInfoSection">
+                                    @if($restaurant->bot_token)
+                                        <div class="space-y-3" id="webhookInfoDisplay" style="display: none;">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">Holat:</span>
+                                                <span class="px-2 py-1 text-xs rounded-full" id="webhookStatusBadge">Yuklanmoqda...</span>
+                                            </div>
+                                            <div class="text-xs text-gray-600 break-all" id="webhookUrlDisplay" style="display: none;"></div>
+                                            <div class="text-xs text-red-600" id="webhookErrorDisplay" style="display: none;"></div>
+                                        </div>
+                                        <div class="text-center py-4" id="webhookInfoLoading">
+                                            <i class="fas fa-spinner fa-spin text-green-500 text-2xl mb-2"></i>
+                                            <p class="text-gray-600">Webhook holati tekshirilmoqda...</p>
+                                        </div>
+                                    @else
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-unlink text-red-500 text-2xl mb-2"></i>
+                                            <p class="text-gray-600">Webhook o'rnatilmagan</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Quick Stats Card -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-chart-bar text-purple-600"></i>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Statistika</h4>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Foydalanuvchilar:</span>
+                                        <span class="font-medium">{{ $restaurant->telegramUsers()->count() ?? 0 }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Xabarlar:</span>
+                                        <span class="font-medium">{{ $restaurant->telegramMessages()->count() ?? 0 }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Buyurtmalar:</span>
+                                        <span class="font-medium">{{ $restaurant->orders()->count() ?? 0 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
