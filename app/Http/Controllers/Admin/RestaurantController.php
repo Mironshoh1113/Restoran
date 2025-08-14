@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Services\TelegramService;
+use Illuminate\Support\Facades\Artisan;
 
 class RestaurantController extends Controller
 {
@@ -223,6 +225,40 @@ class RestaurantController extends Controller
                 'restaurant_id' => $restaurant->id,
                 'updated_data' => $restaurant->fresh()->toArray()
             ]);
+
+            // Ensure storage symlink exists for displaying images
+            try {
+                if (!file_exists(public_path('storage')) && file_exists(storage_path('app/public'))) {
+                    Artisan::call('storage:link');
+                    \Log::info('storage:link executed after restaurant update');
+                }
+            } catch (\Exception $e) {
+                \Log::warning('storage:link failed', ['error' => $e->getMessage()]);
+            }
+
+            // Sync bot settings to Telegram if token exists
+            try {
+                if (!empty($restaurant->bot_token)) {
+                    $telegram = new TelegramService($restaurant->bot_token);
+                    // Update bot name
+                    if ($request->filled('bot_name')) {
+                        $telegram->setMyName($request->input('bot_name'));
+                    }
+                    // Update bot description
+                    if ($request->filled('bot_description')) {
+                        $telegram->setMyDescription($request->input('bot_description'));
+                    }
+                    // Update bot profile photo at Telegram when uploaded
+                    if ($request->hasFile('bot_image')) {
+                        $telegram->setProfilePhoto($request->file('bot_image'));
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to sync bot settings to Telegram', [
+                    'restaurant_id' => $restaurant->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             if (request()->expectsJson()) {
                 return response()->json([
