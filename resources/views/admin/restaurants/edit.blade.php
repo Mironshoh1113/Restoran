@@ -10,18 +10,11 @@
             <h1 class="text-2xl font-bold text-gray-800">Restoran tahrirlash</h1>
             <p class="text-gray-600">{{ $restaurant->name }}</p>
         </div>
-        <div class="flex items-center space-x-3">
-            <a href="{{ route('admin.restaurants.web-app-settings', $restaurant) }}" 
-               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                <i class="fas fa-mobile-alt"></i>
-                <span>Web App sozlamalari</span>
-            </a>
-            <a href="{{ route('admin.restaurants.show', $restaurant) }}" 
-               class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                <i class="fas fa-arrow-left"></i>
-                <span>Orqaga</span>
-            </a>
-        </div>
+        <a href="{{ route('admin.restaurants.show', $restaurant) }}" 
+           class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+            <i class="fas fa-arrow-left"></i>
+            <span>Orqaga</span>
+        </a>
     </div>
 
     <!-- Edit Form -->
@@ -140,6 +133,16 @@
                         @error('bot_description')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
+                    </div>
+                    
+                    <!-- Web App Settings Button -->
+                    <div class="pt-2">
+                        <a href="{{ route('admin.restaurants.web-app-settings', $restaurant) }}" 
+                           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                            <i class="fas fa-mobile-alt mr-2"></i>
+                            Web App sozlamalari
+                        </a>
+                        <p class="text-xs text-gray-500 mt-1">Telegram Web App dizayni va ranglarini sozlash</p>
                     </div>
                     
                     @if($restaurant->bot_token && $restaurant->bot_username)
