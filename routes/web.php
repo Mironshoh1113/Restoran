@@ -58,6 +58,8 @@ Route::middleware('auth')->group(function () {
         Route::post('bots/{restaurant}/webhook', [BotController::class, 'setWebhook'])->name('bots.set-webhook');
         Route::delete('bots/{restaurant}/webhook', [BotController::class, 'deleteWebhook'])->name('bots.delete-webhook');
         Route::post('bots/{restaurant}/webhook/auto', [BotController::class, 'setWebhookAuto'])->name('bots.set-webhook-auto');
+        Route::get('bots/{restaurant}/webhook/info', [BotController::class, 'getWebhookInfo'])->name('bots.webhook-info');
+        Route::get('bots/{restaurant}/info', [BotController::class, 'getBotInfo'])->name('bots.info');
         Route::post('bots/{restaurant}/send-test', [BotController::class, 'sendTestMessage'])->name('bots.send-test');
         
         // Multi-bot management routes

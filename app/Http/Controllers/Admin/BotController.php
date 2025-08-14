@@ -279,6 +279,54 @@ class BotController extends Controller
     }
 
     /**
+     * Get bot info for AJAX call
+     */
+    public function getBotInfo(Restaurant $restaurant)
+    {
+        $this->authorize('view', $restaurant);
+        
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            $telegramService = new TelegramService($restaurant->bot_token);
+            $botInfo = $telegramService->getMe();
+            
+            return response()->json([
+                'success' => true,
+                'botInfo' => $botInfo
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Bot ma\'lumotlarini olishda xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get webhook info for AJAX call
+     */
+    public function getWebhookInfo(Restaurant $restaurant)
+    {
+        $this->authorize('view', $restaurant);
+        
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            $telegramService = new TelegramService($restaurant->bot_token);
+            $webhookInfo = $telegramService->getWebhookInfo();
+            
+            return response()->json([
+                'success' => true,
+                'webhookInfo' => $webhookInfo
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Webhook ma\'lumotlarini olishda xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Set webhook for bot
      */
     public function setWebhook(Request $request, Restaurant $restaurant)
