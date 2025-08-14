@@ -9,6 +9,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <meta name="bot-token" content="{{ $botToken ?? $restaurant->bot_token ?? '' }}">
+    @if(!config('app.debug'))
+    <script>
+        // Disable console logs in production
+        console.log = function(){};
+        console.debug = function(){};
+        console.warn = function(){};
+    </script>
+    @endif
     
     <style>
         :root {

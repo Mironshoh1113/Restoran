@@ -6,27 +6,27 @@
 <div class="max-w-6xl mx-auto space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-robot text-white text-2xl"></i>
                 </div>
-                <div>
+        <div>
                     <h1 class="text-2xl font-bold text-gray-800">{{ $restaurant->name }}</h1>
                     <p class="text-gray-600">Telegram Bot Boshqaruvi</p>
                 </div>
-            </div>
+        </div>
             <div class="flex space-x-3">
-                <a href="{{ route('admin.bots.users', $restaurant) }}" 
+            <a href="{{ route('admin.bots.users', $restaurant) }}" 
                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center space-x-2 transition-colors">
-                    <i class="fas fa-users"></i>
-                    <span>Foydalanuvchilar</span>
-                </a>
-                <a href="{{ route('admin.bots.index') }}" 
+                <i class="fas fa-users"></i>
+                <span>Foydalanuvchilar</span>
+            </a>
+            <a href="{{ route('admin.bots.index') }}" 
                    class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg flex items-center space-x-2 transition-colors">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Orqaga</span>
-                </a>
+                <i class="fas fa-arrow-left"></i>
+                <span>Orqaga</span>
+            </a>
             </div>
         </div>
     </div>
@@ -86,12 +86,12 @@
                     @if($webhookInfo['result']['url'])
                         <div class="text-xs text-gray-600 break-all">
                             {{ $webhookInfo['result']['url'] }}
-                        </div>
+                    </div>
                     @endif
                     @if(isset($webhookInfo['result']['last_error_message']))
                         <div class="text-xs text-red-600">
                             Xatolik: {{ $webhookInfo['result']['last_error_message'] }}
-                        </div>
+                    </div>
                     @endif
                 </div>
             @else
@@ -151,7 +151,7 @@
                     <h4 class="font-medium text-gray-800">Bot Test</h4>
                     <p class="text-sm text-gray-600">Ishlashini tekshirish</p>
                 </div>
-            </button>
+                    </button>
 
             <!-- View Users -->
             <a href="{{ route('admin.bots.users', $restaurant) }}" 
@@ -197,7 +197,7 @@
                     </div>
                     <p class="text-xs text-gray-500 mt-1">BotFather dan olingan token</p>
                 </div>
-
+                
                 <!-- Webhook URL -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Webhook URL</label>
@@ -214,13 +214,13 @@
                     <p class="text-xs text-gray-500 mt-1">Avtomatik yaratilgan URL</p>
                 </div>
             </div>
-
+            
             <!-- Action Buttons -->
             <div class="flex space-x-4 pt-4 border-t">
                 <button type="button" onclick="saveConfiguration()" 
                         class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
                     <i class="fas fa-save mr-2"></i>Saqlash
-                </button>
+                    </button>
                 <button type="button" onclick="setupWebhookAuto()" 
                         class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
                     <i class="fas fa-magic mr-2"></i>Webhook O'rnatish
@@ -239,7 +239,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Enhanced Web App -->
-            <div>
+                <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Enhanced Web App (Tavsiya etiladi)</label>
                 <div class="flex space-x-2">
                     <input type="url" value="{{ url('/enhanced-web-interface?bot_token=' . ($restaurant->bot_token ?? '')) }}"
@@ -253,7 +253,7 @@
             </div>
 
             <!-- Basic Web App -->
-            <div>
+                <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Basic Web App</label>
                 <div class="flex space-x-2">
                     <input type="url" value="{{ url('/web-interface?bot_token=' . ($restaurant->bot_token ?? '')) }}"
@@ -266,9 +266,9 @@
                 <p class="text-xs text-gray-500 mt-1">Asosiy web interface</p>
             </div>
         </div>
-    </div>
-</div>
-
+                </div>
+            </div>
+            
 <!-- Success/Error Messages -->
 <div id="notification" class="fixed top-4 right-4 z-50 hidden">
     <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm">
@@ -408,7 +408,7 @@ function toggleTokenVisibility() {
     if (tokenInput.type === 'password') {
         tokenInput.type = 'text';
         eyeIcon.className = 'fas fa-eye-slash';
-    } else {
+        } else {
         tokenInput.type = 'password';
         eyeIcon.className = 'fas fa-eye';
     }
