@@ -127,11 +127,11 @@ class TelegramController extends Controller
                 ]);
                 return response('OK', 200);
             }
-            
-            // Find restaurant by bot token
+        
+        // Find restaurant by bot token
             $restaurant = Restaurant::where('bot_token', $token)->first();
-            
-            if (!$restaurant) {
+        
+        if (!$restaurant) {
                 Log::error('Restaurant not found for bot token in POST request', [
                     'token' => substr($token, 0, 10) . '...',
                     'available_tokens' => Restaurant::whereNotNull('bot_token')->pluck('bot_token')->map(function($t) {
@@ -162,8 +162,8 @@ class TelegramController extends Controller
             // Basic validation of request structure
             if (empty($requestData)) {
                 Log::warning('Empty request data received', [
-                    'restaurant_id' => $restaurant->id
-                ]);
+                'restaurant_id' => $restaurant->id
+            ]);
                 return response('OK', 200);
             }
 
@@ -206,7 +206,7 @@ class TelegramController extends Controller
                 Log::info('Edited message received', ['restaurant_id' => $restaurant->id]);
             } else {
                 Log::info('Unhandled update type', [
-                    'restaurant_id' => $restaurant->id,
+            'restaurant_id' => $restaurant->id,
                     'update_keys' => array_keys($requestData)
                 ]);
             }
@@ -272,12 +272,12 @@ class TelegramController extends Controller
                 );
 
                 Log::info('Telegram user created/updated', [
-                    'restaurant_id' => $restaurant->id,
+                'restaurant_id' => $restaurant->id,
                     'telegram_user_id' => $telegramUser->id,
                     'chat_id' => $chatId
-                ]);
-
-            } catch (\Exception $e) {
+            ]);
+            
+        } catch (\Exception $e) {
                 Log::error('Error creating/updating telegram user', [
                     'restaurant_id' => $restaurant->id,
                     'chat_id' => $chatId,
@@ -336,7 +336,7 @@ class TelegramController extends Controller
                 'chat_id' => $chatId,
                 'text' => $text
             ]);
-
+            
         } catch (\Exception $e) {
             Log::error('Error handling message', [
                 'error' => $e->getMessage(),
@@ -592,8 +592,8 @@ class TelegramController extends Controller
                 'restaurant_id' => $restaurant->id,
                     'chat_id' => $chatId
             ]);
-                return;
-            }
+            return;
+        }
 
             switch ($data) {
                 case 'show_menu':
@@ -799,14 +799,14 @@ class TelegramController extends Controller
                 Log::warning('Bot token not provided for web interface');
                 return response('Bot token not provided', 400);
             }
-
+            
             Log::info('Looking for restaurant with bot token', [
                 'token' => substr($botToken, 0, 10) . '...'
             ]);
 
-        $restaurant = Restaurant::where('bot_token', $botToken)->first();
-        
-        if (!$restaurant) {
+            $restaurant = Restaurant::where('bot_token', $botToken)->first();
+            
+            if (!$restaurant) {
                 Log::error('Restaurant not found for web interface', [
                     'token' => substr($botToken, 0, 10) . '...',
                     'available_tokens' => Restaurant::whereNotNull('bot_token')->pluck('bot_token')->map(function($t) {

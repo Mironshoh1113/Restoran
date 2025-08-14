@@ -42,7 +42,7 @@
             color: var(--text-color, #2c3e50) !important;
             line-height: 1.6;
             overflow-x: hidden;
-            padding-bottom: 120px; /* prevent cart overlay from covering controls */
+            padding-bottom: 160px; /* prevent cart overlay from covering controls */
         }
 
         /* Custom Scrollbar */
@@ -154,6 +154,7 @@
             overflow: hidden;
             transition: all 0.3s ease;
             border: 1px solid rgba(0,0,0,0.05);
+            display: block;
         }
 
         /* Override bootstrap grid inside card to stack vertically */
@@ -1198,11 +1199,13 @@
             // Update totals in modal
             let subtotal = 0;
             let itemsList = '';
+            const formatPrice = (num) => num.toLocaleString();
             Object.keys(cart).forEach(itemId => {
                 const qty = cart[itemId];
                 const price = parseFloat(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price);
                 subtotal += qty * price;
-                itemsList += `- ${qty} x ${document.querySelector(`[data-item-id="${itemId}"]`).dataset.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${number_format(qty * price)} so'm\n`;
+                const name = document.querySelector(`[data-item-id="${itemId}"]`).dataset.name;
+                itemsList += `- ${qty} x ${name}: ${formatPrice(qty * price)} so'm\n`;
             });
             document.getElementById('checkoutSubtotal').textContent = subtotal.toLocaleString() + " so'm";
             document.getElementById('checkoutItems').textContent = itemsList;
