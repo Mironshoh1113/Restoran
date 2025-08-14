@@ -98,17 +98,25 @@
                             <img src="" alt="Preview" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
                             <p class="text-xs text-gray-500 mt-1">Tanlangan rasm</p>
                         </div>
-                        <input type="file" 
-                               id="image" 
-                               name="image" 
-                               accept="image/*"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <p class="text-xs text-gray-500">Rasm yuklash uchun fayl tanlang (JPEG, PNG, GIF, maksimal 2MB)</p>
-                        <div id="file-info" class="text-xs text-gray-600 hidden">
-                            <p>Fayl nomi: <span id="file-name"></span></p>
-                            <p>Fayl hajmi: <span id="file-size"></span></p>
-                            <p>Fayl turi: <span id="file-type"></span></p>
+                        
+                        <div class="flex items-center space-x-2">
+                            <input type="file" 
+                                   id="image" 
+                                   name="image" 
+                                   accept="image/*"
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   onchange="previewImage(this)">
+                            <button type="button" 
+                                    onclick="clearImage()"
+                                    class="px-3 py-2 text-sm text-red-600 hover:text-red-800 border border-red-300 hover:border-red-400 rounded-lg transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
+                        
+                        <p class="text-xs text-gray-500">
+                            Rasm formati: JPG, PNG, GIF. Maksimal hajm: 2MB. 
+                            Tavsiya etilgan o'lcham: 800x600 piksel.
+                        </p>
                     </div>
                     @error('image')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -168,8 +176,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileTypeSpan = document.getElementById('file-type');
     const form = document.getElementById('menu-item-form');
     
-    imageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
+    function previewImage(input) {
+        const file = input.files[0];
         
         if (file) {
             // Show preview
@@ -192,7 +200,15 @@ document.addEventListener('DOMContentLoaded', function() {
             imagePreview.classList.add('hidden');
             fileInfoDiv.classList.add('hidden');
         }
-    });
+    }
+
+    function clearImage() {
+        imageInput.value = ''; // Clear the file input
+        previewImg.src = ''; // Clear the preview image
+        imagePreview.classList.add('hidden'); // Hide the preview
+        fileInfoDiv.classList.add('hidden'); // Hide file info
+        console.log('Image cleared');
+    }
     
     // Form submission handling
     form.addEventListener('submit', function(e) {
