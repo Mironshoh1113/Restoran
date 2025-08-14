@@ -50,8 +50,30 @@ Route::post('/deploy', function () {
     }
 }); 
 
-// Telegram webhook - API route
-Route::post('/telegram-webhook/{token}', [TelegramController::class, 'webhook'])->name('api.telegram.webhook');
+// Telegram webhook - API route (both GET and POST)
+Route::match(['get', 'post'], '/telegram-webhook/{token}', [TelegramController::class, 'webhook'])->name('api.telegram.webhook');
+
+// Test webhook endpoint for debugging
+Route::get('/test-webhook/{token}', function($token) {
+    $restaurant = \App\Models\Restaurant::where('bot_token', $token)->first();
+    
+    if (!$restaurant) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Restaurant not found for token',
+            'token' => $token
+        ], 404);
+    }
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Webhook endpoint is working!',
+        'restaurant' => $restaurant->name,
+        'token' => $token,
+        'webhook_url' => url('/api/telegram-webhook/' . $token),
+        'timestamp' => now()->toISOString()
+    ]);
+})->name('api.test.webhook');
 
 // Debug route for testing orders API
 Route::post('/test-orders', function (Request $request) {
