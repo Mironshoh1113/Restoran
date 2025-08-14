@@ -689,7 +689,9 @@
         .btn-primary {
             background: var(--primary-color, #667eea) !important;
         }
-		.cart-fixed { z-index: 9999; }
+		.cart-fixed { z-index: 9999; padding: 0.75rem 1rem; }
+		.cart-content { padding-bottom: 0; }
+		.checkout-btn { position: relative; }
 		.menu-item { margin-bottom: 0; }
 		.category-content { margin-bottom: 1rem; }
     </style>
@@ -755,7 +757,7 @@
                     </div>
                 @else
                     @foreach($category->menuItems as $item)
-                        <div class="menu-item" data-item-id="{{ $item->id }}" data-price="{{ $item->price }}" data-name="{{ strtolower($item->name) }}" data-description="{{ strtolower($item->description ?? '') }}">
+                        <div class="menu-item" data-item-id="{{ $item->id }}" data-price="{{ $item->price }}" data-name="{{ $item->name }}" data-description="{{ strtolower($item->description ?? '') }}">
                             <div class="row g-0">
                                 <div class="col-md-4">
                                     @if($item->image && !empty(trim($item->image)))
@@ -841,20 +843,22 @@
                 </div>
                 
                 <div class="form-group" style="background:#f8f9fa;border-radius:12px;padding:12px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                        <span>Oraliq summa</span>
-                        <span id="checkoutSubtotal">0 so'm</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                        <span>Yetkazib berish</span>
-                        <span id="checkoutDeliveryFee">{{ number_format((float)($restaurant->delivery_fee ?? 0), 0, ',', ' ') }} so'm</span>
-                    </div>
-                    <hr style="margin:8px 0;" />
-                    <div style="display:flex;justify-content:space-between;font-weight:600;">
-                        <span>Jami</span>
-                        <span id="checkoutTotal">0 so'm</span>
-                    </div>
-                </div>
+					<div style="font-weight:600;margin-bottom:6px;">Tanlangan taomlar</div>
+					<div id="checkoutItems" style="font-size:0.9rem;color:#374151;margin-bottom:8px;"></div>
+					<div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+						<span>Oraliq summa</span>
+						<span id="checkoutSubtotal">0 so'm</span>
+					</div>
+					<div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+						<span>Yetkazib berish</span>
+						<span id="checkoutDeliveryFee">{{ number_format((float)($restaurant->delivery_fee ?? 0), 0, ',', ' ') }} so'm</span>
+					</div>
+					<hr style="margin:8px 0;" />
+					<div style="display:flex;justify-content:space-between;font-weight:600;">
+						<span>Jami</span>
+						<span id="checkoutTotal">0 so'm</span>
+					</div>
+				</div>
                 
                 <div class="checkout-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeCheckoutModal()">Bekor qilish</button>
@@ -885,6 +889,16 @@
         // Global variables
         let cart = {};
         let currentCategory = {{ $categories->first()->id ?? 1 }};
+        // Prefill customer data
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const saved = JSON.parse(localStorage.getItem('customerData') || '{}');
+                if (saved.name) document.getElementById('customerName').value = saved.name;
+                if (saved.phone) document.getElementById('customerPhone').value = saved.phone;
+                if (saved.address) document.getElementById('customerAddress').value = saved.address;
+                if (saved.notes) document.getElementById('customerNotes').value = saved.notes;
+            } catch(e) {}
+        });
         
         // Restaurant customization settings
         const restaurantSettings = {
@@ -997,6 +1011,13 @@
             const cartFixed = document.querySelector('.cart-fixed');
             if (cartFixed) {
                 cartFixed.style.background = restaurantSettings.cardBg;
+                cartFixed.style.padding = '0.75rem 1rem'; // Apply padding here
+            }
+            
+            // Update cart content padding
+            const cartContent = document.querySelector('.cart-content');
+            if (cartContent) {
+                cartContent.style.paddingBottom = '0'; // Apply padding here
             }
             
             // Update cart total
@@ -1016,6 +1037,7 @@
             if (checkoutBtn) {
                 checkoutBtn.style.background = `linear-gradient(135deg, ${restaurantSettings.primaryColor}, ${restaurantSettings.secondaryColor})`;
                 checkoutBtn.style.borderRadius = restaurantSettings.borderRadius;
+                checkoutBtn.style.position = 'relative'; // Apply position here
             }
             
             // Update search and filters
@@ -1175,12 +1197,15 @@
             document.body.style.overflow = 'hidden';
             // Update totals in modal
             let subtotal = 0;
+            let itemsList = '';
             Object.keys(cart).forEach(itemId => {
                 const qty = cart[itemId];
                 const price = parseFloat(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price);
                 subtotal += qty * price;
+                itemsList += `- ${qty} x ${document.querySelector(`[data-item-id="${itemId}"]`).dataset.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${number_format(qty * price)} so'm\n`;
             });
             document.getElementById('checkoutSubtotal').textContent = subtotal.toLocaleString() + " so'm";
+            document.getElementById('checkoutItems').textContent = itemsList;
             const deliveryFee = {{ (float)($restaurant->delivery_fee ?? 0) }};
             document.getElementById('checkoutDeliveryFee').textContent = deliveryFee.toLocaleString() + " so'm";
             document.getElementById('checkoutTotal').textContent = (subtotal + deliveryFee).toLocaleString() + " so'm";
@@ -1202,6 +1227,9 @@
                 notes: document.getElementById('customerNotes').value
             };
             
+            // Save customer data to localStorage
+            localStorage.setItem('customerData', JSON.stringify(customerData));
+
             // Proceed with order
             proceedToCheckout(customerData);
         });
