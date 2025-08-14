@@ -147,81 +147,29 @@ class MenuItemController extends Controller
 
         if ($request->hasFile('image')) {
             try {
-                $file = $request->file('image');
-                
-                // Debug: Log file information
-                \Log::info('File update attempt', [
-                    'original_name' => $file->getClientOriginalName(),
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                    'is_valid' => $file->isValid(),
-                    'error' => $file->getError(),
-                    'error_message' => $file->getErrorMessage(),
-                    'real_path' => $file->getRealPath(),
-                    'temporary_path' => $file->getPathname()
+                // Use Laravel validation
+                $request->validate([
+                    'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048' // 2MB = 2048 KB
                 ]);
-                
-                // Validate file
-                if (!$file->isValid()) {
-                    throw new \Exception('Fayl yuklashda xatolik yuz berdi: ' . $file->getErrorMessage());
-                }
-                
-                // Check file size (max 2MB)
-                if ($file->getSize() > 2 * 1024 * 1024) {
-                    throw new \Exception('Fayl hajmi 2MB dan katta bo\'lishi mumkin emas');
-                }
-                
-                // Check file type
-                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
-                if (!in_array($file->getMimeType(), $allowedTypes)) {
-                    throw new \Exception('Faqat rasm fayllari qabul qilinadi (JPEG, PNG, GIF)');
-                }
-                
-                // Create storage directory if it doesn't exist
-                $storagePath = public_path('img/menu');
-                if (!file_exists($storagePath)) {
-                    mkdir($storagePath, 0755, true);
-                }
                 
                 // Delete old image if exists
                 if ($menuItem->image) {
-                    $oldPath = public_path($menuItem->image);
-                    if (file_exists($oldPath)) {
-                        if (unlink($oldPath)) {
-                            \Log::info('Old menu item image deleted', ['old_path' => $menuItem->image]);
-                        } else {
-                            \Log::warning('Failed to delete old image', ['old_path' => $menuItem->image]);
-                        }
-                    }
+                    \Storage::disk('public')->delete($menuItem->image);
                 }
                 
-                // Generate unique filename
-                $extension = $file->getClientOriginalExtension();
-                $filename = 'menu_' . time() . '_' . uniqid() . '.' . $extension;
-                $filepath = $storagePath . '/' . $filename;
+                // Store using Laravel Storage (consistent with Restaurant images)
+                $imagePath = $request->file('image')->store('menu-items', 'public');
+                $data['image'] = $imagePath;
                 
-                // Move file to storage
-                if ($file->move($storagePath, $filename)) {
-                    $data['image'] = 'img/menu/' . $filename;
-                    
-                    \Log::info('File uploaded successfully (update)', [
-                        'filename' => $filename,
-                        'filepath' => $filepath,
-                        'stored_path' => $data['image'],
-                        'file_size' => filesize($filepath)
-                    ]);
-                } else {
-                    throw new \Exception('Faylni saqlashda xatolik yuz berdi');
-                }
+                \Log::info('Menu item image updated successfully', [
+                    'old_path' => $menuItem->image,
+                    'new_path' => $imagePath,
+                    'full_url' => asset('storage/' . $imagePath)
+                ]);
                 
             } catch (\Exception $e) {
-                \Log::error('Failed to update menu item image', [
-                    'error' => $e->getMessage(),
-                    'file' => $request->file('image')->getClientOriginalName(),
-                    'file_size' => $request->file('image')->getSize(),
-                    'mime_type' => $request->file('image')->getMimeType(),
-                    'is_valid' => $request->file('image')->isValid(),
-                    'error_code' => $request->file('image')->getError()
+                \Log::error('Menu item image update failed', [
+                    'error' => $e->getMessage()
                 ]);
                 
                 return redirect()->back()

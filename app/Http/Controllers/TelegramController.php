@@ -709,28 +709,63 @@ class TelegramController extends Controller
     public function webInterface(Request $request, $token = null)
     {
         try {
+            Log::info('Web interface request received', [
+                'token' => $token ? substr($token, 0, 10) . '...' : 'null',
+                'query_params' => $request->query(),
+                'user_agent' => $request->header('User-Agent')
+            ]);
+
             $botToken = $token ?? $request->query('bot_token');
             
             if (!$botToken) {
+                Log::warning('Bot token not provided for web interface');
                 return response('Bot token not provided', 400);
             }
+
+            Log::info('Looking for restaurant with bot token', [
+                'token' => substr($botToken, 0, 10) . '...'
+            ]);
+
+            $restaurant = Restaurant::where('bot_token', $botToken)->first();
             
-        $restaurant = Restaurant::where('bot_token', $botToken)->first();
-        
-        if (!$restaurant) {
+            if (!$restaurant) {
+                Log::error('Restaurant not found for web interface', [
+                    'token' => substr($botToken, 0, 10) . '...',
+                    'available_tokens' => Restaurant::whereNotNull('bot_token')->pluck('bot_token')->map(function($t) {
+                        return substr($t, 0, 10) . '...';
+                    })->toArray()
+                ]);
                 return response('Restaurant not found', 404);
             }
 
+            Log::info('Restaurant found for web interface', [
+                'restaurant_id' => $restaurant->id,
+                'restaurant_name' => $restaurant->name,
+                'token' => substr($botToken, 0, 10) . '...'
+            ]);
+
+            Log::info('Loading categories and menu items');
             $categories = $restaurant->categories()->with('menuItems')->get();
 
-            return view('web-interface.enhanced', compact('restaurant', 'categories', 'botToken'));
+            Log::info('Categories loaded', [
+                'categories_count' => $categories->count(),
+                'total_menu_items' => $categories->sum(function($cat) {
+                    return $cat->menuItems->count();
+                })
+            ]);
+
+            Log::info('Rendering simple web interface view for debugging');
+            return view('web-interface.simple', compact('restaurant', 'categories', 'botToken'));
 
         } catch (\Exception $e) {
             Log::error('Error serving web interface', [
                 'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile()),
+                'trace' => $e->getTraceAsString(),
                 'token' => $token ?? 'null'
             ]);
-            return response('Internal Server Error', 500);
+            return response('Internal Server Error: ' . $e->getMessage(), 500);
         }
     }
 

@@ -47,7 +47,12 @@ Route::middleware('auth')->group(function () {
         
         // Bot routes
         Route::get('bots', [BotController::class, 'index'])->name('bots.index');
-        Route::get('bots/{restaurant}', [BotController::class, 'show'])->name('bots.show');
+        
+        // Redirect bot show page to restaurant edit page (merged functionality)
+        Route::get('bots/{restaurant}', function(App\Models\Restaurant $restaurant) {
+            return redirect()->route('admin.restaurants.edit', $restaurant);
+        })->name('bots.show');
+        
         Route::patch('bots/{restaurant}', [BotController::class, 'update'])->name('bots.update');
         Route::post('bots/{restaurant}/test', [BotController::class, 'test'])->name('bots.test');
         Route::post('bots/{restaurant}/webhook', [BotController::class, 'setWebhook'])->name('bots.set-webhook');

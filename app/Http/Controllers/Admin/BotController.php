@@ -96,7 +96,7 @@ class BotController extends Controller
                 Storage::disk('public')->delete($restaurant->bot_image);
             }
             
-            $imagePath = $request->file('bot_image')->store('bot-images', 'public');
+            $imagePath = $request->file('bot_image')->store('restaurants/bot-images', 'public');
             $data['bot_image'] = $imagePath;
         }
 
@@ -210,7 +210,7 @@ class BotController extends Controller
             
             if ($result['ok']) {
                 // Save locally
-                $imagePath = $request->file('bot_photo')->store('bot-images', 'public');
+                $imagePath = $request->file('bot_photo')->store('restaurants/bot-images', 'public');
                 $restaurant->update(['bot_image' => $imagePath]);
                 
                 return response()->json(['success' => true, 'message' => 'Bot rasmi muvaffaqiyatli yangilandi']);
