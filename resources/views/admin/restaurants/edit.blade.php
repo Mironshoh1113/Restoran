@@ -284,16 +284,33 @@
                     @if($restaurant->bot_token)
                         <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <h6 class="font-medium text-blue-800 mb-2">Web App URL</h6>
-                            <div class="flex items-center space-x-2">
-                                <input type="text" value="{{ url('/web-interface?bot_token=' . $restaurant->bot_token) }}" 
-                                       readonly class="flex-1 px-3 py-2 bg-white border border-blue-300 rounded text-sm">
-                                <button type="button" onclick="copyToClipboard(this.previousElementSibling)" 
-                                        class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-                                    <i class="fas fa-copy"></i>
-                                </button>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-blue-700 mb-1">Asosiy Web Interface</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" value="{{ url('/web-interface?bot_token=' . $restaurant->bot_token) }}" 
+                                               readonly class="flex-1 px-3 py-2 bg-white border border-blue-300 rounded text-sm">
+                                        <button type="button" onclick="copyToClipboard(this.previousElementSibling)" 
+                                                class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-medium text-green-700 mb-1">Enhanced Web Interface (Yaxshilangan)</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" value="{{ url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token) }}" 
+                                               readonly class="flex-1 px-3 py-2 bg-white border border-green-300 rounded text-sm">
+                                        <button type="button" onclick="copyToClipboard(this.previousElementSibling)" 
+                                                class="px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                             <p class="text-xs text-blue-600 mt-2">
-                                Bu URL ni BotFather da Web App URL sifatida qo'shing
+                                Bu URL larni BotFather da Web App URL sifatida qo'shing
                             </p>
                         </div>
                     @endif

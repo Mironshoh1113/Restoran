@@ -289,19 +289,32 @@
             </div>
             
             <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Web App URL</label>
-                    <div class="flex items-center space-x-2">
-                        <input type="text" value="{{ url('/web-interface?bot_token=' . $restaurant->bot_token) }}" 
-                               readonly class="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm">
-                        <button type="button" onclick="copyToClipboard(this.previousElementSibling)" 
-                                class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-                            <i class="fas fa-copy mr-2"></i>Nusxalash
-                        </button>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Web App URL (Asosiy)</label>
+                        <div class="flex space-x-2">
+                            <input type="text" value="{{ url('/web-interface?bot_token=' . $restaurant->bot_token) }}" 
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm" readonly>
+                            <button onclick="copyToClipboard(this.previousElementSibling.value)" 
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">BotFather da ishlatish uchun</p>
                     </div>
-                    <p class="text-xs text-gray-600 mt-2">
-                        Bu URL ni BotFather da Web App URL sifatida qo'shing
-                    </p>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Enhanced Web App URL (Yaxshilangan)</label>
+                        <div class="flex space-x-2">
+                            <input type="text" value="{{ url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token) }}" 
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm" readonly>
+                            <button onclick="copyToClipboard(this.previousElementSibling.value)" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Yangi dizayn va funksiyalar bilan</p>
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -372,21 +385,22 @@ function updatePreviews() {
 }
 
 // Function to copy text to clipboard
-function copyToClipboard(element) {
-    const text = element.value;
+function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(function() {
         // Show success message
-        const button = element.nextElementSibling;
-        const originalText = button.innerHTML;
+        const button = document.createElement('button');
         button.innerHTML = '<i class="fas fa-check mr-2"></i>Nusxalandi!';
         button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
         button.classList.add('bg-green-600');
         
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.remove('bg-green-600');
-            button.classList.add('bg-blue-600', 'hover:bg-blue-700');
-        }, 2000);
+        // Find the closest button and insert it
+        const closestButton = document.querySelector('.space-x-2 button');
+        if (closestButton) {
+            closestButton.parentNode.insertBefore(button, closestButton);
+            button.addEventListener('transitionend', () => {
+                button.remove();
+            });
+        }
     }, function(err) {
         console.error('Nusxalashda xatolik: ', err);
         alert('URL nusxalashda xatolik yuz berdi.');

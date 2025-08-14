@@ -30,8 +30,8 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-color);
-            color: var(--text-color);
+            background: var(--bg-color) !important;
+            color: var(--text-color) !important;
             line-height: 1.6;
             overflow-x: hidden;
         }
@@ -52,13 +52,13 @@
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
             padding: 1rem 0;
             position: sticky;
             top: 0;
             z-index: 1000;
             backdrop-filter: blur(10px);
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow) !important;
         }
 
         .restaurant-logo {
@@ -71,7 +71,7 @@
         }
 
         .restaurant-info h1 {
-            color: white;
+            color: white !important;
             font-size: 1.5rem;
             font-weight: 700;
             margin: 0;
@@ -79,7 +79,7 @@
         }
 
         .restaurant-info p {
-            color: rgba(255,255,255,0.9);
+            color: rgba(255,255,255,0.9) !important;
             margin: 0;
             font-size: 0.9rem;
         }
@@ -87,7 +87,7 @@
         /* Categories */
         .categories-container {
             padding: 1rem 0;
-            background: white;
+            background: var(--card-bg) !important;
             border-bottom: 1px solid rgba(0,0,0,0.1);
             position: sticky;
             top: 100px;
@@ -108,9 +108,9 @@
         }
 
         .category-tab {
-            background: white;
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
+            background: var(--card-bg) !important;
+            border: 2px solid var(--primary-color) !important;
+            color: var(--primary-color) !important;
             padding: 0.75rem 1.5rem;
             border-radius: 25px;
             font-weight: 600;
@@ -122,8 +122,8 @@
         }
 
         .category-tab.active {
-            background: var(--primary-color);
-            color: white;
+            background: var(--primary-color) !important;
+            color: white !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
         }
@@ -139,9 +139,9 @@
         }
 
         .menu-item {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
+            background: var(--card-bg) !important;
+            border-radius: var(--border-radius) !important;
+            box-shadow: var(--shadow) !important;
             margin-bottom: 1rem;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -185,7 +185,7 @@
         .menu-item-title {
             font-size: 1.25rem;
             font-weight: 700;
-            color: var(--text-color);
+            color: var(--text-color) !important;
             margin-bottom: 0.5rem;
         }
 
@@ -198,7 +198,7 @@
         .menu-item-price {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--accent-color);
+            color: var(--accent-color) !important;
             margin-bottom: 1rem;
         }
 
@@ -229,7 +229,7 @@
         }
 
         .quantity-btn.plus {
-            background: var(--accent-color);
+            background: var(--accent-color) !important;
             color: white;
         }
 
@@ -240,7 +240,7 @@
         .quantity-display {
             font-size: 1.2rem;
             font-weight: 600;
-            color: var(--text-color);
+            color: var(--text-color) !important;
             min-width: 40px;
             text-align: center;
         }
@@ -251,7 +251,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
+            background: var(--card-bg) !important;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
@@ -273,11 +273,11 @@
         .cart-total {
             font-size: 1.25rem;
             font-weight: 700;
-            color: var(--text-color);
+            color: var(--text-color) !important;
         }
 
         .cart-count {
-            background: var(--accent-color);
+            background: var(--accent-color) !important;
             color: white;
             padding: 0.25rem 0.75rem;
             border-radius: 20px;
@@ -287,11 +287,11 @@
 
         .checkout-btn {
             width: 100%;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
             color: white;
             border: none;
             padding: 1rem;
-            border-radius: var(--border-radius);
+            border-radius: var(--border-radius) !important;
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
@@ -307,6 +307,57 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+
+        /* Search and Filters */
+        .search-container {
+            padding: 1rem;
+            background: var(--card-bg) !important;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--primary-color) !important;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: var(--card-bg) !important;
+            color: var(--text-color) !important;
+        }
+
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filters-container {
+            padding: 1rem;
+            background: var(--card-bg) !important;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .filter-btn {
+            background: var(--card-bg) !important;
+            border: 1px solid var(--primary-color) !important;
+            color: var(--primary-color) !important;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-1px);
         }
 
         /* Empty State */
@@ -376,57 +427,85 @@
             --primary-color: var(--tg-theme-button-color, var(--primary-color));
         }
 
-        /* Enhanced Features */
-        .search-container {
-            padding: 1rem;
-            background: white;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+        /* Force apply custom colors */
+        .custom-theme {
+            background: var(--bg-color) !important;
+            color: var(--text-color) !important;
         }
 
-        .search-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid var(--primary-color);
-            border-radius: 25px;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s ease;
+        .custom-theme .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
         }
 
-        .search-input:focus {
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        .custom-theme .category-tab {
+            border-color: var(--primary-color) !important;
+            color: var(--primary-color) !important;
         }
 
-        .filters-container {
-            padding: 1rem;
-            background: white;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+        .custom-theme .category-tab.active {
+            background: var(--primary-color) !important;
+            color: white !important;
         }
 
-        .filter-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .custom-theme .menu-item {
+            background: var(--card-bg) !important;
+            border-radius: var(--border-radius) !important;
+            box-shadow: var(--shadow) !important;
         }
 
-        .filter-btn.active {
-            background: var(--primary-color);
-            color: white;
+        .custom-theme .menu-item-title {
+            color: var(--text-color) !important;
         }
 
-        .filter-btn:hover {
-            transform: translateY(-1px);
+        .custom-theme .menu-item-price {
+            color: var(--accent-color) !important;
+        }
+
+        .custom-theme .quantity-btn.plus {
+            background: var(--accent-color) !important;
+        }
+
+        .custom-theme .cart-fixed {
+            background: var(--card-bg) !important;
+        }
+
+        .custom-theme .cart-total {
+            color: var(--text-color) !important;
+        }
+
+        .custom-theme .cart-count {
+            background: var(--accent-color) !important;
+        }
+
+        .custom-theme .checkout-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+            border-radius: var(--border-radius) !important;
+        }
+
+        .custom-theme .search-container,
+        .custom-theme .filters-container {
+            background: var(--card-bg) !important;
+        }
+
+        .custom-theme .search-input {
+            border-color: var(--primary-color) !important;
+            background: var(--card-bg) !important;
+            color: var(--text-color) !important;
+        }
+
+        .custom-theme .filter-btn {
+            background: var(--card-bg) !important;
+            border-color: var(--primary-color) !important;
+            color: var(--primary-color) !important;
+        }
+
+        .custom-theme .filter-btn.active {
+            background: var(--primary-color) !important;
+            color: white !important;
         }
     </style>
 </head>
-<body class="telegram-theme">
+<body class="telegram-theme custom-theme">
     <!-- Header -->
     <header class="header">
         <div class="container">
@@ -448,8 +527,8 @@
                 </div>
                 <div class="col">
                     <div class="restaurant-info">
-                        <h1>{{ $restaurant->name }}</h1>
-                        <p>{{ $restaurant->description ?? 'Zamonaviy restoran menyusi' }}</p>
+                        <h1>{{ $restaurant->web_app_title ?? $restaurant->name . ' - Menyu' }}</h1>
+                        <p>{{ $restaurant->web_app_description ?? 'Zamonaviy restoran menyusi' }}</p>
                     </div>
                 </div>
             </div>
@@ -559,6 +638,18 @@
         let cart = {};
         let currentCategory = {{ $categories->first()->id ?? 1 }};
         
+        // Restaurant customization settings
+        const restaurantSettings = {
+            primaryColor: '{{ $restaurant->primary_color ?? "#667eea" }}',
+            secondaryColor: '{{ $restaurant->secondary_color ?? "#764ba2" }}',
+            accentColor: '{{ $restaurant->accent_color ?? "#ff6b35" }}',
+            textColor: '{{ $restaurant->text_color ?? "#2c3e50" }}',
+            bgColor: '{{ $restaurant->bg_color ?? "#f8f9fa" }}',
+            cardBg: '{{ $restaurant->card_bg ?? "#ffffff" }}',
+            borderRadius: '{{ $restaurant->border_radius ?? "16px" }}',
+            shadow: '{{ $restaurant->shadow ?? "0 8px 32px rgba(0,0,0,0.1)" }}'
+        };
+        
         // Initialize Telegram Web App
         let tg = window.Telegram.WebApp;
         tg.ready();
@@ -566,6 +657,126 @@
         
         // Apply Telegram theme
         document.body.classList.add('telegram-theme');
+        
+        // Apply custom restaurant settings
+        function applyCustomSettings() {
+            // Update CSS variables
+            document.documentElement.style.setProperty('--primary-color', restaurantSettings.primaryColor);
+            document.documentElement.style.setProperty('--secondary-color', restaurantSettings.secondaryColor);
+            document.documentElement.style.setProperty('--accent-color', restaurantSettings.accentColor);
+            document.documentElement.style.setProperty('--text-color', restaurantSettings.textColor);
+            document.documentElement.style.setProperty('--bg-color', restaurantSettings.bgColor);
+            document.documentElement.style.setProperty('--card-bg', restaurantSettings.cardBg);
+            document.documentElement.style.setProperty('--border-radius', restaurantSettings.borderRadius);
+            document.documentElement.style.setProperty('--shadow', restaurantSettings.shadow);
+            
+            // Force apply custom colors to all elements
+            document.body.classList.add('custom-theme');
+            
+            // Update specific elements that might not inherit CSS variables
+            updateElementStyles();
+        }
+        
+        // Update specific element styles
+        function updateElementStyles() {
+            // Update header gradient
+            const header = document.querySelector('.header');
+            if (header) {
+                header.style.background = `linear-gradient(135deg, ${restaurantSettings.primaryColor}, ${restaurantSettings.secondaryColor})`;
+            }
+            
+            // Update category tabs
+            const categoryTabs = document.querySelectorAll('.category-tab');
+            categoryTabs.forEach(tab => {
+                tab.style.borderColor = restaurantSettings.primaryColor;
+                tab.style.color = restaurantSettings.primaryColor;
+            });
+            
+            // Update active category tab
+            const activeTab = document.querySelector('.category-tab.active');
+            if (activeTab) {
+                activeTab.style.background = restaurantSettings.primaryColor;
+                activeTab.style.color = 'white';
+            }
+            
+            // Update menu items
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.style.background = restaurantSettings.cardBg;
+                item.style.borderRadius = restaurantSettings.borderRadius;
+                item.style.boxShadow = restaurantSettings.shadow;
+            });
+            
+            // Update menu item titles
+            const menuTitles = document.querySelectorAll('.menu-item-title');
+            menuTitles.forEach(title => {
+                title.style.color = restaurantSettings.textColor;
+            });
+            
+            // Update menu item prices
+            const menuPrices = document.querySelectorAll('.menu-item-price');
+            menuPrices.forEach(price => {
+                price.style.color = restaurantSettings.accentColor;
+            });
+            
+            // Update quantity buttons
+            const plusButtons = document.querySelectorAll('.quantity-btn.plus');
+            plusButtons.forEach(btn => {
+                btn.style.background = restaurantSettings.accentColor;
+            });
+            
+            // Update cart
+            const cartFixed = document.querySelector('.cart-fixed');
+            if (cartFixed) {
+                cartFixed.style.background = restaurantSettings.cardBg;
+            }
+            
+            // Update cart total
+            const cartTotal = document.querySelector('.cart-total');
+            if (cartTotal) {
+                cartTotal.style.color = restaurantSettings.textColor;
+            }
+            
+            // Update cart count
+            const cartCount = document.querySelector('.cart-count');
+            if (cartCount) {
+                cartCount.style.background = restaurantSettings.accentColor;
+            }
+            
+            // Update checkout button
+            const checkoutBtn = document.querySelector('.checkout-btn');
+            if (checkoutBtn) {
+                checkoutBtn.style.background = `linear-gradient(135deg, ${restaurantSettings.primaryColor}, ${restaurantSettings.secondaryColor})`;
+                checkoutBtn.style.borderRadius = restaurantSettings.borderRadius;
+            }
+            
+            // Update search and filters
+            const searchContainer = document.querySelector('.search-container');
+            if (searchContainer) {
+                searchContainer.style.background = restaurantSettings.cardBg;
+            }
+            
+            const filtersContainer = document.querySelector('.filters-container');
+            if (filtersContainer) {
+                filtersContainer.style.background = restaurantSettings.cardBg;
+            }
+            
+            // Update search input
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput) {
+                searchInput.style.borderColor = restaurantSettings.primaryColor;
+                searchInput.style.background = restaurantSettings.cardBg;
+                searchInput.style.color = restaurantSettings.textColor;
+            }
+            
+            // Update filter buttons
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.style.background = restaurantSettings.cardBg;
+                btn.style.borderColor = restaurantSettings.primaryColor;
+                btn.style.color = restaurantSettings.primaryColor;
+            });
+        }
         
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', function() {
@@ -596,6 +807,9 @@
                 const filter = this.dataset.filter;
                 // Implement filter logic here
                 console.log('Filter:', filter);
+                
+                // Update active button styles
+                updateElementStyles();
             });
         });
         
@@ -618,6 +832,9 @@
             event.target.classList.add('active');
             
             currentCategory = categoryId;
+            
+            // Update styles after category change
+            updateElementStyles();
         }
         
         // Quantity management
@@ -722,7 +939,21 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            // Apply custom settings first
+            applyCustomSettings();
+            
+            // Update cart
             updateCart();
+            
+            // Log settings for debugging
+            console.log('Restaurant settings applied:', restaurantSettings);
+        });
+        
+        // Apply settings when page becomes visible
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                applyCustomSettings();
+            }
         });
     </script>
 </body>

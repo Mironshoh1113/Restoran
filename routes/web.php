@@ -132,6 +132,12 @@ Route::post('/web-interface/order', [TelegramController::class, 'placeOrderWitho
 Route::get('/web-interface/{token}/menu', [TelegramController::class, 'getMenu'])->name('web.get-menu');
 Route::get('/web-interface/menu', [TelegramController::class, 'getMenuWithoutToken'])->name('web.get-menu-no-token');
 
+// Enhanced web interface for Telegram users
+Route::get('/enhanced-web-interface/{token}', [TelegramController::class, 'webInterface'])->name('enhanced.web.interface');
+Route::get('/enhanced-web-interface', [TelegramController::class, 'webInterfaceFromApp'])->name('enhanced.web.interface.app');
+Route::post('/enhanced-web-interface/{token}/order', [TelegramController::class, 'placeOrder'])->name('enhanced.web.place-order');
+Route::post('/enhanced-web-interface/order', [TelegramController::class, 'placeOrderWithoutToken'])->name('enhanced.web.place-order-no-token');
+
 // Telegram Web App direct access
 Route::get('/web-interface/app/{botToken}', function($botToken) {
     $restaurant = \App\Models\Restaurant::where('bot_token', $botToken)->where('is_active', true)->first();
@@ -278,27 +284,25 @@ Route::get('/debug-restaurants', function() {
 
 // Test web interface with different bot tokens
 Route::get('/test-web-interface', function (Request $request) {
-    $restaurants = \App\Models\Restaurant::all();
-    $results = [];
+    $restaurants = Restaurant::where('is_active', true)->get();
     
+    $results = [];
     foreach ($restaurants as $restaurant) {
-        $results[] = [
-            'restaurant_id' => $restaurant->id,
-            'restaurant_name' => $restaurant->name,
-            'bot_token' => $restaurant->bot_token,
-            'web_interface_url' => url("/web-interface?bot_token={$restaurant->bot_token}"),
-            'categories_count' => \App\Models\Category::where('restaurant_id', $restaurant->id)->count(),
-            'menu_items_count' => \App\Models\MenuItem::where('restaurant_id', $restaurant->id)->count()
-        ];
+        if ($restaurant->bot_token) {
+            $results[] = [
+                'restaurant_name' => $restaurant->name,
+                'bot_token' => $restaurant->bot_token,
+                'web_interface_url' => url("/web-interface?bot_token={$restaurant->bot_token}"),
+                'enhanced_web_interface_url' => url("/enhanced-web-interface?bot_token={$restaurant->bot_token}")
+            ];
+        }
     }
     
     return response()->json([
-        'status' => 'success',
         'message' => 'Web interface test results',
-        'restaurants' => $results,
-        'timestamp' => now()
+        'restaurants' => $results
     ]);
-});
+})->name('test.web.interface');
 
 // Debug endpoint for web interface
 Route::get('/debug-web-interface', function (Request $request) {
@@ -528,3 +532,20 @@ Route::get('/admin/restaurants/{restaurant}/web-app-settings', [App\Http\Control
     ->middleware(['auth', 'verified']);
 
 require __DIR__.'/auth.php';
+
+// Test enhanced web interface directly
+Route::get('/test-enhanced-web-interface', function (Request $request) {
+    $restaurant = Restaurant::where('is_active', true)->first();
+    
+    if (!$restaurant) {
+        return response()->json(['error' => 'No active restaurant found'], 404);
+    }
+    
+    $categories = Category::where('restaurant_id', $restaurant->id)
+        ->with(['menuItems' => function($query) {
+            $query->where('is_active', true);
+        }])
+        ->get();
+    
+    return view('web-interface.enhanced', compact('restaurant', 'categories'));
+})->name('test.enhanced.web.interface');

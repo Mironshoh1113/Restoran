@@ -487,7 +487,7 @@ class TelegramController extends Controller
                 'bot_token' => $botToken
             ]);
             
-            return view('web-interface.index', compact('restaurant', 'user', 'categories', 'botToken'));
+            return view('web-interface.enhanced', compact('restaurant', 'user', 'categories', 'botToken'));
             
         } catch (\Exception $e) {
             Log::error('Web interface error for Telegram Web App', [
@@ -585,7 +585,7 @@ class TelegramController extends Controller
                 'bot_token' => $botToken
             ]);
             
-            return view('web-interface.index', compact('restaurant', 'user', 'categories', 'token', 'botToken'));
+            return view('web-interface.enhanced', compact('restaurant', 'user', 'categories', 'token', 'botToken'));
             
         } catch (\Exception $e) {
             Log::error('Web interface error', [
