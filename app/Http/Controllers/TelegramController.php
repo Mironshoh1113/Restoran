@@ -389,12 +389,13 @@ class TelegramController extends Controller
             $message .= "📱 Buyurtma berish uchun quyidagi tugmani bosing:\n\n";
             
             $webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
+            $buttonText = $restaurant->web_app_button_text ?: "Menyuni ko'rish";
             
             $keyboard = [
                 'inline_keyboard' => [
                     [
                         [
-                            'text' => '🛒 Buyurtma berish',
+                            'text' => $buttonText,
                             'web_app' => ['url' => $webAppUrl]
                         ]
                     ],
@@ -441,12 +442,13 @@ class TelegramController extends Controller
             }
             
             $webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
+            $buttonText = $restaurant->web_app_button_text ?: "Menyuni ko'rish";
             
             $keyboard = [
                 'inline_keyboard' => [
                     [
                         [
-                            'text' => '🛒 Buyurtma berish',
+                            'text' => $buttonText,
                             'web_app' => ['url' => $webAppUrl]
                         ]
                     ]
@@ -469,15 +471,39 @@ class TelegramController extends Controller
     private function sendHelpMessage($restaurant, $telegramUser)
     {
         try {
-            $message = "❓ <b>Yordam</b>\n\n";
-            $message .= "📋 /menu - Menyuni ko'rish\n";
-            $message .= "🛒 Buyurtma berish uchun \"Buyurtma berish\" tugmasini bosing\n";
-            $message .= "📞 Aloqa: {$restaurant->phone}\n";
-            if ($restaurant->address) {
-                $message .= "📍 Manzil: {$restaurant->address}\n";
+            $info = [];
+            $info[] = "❓ <b>Yordam</b>";
+            if ($restaurant->description) {
+                $info[] = "📝 {$restaurant->description}";
             }
-
-            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message);
+            if ($restaurant->phone) {
+                $info[] = "📞 Tel: {$restaurant->phone}";
+            }
+            if ($restaurant->address) {
+                $info[] = "📍 Manzil: {$restaurant->address}";
+            }
+            if ($restaurant->working_hours) {
+                $info[] = "⏰ Ish vaqti: {$restaurant->working_hours}";
+            }
+            $info[] = "\n📋 /menu - Menyuni ko'rish";
+            
+            $message = implode("\n", $info);
+            
+            $webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
+            $buttonText = $restaurant->web_app_button_text ?: "Menyuni ko'rish";
+            $keyboard = [
+                'inline_keyboard' => [
+                    [[ 'text' => $buttonText, 'web_app' => ['url' => $webAppUrl] ]]
+                ]
+            ];
+            
+            // If logo exists, try to send photo with caption; otherwise send text
+            if (!empty($restaurant->logo)) {
+                $photoUrl = asset('storage/' . $restaurant->logo);
+                $this->sendTelegramPhoto($restaurant->bot_token, $telegramUser->telegram_id, $photoUrl, $message, $keyboard);
+            } else {
+                $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message, $keyboard);
+            }
 
         } catch (\Exception $e) {
             Log::error('Error sending help message', [
@@ -518,12 +544,13 @@ class TelegramController extends Controller
             $message = "Salom! Buyurtma berish uchun quyidagi tugmani bosing:";
             
             $webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
+            $buttonText = $restaurant->web_app_button_text ?: "Menyuni ko'rish";
             
             $keyboard = [
                 'inline_keyboard' => [
                     [
                         [
-                            'text' => '🛒 Buyurtma berish',
+                            'text' => $buttonText,
                             'web_app' => ['url' => $webAppUrl]
                         ]
                     ]
@@ -730,6 +757,27 @@ class TelegramController extends Controller
                 'bot_token' => substr($botToken ?? '', 0, 10) . '...'
             ]);
             return false;
+        }
+    }
+
+    /**
+     * Send telegram photo safely
+     */
+    private function sendTelegramPhoto($botToken, $chatId, $photoUrl, $caption = null, $keyboard = null)
+    {
+        try {
+            $payload = [
+                'chat_id' => $chatId,
+                'photo' => $photoUrl,
+            ];
+            if ($caption) { $payload['caption'] = $caption; $payload['parse_mode'] = 'HTML'; }
+            if ($keyboard) { $payload['reply_markup'] = json_encode($keyboard); }
+            
+            $apiUrl = config('telegram.api_url') . $botToken . '/sendPhoto';
+            $response = \Illuminate\Support\Facades\Http::post($apiUrl, $payload);
+            Log::info('sendPhoto response', ['status' => $response->status(), 'body' => $response->json()]);
+        } catch (\Exception $e) {
+            Log::warning('sendTelegramPhoto failed', ['error' => $e->getMessage()]);
         }
     }
 
