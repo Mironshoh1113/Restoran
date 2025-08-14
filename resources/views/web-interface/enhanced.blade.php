@@ -695,6 +695,16 @@
 		.checkout-btn { position: relative; }
 		.menu-item { margin-bottom: 0; }
 		.category-content { margin-bottom: 1rem; }
+		.checkout-modal-content { position: relative; padding-bottom: 5rem; }
+		.checkout-actions {
+			display: flex;
+			gap: 1rem;
+			margin-top: 1rem;
+			position: sticky;
+			bottom: 0;
+			background: var(--card-bg, #ffffff);
+			padding: 0.75rem 0;
+		}
     </style>
 </head>
 <body>
