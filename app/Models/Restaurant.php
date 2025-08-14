@@ -74,4 +74,14 @@ class Restaurant extends Model
     {
         return $this->hasMany(TelegramUser::class);
     }
+
+    public function telegramMessages(): HasMany
+    {
+        return $this->hasMany(TelegramMessage::class);
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
 } 

@@ -291,13 +291,16 @@ class TelegramController extends Controller
                 TelegramMessage::create([
                     'telegram_user_id' => $telegramUser->id,
                     'restaurant_id' => $restaurant->id,
+                    'message_id' => $message['message_id'] ?? null,
+                    'direction' => 'incoming',
+                    'message_text' => $text,
+                    'message_data' => $message,
                     'message_type' => 'text',
-                    'content' => $text,
-                    'telegram_message_id' => $message['message_id'] ?? null
+                    'is_read' => false,
                 ]);
 
                 Log::info('Message stored in database', [
-                'restaurant_id' => $restaurant->id,
+                    'restaurant_id' => $restaurant->id,
                     'telegram_user_id' => $telegramUser->id,
                     'text' => $text
                 ]);
@@ -426,7 +429,7 @@ class TelegramController extends Controller
         try {
             $message = "📋 <b>{$restaurant->name}</b> menyusi:\n\n";
             
-            $categories = $restaurant->categories()->with('menuItems')->get();
+            $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
             
             foreach ($categories as $category) {
                 $message .= "🍽 <b>{$category->name}</b>\n";
@@ -689,6 +692,33 @@ class TelegramController extends Controller
                 'bot_token' => substr($botToken, 0, 10) . '...'
             ]);
 
+            // Try to store outgoing message if we can map chatId -> telegram_user
+            try {
+                $restaurant = Restaurant::where('bot_token', $botToken)->first();
+                if ($restaurant) {
+                    $telegramUser = TelegramUser::where('restaurant_id', $restaurant->id)
+                        ->where('telegram_id', $chatId)
+                        ->first();
+                    if ($telegramUser) {
+                        TelegramMessage::create([
+                            'restaurant_id' => $restaurant->id,
+                            'telegram_user_id' => $telegramUser->id,
+                            'message_id' => $responseData['result']['message_id'] ?? null,
+                            'direction' => 'outgoing',
+                            'message_text' => $message,
+                            'message_data' => $responseData,
+                            'message_type' => 'text',
+                            'is_read' => true,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to record outgoing message', [
+                    'error' => $e->getMessage(),
+                    'chat_id' => $chatId
+                ]);
+            }
+
             return true;
 
         } catch (\Exception $e) {
@@ -745,7 +775,7 @@ class TelegramController extends Controller
             ]);
 
             Log::info('Loading categories and menu items');
-            $categories = $restaurant->categories()->with('menuItems')->get();
+            $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
 
             Log::info('Categories loaded', [
                 'categories_count' => $categories->count(),
