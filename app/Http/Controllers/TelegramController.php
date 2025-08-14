@@ -323,12 +323,31 @@ class TelegramController extends Controller
                 ]);
                 $this->handleCommand($restaurant, $telegramUser, $text);
             } else {
-                Log::info('Processing as regular message', [
-                'restaurant_id' => $restaurant->id,
-                    'text' => $text,
-                    'chat_id' => $chatId
-                ]);
-                $this->sendDefaultResponse($restaurant, $telegramUser);
+				// Text buttons handling
+				if (in_array($text, ['📋 Menyu','Menyu'])) {
+					$this->sendMenuMessage($restaurant, $telegramUser);
+					return;
+				}
+				if (in_array($text, ['📊 Buyurtmalarim','Buyurtmalarim'])) {
+					$this->sendDefaultResponse($restaurant, $telegramUser);
+					return;
+				}
+				if (in_array($text, ['ℹ Yordam','Yordam','Yordam'])) {
+					$this->sendHelpMessage($restaurant, $telegramUser);
+					return;
+				}
+				
+				// Show main menu keyboard for other texts
+				$keyboard = [
+					'keyboard' => [
+						[['text' => '📋 Menyu']],
+						[['text' => '📊 Buyurtmalarim']],
+						[['text' => 'ℹ Yordam']],
+					],
+					'resize_keyboard' => true,
+					'one_time_keyboard' => false,
+				];
+				$this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, "Kerakli bo'limni tanlang:", $keyboard);
             }
 
             Log::info('Message processing completed', [

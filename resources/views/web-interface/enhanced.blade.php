@@ -423,22 +423,19 @@
             z-index: 2000;
             backdrop-filter: blur(5px);
         }
-
-        .checkout-modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
+        
+        .checkout-modal.show { display: flex; }
+        
         .checkout-modal-content {
             background: var(--card-bg, #ffffff);
-            border-radius: var(--border-radius, 16px);
-            padding: 2rem;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
+            border-radius: 0; /* fullscreen */
+            padding: 1rem 1rem 6rem; /* leave room for footer buttons */
+            max-width: none;
+            width: 100%;
+            height: 100vh;
+            max-height: none;
             overflow-y: auto;
-            box-shadow: var(--shadow, 0 8px 32px rgba(0,0,0,0.1));
+            box-shadow: none;
         }
 
         .checkout-modal-header {
@@ -482,8 +479,12 @@
 
         .checkout-actions {
             display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
+            gap: 0.75rem;
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            padding: 0.75rem 1rem;
+            background: var(--card-bg, #ffffff);
+            box-shadow: 0 -8px 24px rgba(0,0,0,0.08);
         }
 
         .btn {
@@ -1206,6 +1207,8 @@
         function openCheckoutModal() {
             document.getElementById('checkoutModal').classList.add('show');
             document.body.style.overflow = 'hidden';
+            const btn = document.getElementById('checkout-btn');
+            if (btn) btn.style.display = 'none';
             // Update totals in modal
             let subtotal = 0;
             let itemsList = '';
@@ -1227,6 +1230,8 @@
         function closeCheckoutModal() {
             document.getElementById('checkoutModal').classList.remove('show');
             document.body.style.overflow = 'auto';
+            const btn = document.getElementById('checkout-btn');
+            if (btn) btn.style.display = '';
         }
         
         // Handle checkout form submission
