@@ -337,12 +337,14 @@ class TelegramController extends Controller
 					return;
 				}
 				
-				// Show main menu keyboard for other texts
+				// Show main menu keyboard (Menyu opens Web App directly)
+				$webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
+				$buttonText = $restaurant->web_app_button_text ?: "Menyuni ko'rish";
 				$keyboard = [
 					'keyboard' => [
-						[['text' => '📋 Menyu']],
-						[['text' => '📊 Buyurtmalarim']],
-						[['text' => 'ℹ Yordam']],
+						[[ 'text' => '📋 ' . $buttonText, 'web_app' => ['url' => $webAppUrl] ]],
+						[[ 'text' => '📊 Buyurtmalarim' ]],
+						[[ 'text' => 'ℹ Yordam' ]],
 					],
 					'resize_keyboard' => true,
 					'one_time_keyboard' => false,
@@ -405,33 +407,31 @@ class TelegramController extends Controller
         try {
             $message = "🎉 Xush kelibsiz!\n\n";
             $message .= "🏪 Restoran: {$restaurant->name}\n";
-            $message .= "📱 Buyurtma berish uchun quyidagi tugmani bosing:\n\n";
+            $message .= "📱 Menyu tugmasini bosing va darhol Web App ochiladi:\n\n";
             
             $webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
             $buttonText = $restaurant->web_app_button_text ?: "Menyuni ko'rish";
             
-            $keyboard = [
-                'inline_keyboard' => [
+            $replyKeyboard = [
+                'keyboard' => [
                     [
                         [
-                            'text' => $buttonText,
+                            'text' => '📋 ' . $buttonText,
                             'web_app' => ['url' => $webAppUrl]
                         ]
                     ],
                     [
-                        [
-                            'text' => '📋 Menyu',
-                            'callback_data' => 'show_menu'
-                        ],
-                        [
-                            'text' => '❓ Yordam',
-                            'callback_data' => 'show_help'
-                        ]
+                        ['text' => '📊 Buyurtmalarim']
+                    ],
+                    [
+                        ['text' => 'ℹ Yordam']
                     ]
-                ]
+                ],
+                'resize_keyboard' => true,
+                'one_time_keyboard' => false,
             ];
 
-            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message, $keyboard);
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message, $replyKeyboard);
             
         } catch (\Exception $e) {
             Log::error('Error sending welcome message', [
@@ -560,23 +560,22 @@ class TelegramController extends Controller
     private function sendDefaultResponse($restaurant, $telegramUser)
     {
         try {
-            $message = "Salom! Buyurtma berish uchun quyidagi tugmani bosing:";
+            $message = "Kerakli bo'limni tanlang:";
             
             $webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
             $buttonText = $restaurant->web_app_button_text ?: "Menyuni ko'rish";
             
-            $keyboard = [
-                'inline_keyboard' => [
-                    [
-                        [
-                            'text' => $buttonText,
-                            'web_app' => ['url' => $webAppUrl]
-                        ]
-                    ]
-                ]
+            $replyKeyboard = [
+                'keyboard' => [
+                    [[ 'text' => '📋 ' . $buttonText, 'web_app' => ['url' => $webAppUrl] ]],
+                    [[ 'text' => '📊 Buyurtmalarim' ]],
+                    [[ 'text' => 'ℹ Yordam' ]],
+                ],
+                'resize_keyboard' => true,
+                'one_time_keyboard' => false,
             ];
 
-            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message, $keyboard);
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message, $replyKeyboard);
 
         } catch (\Exception $e) {
             Log::error('Error sending default response', [
