@@ -484,23 +484,54 @@ class BotController extends Controller
     {
         $this->authorize('update', $restaurant);
         
-        $request->validate([
-            'chat_id' => 'required|numeric',
-            'message' => 'required|string'
-        ]);
-
         if (!$restaurant->bot_token) {
             return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
         }
 
         try {
             $telegramService = new TelegramService($restaurant->bot_token);
-            $result = $telegramService->sendMessage($request->chat_id, $request->message);
+            
+            // Get bot info first
+            $botInfo = $telegramService->getMe();
+            if (!$botInfo['ok']) {
+                return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
+            }
+            
+            // Try to get a test chat ID (restaurant owner's telegram or first user)
+            $testChatId = null;
+            
+            // Try to find restaurant owner's telegram chat ID
+            if ($restaurant->owner && $restaurant->owner->telegram_chat_id) {
+                $testChatId = $restaurant->owner->telegram_chat_id;
+            } else {
+                // Try to find any telegram user for this restaurant
+                $telegramUser = \App\Models\TelegramUser::where('restaurant_id', $restaurant->id)->first();
+                if ($telegramUser) {
+                    $testChatId = $telegramUser->telegram_chat_id;
+                }
+            }
+            
+            if (!$testChatId) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Test uchun chat ID topilmadi. Avval bot ga /start yuboring yoki telegram_chat_id ni sozlang.'
+                ]);
+            }
+            
+            $testMessage = "🤖 Test xabar!\n\n✅ Bot ishlayapti\n🏪 Restoran: {$restaurant->name}\n⏰ Vaqt: " . now()->format('Y-m-d H:i:s');
+            
+            $result = $telegramService->sendMessage($testChatId, $testMessage);
             
             if ($result['ok']) {
-                return response()->json(['success' => true, 'message' => 'Xabar muvaffaqiyatli yuborildi']);
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Test xabar muvaffaqiyatli yuborildi! Chat ID: ' . $testChatId
+                ]);
             } else {
-                return response()->json(['success' => false, 'message' => 'Xabar yuborishda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')]);
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Xabar yuborishda xatolik: ' . ($result['description'] ?? 'Nomalum xatolik')
+                ]);
             }
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
