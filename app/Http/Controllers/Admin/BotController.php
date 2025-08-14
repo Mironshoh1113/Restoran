@@ -300,7 +300,7 @@ class BotController extends Controller
             }
             
             // Set webhook URL for this specific bot
-            $webhookUrl = url('/telegram-webhook/' . $restaurant->bot_token);
+            $webhookUrl = url('/api/telegram-webhook/' . $restaurant->bot_token);
             $result = $telegramService->setWebhook($webhookUrl);
             
             if ($result['ok']) {
@@ -348,6 +348,97 @@ class BotController extends Controller
             }
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Set webhook automatically with proper URL
+     */
+    public function setWebhookAuto(Restaurant $restaurant)
+    {
+        $this->authorize('update', $restaurant);
+        
+        if (!$restaurant->bot_token) {
+            return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
+        }
+
+        try {
+            // Create TelegramService with restaurant's bot token
+            $telegramService = new TelegramService($restaurant->bot_token);
+            
+            // Test bot connection first
+            $botInfo = $telegramService->getMe();
+            if (!$botInfo['ok']) {
+                return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
+            }
+            
+            // Delete existing webhook first
+            $deleteResult = $telegramService->deleteWebhook();
+            
+            // Set webhook URL for this specific bot with correct /api/ path
+            $webhookUrl = url('/api/telegram-webhook/' . $restaurant->bot_token);
+            $result = $telegramService->setWebhook($webhookUrl);
+            
+            if ($result['ok']) {
+                // Test the webhook endpoint
+                $testResponse = $this->testWebhookEndpoint($webhookUrl);
+                
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Webhook avtomatik o\'rnatildi va test qilindi ✅',
+                    'webhook_url' => $webhookUrl,
+                    'bot_info' => $botInfo['result'],
+                    'test_result' => $testResponse
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Webhook o\'rnatishda xatolik: ' . ($result['description'] ?? 'Unknown error')
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xatolik: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Test webhook endpoint
+     */
+    private function testWebhookEndpoint($webhookUrl)
+    {
+        try {
+            $testData = [
+                'update_id' => 123456789,
+                'message' => [
+                    'message_id' => 1,
+                    'from' => ['id' => 123456789, 'is_bot' => false, 'first_name' => 'Test'],
+                    'chat' => ['id' => 123456789, 'type' => 'private'],
+                    'date' => time(),
+                    'text' => '/test'
+                ]
+            ];
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, str_replace('/api/telegram-webhook/', '/api/debug-webhook/', $webhookUrl));
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($testData));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            if ($httpCode === 200) {
+                $result = json_decode($response, true);
+                return $result['success'] ? 'Test muvaffaqiyatli ✅' : 'Test muvaffaqiyatsiz ❌';
+            } else {
+                return "HTTP $httpCode ❌";
+            }
+        } catch (\Exception $e) {
+            return 'Test xatolik: ' . $e->getMessage();
         }
     }
 
@@ -1137,7 +1228,7 @@ class BotController extends Controller
                 $telegramService = new TelegramService($restaurant->bot_token);
                 
                 // Set webhook URL
-                $webhookUrl = url('/telegram/webhook/' . $restaurant->bot_token);
+                $webhookUrl = url('/api/telegram/webhook/' . $restaurant->bot_token);
                 $result = $telegramService->setWebhook($webhookUrl);
                 
                 if ($result['ok']) {

@@ -90,7 +90,7 @@
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-gray-600 dark:text-gray-400">URL:</span>
-                        <span class="font-medium text-xs text-gray-800 dark:text-gray-200 truncate max-w-32">{{ $webhookInfo['result']['url'] ?? 'O\'rnatilmagan' }}</span>
+                        <span class="font-medium text-xs text-gray-800 dark:text-gray-200">{{ $webhookInfo['result']['url'] ?? 'O\'rnatilmagan' }}</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-gray-600 dark:text-gray-400">Xatolar:</span>
@@ -122,18 +122,37 @@
                 <button onclick="testBot()" 
                         class="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center space-x-2">
                     <i class="fas fa-play"></i>
-                    <span>Test qilish</span>
+                    <span>Bot test qilish</span>
                 </button>
-                <button onclick="setWebhook()" 
-                        class="w-full px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center space-x-2">
-                    <i class="fas fa-link"></i>
-                    <span>Webhook o'rnatish</span>
-                </button>
-                <button onclick="deleteWebhook()" 
-                        class="w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center space-x-2">
-                    <i class="fas fa-unlink"></i>
-                    <span>Webhook o'chirish</span>
-                </button>
+                
+                <div class="border-t pt-2">
+                    <p class="text-xs text-gray-500 mb-2">Webhook boshqaruvi:</p>
+                    
+                    <button onclick="setWebhookAuto()" 
+                            class="w-full px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center space-x-2 mb-2">
+                        <i class="fas fa-magic"></i>
+                        <span>Avtomatik o'rnatish</span>
+                    </button>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setWebhook()" 
+                                class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center space-x-1">
+                            <i class="fas fa-link"></i>
+                            <span>O'rnatish</span>
+                        </button>
+                        <button onclick="deleteWebhook()" 
+                                class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center space-x-1">
+                            <i class="fas fa-unlink"></i>
+                            <span>O'chirish</span>
+                        </button>
+                    </div>
+                    
+                    <button onclick="checkWebhookStatus()" 
+                            class="w-full mt-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center space-x-2">
+                        <i class="fas fa-sync"></i>
+                        <span>Holat tekshirish</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -398,13 +417,23 @@
             <!-- Webhook URL -->
             <div>
                 <label for="webhook_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Webhook URL</label>
-                <input type="url" id="webhook_url" name="webhook_url" value="{{ old('webhook_url', url('/telegram-webhook/' . ($restaurant->bot_token ?? ''))) }}"
+                <input type="url" id="webhook_url" name="webhook_url" value="{{ old('webhook_url', url('/api/telegram-webhook/' . ($restaurant->bot_token ?? ''))) }}"
                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                       placeholder="https://example.com/telegram-webhook/token">
+                       placeholder="https://example.com/api/telegram-webhook/token">
                 @error('webhook_url')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Telegram webhook URL manzili (avtomatik yaratiladi)</p>
+                <div class="mt-2 flex space-x-2">
+                    <button type="button" onclick="copyWebhookUrl()" 
+                            class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-copy mr-1"></i>Nusxalash
+                    </button>
+                    <button type="button" onclick="testWebhookUrl()" 
+                            class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+                        <i class="fas fa-test-tube mr-1"></i>Test qilish
+                    </button>
+                </div>
             </div>
             
             <!-- Bot Description -->
@@ -789,6 +818,33 @@ function setWebhook() {
     });
 }
 
+function setWebhookAuto() {
+    const webhookUrl = document.getElementById('webhook_url').value;
+    if (!webhookUrl) {
+        showNotification('Webhook URL ni to\'ldiring', 'warning');
+        return;
+    }
+
+    fetch(`/admin/bots/{{ $restaurant->id }}/webhook/auto`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('✅ ' + data.message, 'success');
+        } else {
+            showNotification('❌ ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Xatolik yuz berdi', 'error');
+    });
+}
+
 function deleteWebhook() {
     if (!confirm('Webhook ni o\'chirmoqchimisiz?')) {
         return;
@@ -806,6 +862,33 @@ function deleteWebhook() {
             showNotification('✅ ' + data.message, 'success');
         } else {
             showNotification('❌ ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Xatolik yuz berdi', 'error');
+    });
+}
+
+function checkWebhookStatus() {
+    const webhookUrl = document.getElementById('webhook_url').value;
+    if (!webhookUrl) {
+        showNotification('Webhook URL ni to\'ldiring', 'warning');
+        return;
+    }
+
+    fetch(`${webhookUrl}/status`, {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('✅ Webhook holati: ' + data.message, 'success');
+        } else {
+            showNotification('❌ Webhook holati: ' + data.message, 'error');
         }
     })
     .catch(error => {
@@ -834,6 +917,46 @@ function openWebInterface() {
     } else {
         showNotification('Web Interface URL topilmadi', 'warning');
     }
+}
+
+function copyWebhookUrl() {
+    const webhookUrlInput = document.getElementById('webhook_url');
+    webhookUrlInput.select();
+    webhookUrlInput.setSelectionRange(0, 99999); // For mobile devices
+
+    navigator.clipboard.writeText(webhookUrlInput.value).then(() => {
+        showNotification('Webhook URL nusxalandi!', 'success');
+    }).catch(err => {
+        console.error('Error copying text: ', err);
+        showNotification('Webhook URL nusxalashda xatolik yuz berdi', 'error');
+    });
+}
+
+function testWebhookUrl() {
+    const webhookUrl = document.getElementById('webhook_url').value;
+    if (!webhookUrl) {
+        showNotification('Webhook URL ni to\'ldiring', 'warning');
+        return;
+    }
+
+    fetch(`${webhookUrl}/test`, {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('✅ Webhook URL test qilindi: ' + data.message, 'success');
+        } else {
+            showNotification('❌ Webhook URL test qilinmadi: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Xatolik yuz berdi', 'error');
+    });
 }
 
 function showNotification(message, type = 'info') {
