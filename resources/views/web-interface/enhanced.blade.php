@@ -143,17 +143,58 @@
 
         /* Menu Items */
         .menu-container {
-            padding: 1rem;
+            padding: 0.75rem;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
         }
-
+        
         .menu-item {
             background: var(--card-bg, #ffffff) !important;
-            border-radius: var(--border-radius, 16px) !important;
+            border-radius: var(--border-radius, 12px) !important;
             box-shadow: var(--shadow, 0 8px 32px rgba(0,0,0,0.1)) !important;
-            margin-bottom: 1rem;
+            margin: 0;
             overflow: hidden;
             transition: all 0.3s ease;
             border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .menu-item-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background: #f1f5f9;
+            transition: transform 0.3s ease;
+            border-radius: 0; /* rectangular */
+        }
+        
+        .menu-item-image-placeholder {
+            width: 100%;
+            height: 120px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 2rem;
+            border-radius: 0; /* rectangular */
+            border: 1px dashed #e2e8f0;
+        }
+        
+        .menu-item-content { padding: 0.75rem; }
+        .menu-item-title { font-size: 1rem; margin-bottom: 0.25rem; }
+        .menu-item-description { font-size: 0.8rem; margin-bottom: 0.5rem; }
+        .menu-item-price { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .quantity-controls { gap: 0.5rem; }
+        
+        /* Responsive tweaks */
+        @media (min-width: 768px) {
+            .menu-container { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+            .menu-item-image, .menu-item-image-placeholder { height: 140px; }
+        }
+        @media (min-width: 1024px) {
+            .menu-container { grid-template-columns: repeat(4, 1fr); }
+            .menu-item-title { font-size: 1.05rem; }
         }
 
         .menu-item:hover {
