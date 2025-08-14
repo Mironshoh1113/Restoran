@@ -29,6 +29,37 @@ class TelegramController extends Controller
     public function webhook(Request $request, $token)
     {
         try {
+            // Handle GET requests (for webhook verification)
+            if ($request->isMethod('GET')) {
+                // Validate token format
+                if (!preg_match('/^\d+:[A-Za-z0-9_-]+$/', $token)) {
+                    Log::warning('Invalid token format in GET request', ['token' => $token]);
+                    return response('Bad Request', 400);
+                }
+
+                // Find restaurant by bot token
+                $restaurant = Restaurant::where('bot_token', $token)->first();
+                
+                if (!$restaurant) {
+                    Log::error('Restaurant not found for bot token in GET request: ' . $token);
+                    return response('Not Found', 404);
+                }
+
+                Log::info('Webhook GET request verified', [
+                    'restaurant_id' => $restaurant->id,
+                    'restaurant_name' => $restaurant->name,
+                    'token' => $token
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Webhook endpoint is working',
+                    'restaurant' => $restaurant->name,
+                    'timestamp' => now()->toISOString()
+                ]);
+            }
+
+            // Handle POST requests (actual webhook data)
             // Rate limiting
             $rateLimitKey = "webhook_rate_limit_{$token}";
             if (Cache::get($rateLimitKey, 0) > 100) { // Max 100 requests per minute
