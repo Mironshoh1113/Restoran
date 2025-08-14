@@ -1,89 +1,85 @@
 <?php
 
-require_once 'vendor/autoload.php';
+/**
+ * Fix Telegram Webhook URLs
+ * This script ensures webhooks are set correctly and prevents duplicates
+ */
 
-$app = require_once 'bootstrap/app.php';
-$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
+require_once __DIR__ . '/vendor/autoload.php';
+
+$app = require_once __DIR__ . '/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
 use App\Models\Restaurant;
 use App\Services\TelegramService;
+use Illuminate\Support\Facades\Log;
 
-echo "=== FIXING WEBHOOK CONFIGURATIONS ===\n\n";
+echo "🔧 Fixing Telegram Webhooks...\n\n";
 
-$restaurants = Restaurant::whereNotNull('bot_token')->get();
-
-foreach ($restaurants as $restaurant) {
-    echo "Processing Restaurant: {$restaurant->name}\n";
-    echo "Bot Token: {$restaurant->bot_token}\n";
+try {
+    // Get all restaurants with bot tokens
+    $restaurants = Restaurant::whereNotNull('bot_token')->get();
     
-    // Skip test tokens
-    if (strpos($restaurant->bot_token, 'test_') === 0) {
-        echo "⚠️  Skipping test token\n";
-        echo "---\n\n";
-        continue;
+    if ($restaurants->isEmpty()) {
+        echo "❌ No restaurants with bot tokens found.\n";
+        exit;
     }
     
-    try {
+    foreach ($restaurants as $restaurant) {
+        echo "🏪 Restaurant: {$restaurant->name}\n";
+        echo "🤖 Bot Token: {$restaurant->bot_token}\n";
+        
         $telegramService = new TelegramService($restaurant->bot_token);
         
-        // Test bot connection first
-        $botInfo = $telegramService->getMe();
+        // First, delete any existing webhook to clear pending updates
+        echo "🧹 Deleting existing webhook...\n";
+        $deleteResult = $telegramService->deleteWebhook();
         
-        if (!$botInfo['ok']) {
-            echo "❌ Bot token is invalid: " . ($botInfo['description'] ?? 'Unknown error') . "\n";
-            echo "---\n\n";
-            continue;
-        }
-        
-        echo "✅ Bot connection successful\n";
-        echo "Bot Name: {$botInfo['result']['first_name']}\n";
-        echo "Bot Username: @{$botInfo['result']['username']}\n";
-        
-        // Set webhook URL
-        $webhookUrl = url("/telegram/webhook/{$restaurant->bot_token}");
-        echo "Setting webhook URL: {$webhookUrl}\n";
-        
-        $webhookResult = $telegramService->setWebhook($webhookUrl);
-        
-        if ($webhookResult['ok']) {
-            echo "✅ Webhook set successfully\n";
-            
-            // Set bot commands
-            $commands = [
-                ['command' => 'start', 'description' => 'Botni ishga tushirish'],
-                ['command' => 'menu', 'description' => 'Menyuni ko\'rish'],
-                ['command' => 'cart', 'description' => 'Savatni ko\'rish'],
-                ['command' => 'help', 'description' => 'Yordam']
-            ];
-            
-            $commandsResult = $telegramService->setMyCommands($commands);
-            
-            if ($commandsResult['ok']) {
-                echo "✅ Bot commands set successfully\n";
-            } else {
-                echo "⚠️  Failed to set bot commands: " . ($commandsResult['description'] ?? 'Unknown error') . "\n";
-            }
-            
+        if ($deleteResult['ok']) {
+            echo "✅ Webhook deleted successfully.\n";
         } else {
-            echo "❌ Failed to set webhook: " . ($webhookResult['description'] ?? 'Unknown error') . "\n";
+            echo "⚠️  Failed to delete webhook: " . ($deleteResult['error'] ?? 'Unknown error') . "\n";
         }
         
-    } catch (\Exception $e) {
-        echo "❌ Error: {$e->getMessage()}\n";
+        // Wait a moment for Telegram to process
+        sleep(2);
+        
+        // Set the correct webhook URL
+        $webhookUrl = url("/telegram-webhook/{$restaurant->bot_token}");
+        echo "🔗 Setting webhook to: {$webhookUrl}\n";
+        
+        $setResult = $telegramService->setWebhook($webhookUrl);
+        
+        if ($setResult['ok']) {
+            echo "✅ Webhook set successfully!\n";
+            
+            // Verify webhook is set correctly
+            $webhookInfo = $telegramService->getWebhookInfo();
+            if ($webhookInfo['ok'] && $webhookInfo['result']['url'] === $webhookUrl) {
+                echo "✅ Webhook verified successfully!\n";
+                echo "📊 Pending Updates: " . ($webhookInfo['result']['pending_update_count'] ?? 0) . "\n";
+            } else {
+                echo "⚠️  Webhook verification failed!\n";
+            }
+        } else {
+            echo "❌ Failed to set webhook: " . ($setResult['error'] ?? 'Unknown error') . "\n";
+        }
+        
+        echo "\n" . str_repeat("-", 50) . "\n\n";
     }
     
-    echo "---\n\n";
-}
-
-echo "=== SUMMARY ===\n\n";
-echo "To make all bots work:\n";
-echo "1. Ensure all bot tokens are valid\n";
-echo "2. Set webhook URLs for each bot\n";
-echo "3. Configure bot commands\n";
-echo "4. Test the webhook endpoints\n\n";
-
-echo "For each restaurant, you need to:\n";
-echo "- Go to admin panel\n";
-echo "- Navigate to Bot settings\n";
-echo "- Set the correct webhook URL\n";
-echo "- Test the bot connection\n"; 
+    echo "✅ Webhook fixing completed.\n";
+    echo "\n💡 Tips to prevent duplicate messages:\n";
+    echo "1. Make sure only one webhook URL is set per bot\n";
+    echo "2. Check that webhook URLs are unique for each restaurant\n";
+    echo "3. Monitor logs for duplicate message warnings\n";
+    echo "4. Use the check_webhooks.php script to monitor webhook health\n";
+    
+} catch (Exception $e) {
+    echo "❌ Error: " . $e->getMessage() . "\n";
+    Log::error('Webhook fixing error', [
+        'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString()
+    ]);
+} 

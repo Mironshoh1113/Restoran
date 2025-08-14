@@ -6,6 +6,7 @@ use App\Models\Restaurant;
 use App\Models\Order;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache; // Added Cache facade
 
 class TelegramService
 {
@@ -56,6 +57,33 @@ class TelegramService
             if (strlen($text) > 4096) {
                 throw new \InvalidArgumentException('Message text too long (max 4096 characters)');
             }
+
+            // Rate limiting: prevent sending more than 1 message per second to the same chat
+            $rateLimitKey = "telegram_rate_limit_{$chatId}";
+            if (Cache::get($rateLimitKey, 0) > 0) {
+                Log::warning('Rate limit exceeded for chat', [
+                    'chat_id' => $chatId,
+                    'bot_token' => $this->botToken
+                ]);
+                return ['ok' => false, 'error' => 'Rate limit exceeded'];
+            }
+            
+            // Set rate limit for 1 second
+            Cache::put($rateLimitKey, 1, 1);
+
+            // Check for duplicate messages (same text to same chat within last 5 seconds)
+            $duplicateKey = "telegram_duplicate_{$chatId}_" . md5($text);
+            if (Cache::get($duplicateKey, false)) {
+                Log::warning('Duplicate message detected, skipping', [
+                    'chat_id' => $chatId,
+                    'text' => $text,
+                    'bot_token' => $this->botToken
+                ]);
+                return ['ok' => false, 'error' => 'Duplicate message detected'];
+            }
+            
+            // Set duplicate check for 5 seconds
+            Cache::put($duplicateKey, true, 5);
 
             $data = [
                 'chat_id' => $chatId,

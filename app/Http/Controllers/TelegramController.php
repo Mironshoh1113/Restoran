@@ -124,6 +124,25 @@ class TelegramController extends Controller
 
         // Save incoming message
         if ($telegramUser && $text) {
+            // Check if this exact message was already processed recently (within last 5 seconds)
+            $recentMessage = \App\Models\TelegramMessage::where('restaurant_id', $telegramUser->restaurant_id)
+                ->where('telegram_user_id', $telegramUser->id)
+                ->where('message_text', $text)
+                ->where('direction', 'incoming')
+                ->where('created_at', '>=', now()->subSeconds(5))
+                ->first();
+            
+            if ($recentMessage) {
+                Log::warning('Duplicate message detected, skipping', [
+                    'message_id' => $message['message_id'] ?? null,
+                    'text' => $text,
+                    'chat_id' => $chatId,
+                    'restaurant_id' => $telegramUser->restaurant_id
+                ]);
+                // Don't process duplicate messages
+                return;
+            }
+            
             $this->saveIncomingMessage($telegramUser, $text, $message['message_id'] ?? null, $message);
         }
 

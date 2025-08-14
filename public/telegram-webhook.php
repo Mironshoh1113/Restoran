@@ -157,6 +157,25 @@ try {
         // Save incoming message to database for this restaurant
         if ($telegramUser && $text) {
             try {
+                // Check if this exact message was already processed recently (within last 5 seconds)
+                $recentMessage = \App\Models\TelegramMessage::where('restaurant_id', $restaurant->id)
+                    ->where('telegram_user_id', $telegramUser->id)
+                    ->where('message_text', $text)
+                    ->where('direction', 'incoming')
+                    ->where('created_at', '>=', now()->subSeconds(5))
+                    ->first();
+                
+                if ($recentMessage) {
+                    \Illuminate\Support\Facades\Log::warning("Duplicate message detected, skipping", [
+                        "message_id" => $message["message_id"] ?? null,
+                        "text" => $text,
+                        "chat_id" => $chatId,
+                        "restaurant_id" => $restaurant->id
+                    ]);
+                    // Don't process duplicate messages
+                    return response('OK');
+                }
+                
                 \App\Models\TelegramMessage::create([
                     'restaurant_id' => $restaurant->id,
                     'telegram_user_id' => $telegramUser->id,
@@ -274,6 +293,19 @@ try {
         }
         // Handle orders command
         elseif ($text === "📊 Buyurtmalarim" || $text === "Buyurtmalarim") {
+            // Rate limiting: prevent processing same command multiple times
+            $rateLimitKey = "orders_rate_limit_{$chatId}";
+            if (\Illuminate\Support\Facades\Cache::get($rateLimitKey, 0) > 0) {
+                \Illuminate\Support\Facades\Log::warning("Rate limit exceeded for orders command", [
+                    "chat_id" => $chatId,
+                    "restaurant_id" => $restaurant->id
+                ]);
+                return response('OK');
+            }
+            
+            // Set rate limit for 3 seconds
+            \Illuminate\Support\Facades\Cache::put($rateLimitKey, 1, 3);
+            
             // Get orders for this user from this specific restaurant
             $orders = \App\Models\Order::where("telegram_chat_id", $chatId)
                 ->where("restaurant_id", $restaurant->id)
@@ -327,6 +359,19 @@ try {
         }
         // Handle help command
         elseif ($text === "ℹ Yordam" || $text === "Yordam") {
+            // Rate limiting: prevent processing same command multiple times
+            $rateLimitKey = "help_rate_limit_{$chatId}";
+            if (\Illuminate\Support\Facades\Cache::get($rateLimitKey, 0) > 0) {
+                \Illuminate\Support\Facades\Log::warning("Rate limit exceeded for help command", [
+                    "chat_id" => $chatId,
+                    "restaurant_id" => $restaurant->id
+                ]);
+                return response('OK');
+            }
+            
+            // Set rate limit for 3 seconds
+            \Illuminate\Support\Facades\Cache::put($rateLimitKey, 1, 3);
+            
             $responseMessage = "Yordam kerakmi? 🤝\n\n";
             $responseMessage .= "📞 Qo'ng'iroq: " . ($restaurant->phone ?? "N/A") . "\n";
             $responseMessage .= "📍 Manzil: " . ($restaurant->address ?? "N/A") . "\n\n";
