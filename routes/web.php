@@ -123,7 +123,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Telegram webhook
-Route::post('/telegram/webhook/{token}', [TelegramController::class, 'webhook'])->name('telegram.webhook');
+Route::post('/telegram-webhook/{token}', [TelegramController::class, 'webhook'])->name('telegram.webhook');
 
 // Web interface for Telegram users
 Route::get('/web-interface/{token}', [TelegramController::class, 'webInterface'])->name('web.interface');
