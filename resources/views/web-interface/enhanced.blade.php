@@ -785,8 +785,35 @@
                 </div>
                 
                 <div class="form-group">
+                    <label class="form-label">To'lov usuli</label>
+                    <select class="form-input" id="paymentMethod" name="payment_method" required>
+                        @php($allowed = $restaurant->payment_methods ?? ['cash','card'])
+                        @if(in_array('cash', $allowed))<option value="cash">Naqd</option>@endif
+                        @if(in_array('card', $allowed))<option value="card">Karta</option>@endif
+                        @if(in_array('click', $allowed))<option value="click">Click</option>@endif
+                        @if(in_array('payme', $allowed))<option value="payme">Payme</option>@endif
+                    </select>
+                </div>
+                
+                <div class="form-group">
                     <label class="form-label">Izoh (ixtiyoriy)</label>
                     <textarea class="form-input" id="customerNotes" name="customer_notes" rows="2"></textarea>
+                </div>
+                
+                <div class="form-group" style="background:#f8f9fa;border-radius:12px;padding:12px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                        <span>Oraliq summa</span>
+                        <span id="checkoutSubtotal">0 so'm</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                        <span>Yetkazib berish</span>
+                        <span id="checkoutDeliveryFee">{{ number_format((float)($restaurant->delivery_fee ?? 0), 0, ',', ' ') }} so'm</span>
+                    </div>
+                    <hr style="margin:8px 0;" />
+                    <div style="display:flex;justify-content:space-between;font-weight:600;">
+                        <span>Jami</span>
+                        <span id="checkoutTotal">0 so'm</span>
+                    </div>
                 </div>
                 
                 <div class="checkout-actions">
@@ -1106,6 +1133,17 @@
         function openCheckoutModal() {
             document.getElementById('checkoutModal').classList.add('show');
             document.body.style.overflow = 'hidden';
+            // Update totals in modal
+            let subtotal = 0;
+            Object.keys(cart).forEach(itemId => {
+                const qty = cart[itemId];
+                const price = parseFloat(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price);
+                subtotal += qty * price;
+            });
+            document.getElementById('checkoutSubtotal').textContent = subtotal.toLocaleString() + " so'm";
+            const deliveryFee = {{ (float)($restaurant->delivery_fee ?? 0) }};
+            document.getElementById('checkoutDeliveryFee').textContent = deliveryFee.toLocaleString() + " so'm";
+            document.getElementById('checkoutTotal').textContent = (subtotal + deliveryFee).toLocaleString() + " so'm";
         }
         
         function closeCheckoutModal() {
@@ -1148,12 +1186,19 @@
                     const price = parseFloat(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price);
                     return total + (qty * price);
                 }, 0),
+                payment_method: document.getElementById('paymentMethod').value,
                 telegram_chat_id: tg.initDataUnsafe?.user?.id || null,
                 bot_token: botToken,
                 customer_name: customerData?.name || 'Anonim',
                 customer_phone: customerData?.phone || 'Kiritilmagan',
                 customer_address: customerData?.address || 'Kiritilmagan',
-                customer_notes: customerData?.notes || ''
+                customer_notes: customerData?.notes || '',
+                subtotal: Object.keys(cart).reduce((total, itemId) => {
+                    const qty = cart[itemId];
+                    const price = parseFloat(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price);
+                    return total + (qty * price);
+                }, 0),
+                delivery_fee: {{ (float)($restaurant->delivery_fee ?? 0) }}
             };
             
             console.log('Order data:', orderData);

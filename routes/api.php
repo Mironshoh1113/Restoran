@@ -43,10 +43,11 @@ Route::post('/orders', function (Request $request) {
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:255',
             'customer_address' => 'nullable|string|max:1000',
-            'customer_notes' => 'nullable|string|max:1000'
+            'customer_notes' => 'nullable|string|max:1000',
+            'payment_method' => 'required|string|in:cash,card,click,payme'
         ]);
 
-        // Verify bot token
+        // Verify bot token and active restaurant
         $restaurant = \App\Models\Restaurant::where('id', $data['restaurant_id'])
             ->where('bot_token', $data['bot_token'])
             ->where('is_active', true)
@@ -56,6 +57,41 @@ Route::post('/orders', function (Request $request) {
             return response()->json(['success' => false, 'error' => 'Invalid restaurant or bot token'], 400);
         }
 
+        // Ensure payment method is allowed by this restaurant
+        $allowedMethods = (array) ($restaurant->payment_methods ?? []);
+        if (!empty($allowedMethods) && !in_array($data['payment_method'], $allowedMethods, true)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Payment method not allowed',
+                'allowed' => $allowedMethods
+            ], 400);
+        }
+
+        // Recalculate subtotal from DB prices to avoid tampering
+        $quantitiesById = collect($data['items'])
+            ->keyBy('menu_item_id')
+            ->map(fn($item) => (int) $item['quantity']);
+
+        $menuItems = \App\Models\MenuItem::whereIn('id', $quantitiesById->keys())
+            ->get(['id', 'price']);
+
+        if ($menuItems->count() !== $quantitiesById->count()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Some menu items not found'
+            ], 404);
+        }
+
+        $subtotal = 0;
+        foreach ($menuItems as $menuItem) {
+            $qty = $quantitiesById[$menuItem->id] ?? 0;
+            $subtotal += $qty * (float) $menuItem->price;
+        }
+
+        // Apply delivery fee (from restaurant settings)
+        $deliveryFee = (float) ($restaurant->delivery_fee ?? 0);
+        $totalPrice = $subtotal + $deliveryFee;
+
         // Create order
         $order = \App\Models\Order::create([
             'restaurant_id' => $data['restaurant_id'],
@@ -64,21 +100,23 @@ Route::post('/orders', function (Request $request) {
             'customer_phone' => $data['customer_phone'] ?? 'N/A',
             'delivery_address' => $data['customer_address'] ?? 'Telegram Order',
             'notes' => $data['customer_notes'] ?? '',
-            'total_price' => $data['total_amount'],
+            'total_price' => $totalPrice,
+            'delivery_fee' => $deliveryFee,
             'status' => 'new',
-            'payment_method' => 'telegram',
+            'payment_method' => $data['payment_method'],
             'telegram_chat_id' => $data['telegram_chat_id'],
             'bot_token' => $data['bot_token']
         ]);
 
-        // Create order items
-        foreach ($data['items'] as $item) {
+        // Create order items using DB prices
+        foreach ($menuItems as $menuItem) {
+            $qty = $quantitiesById[$menuItem->id];
             \App\Models\OrderItem::create([
                 'order_id' => $order->id,
-                'menu_item_id' => $item['menu_item_id'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-                'subtotal' => $item['quantity'] * $item['price']
+                'menu_item_id' => $menuItem->id,
+                'quantity' => $qty,
+                'price' => (float) $menuItem->price,
+                'subtotal' => $qty * (float) $menuItem->price
             ]);
         }
 
@@ -87,9 +125,10 @@ Route::post('/orders', function (Request $request) {
             'order_id' => $order->id,
             'restaurant_id' => $data['restaurant_id'],
             'telegram_chat_id' => $data['telegram_chat_id'],
-            'total_amount' => $data['total_amount'],
-            'customer_name' => $data['customer_name'] ?? 'N/A',
-            'customer_phone' => $data['customer_phone'] ?? 'N/A'
+            'subtotal' => $subtotal,
+            'delivery_fee' => $deliveryFee,
+            'total_price' => $totalPrice,
+            'payment_method' => $data['payment_method']
         ]);
 
         return response()->json([
