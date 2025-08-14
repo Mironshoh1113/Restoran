@@ -42,6 +42,7 @@
             color: var(--text-color, #2c3e50) !important;
             line-height: 1.6;
             overflow-x: hidden;
+            padding-bottom: 120px; /* prevent cart overlay from covering controls */
         }
 
         /* Custom Scrollbar */
@@ -688,6 +689,9 @@
         .btn-primary {
             background: var(--primary-color, #667eea) !important;
         }
+		.cart-fixed { z-index: 9999; }
+		.menu-item { margin-bottom: 0; }
+		.category-content { margin-bottom: 1rem; }
     </style>
 </head>
 <body>
@@ -725,13 +729,7 @@
         <input type="text" class="search-input" placeholder="Taom nomi yoki tarkibini qidiring..." id="searchInput">
     </div>
 
-    <!-- Filters -->
-    <div class="filters-container">
-        <button class="filter-btn active" data-filter="all">Hammasi</button>
-        <button class="filter-btn" data-filter="popular">Mashhur</button>
-        <button class="filter-btn" data-filter="new">Yangi</button>
-        <button class="filter-btn" data-filter="vegetarian">Vegetarian</button>
-    </div>
+    <!-- Filters removed per request -->
 
     <!-- Categories -->
     <div class="categories-container">
@@ -761,7 +759,8 @@
                             <div class="row g-0">
                                 <div class="col-md-4">
                                     @if($item->image && !empty(trim($item->image)))
-                                        <img src="{{ asset('storage/' . $item->image) }}"
+                                        @php($imgPath = \Illuminate\Support\Facades\Storage::url($item->image))
+                                        <img src="{{ $imgPath }}"
                                              alt="{{ $item->name }}" 
                                              class="menu-item-image"
                                              loading="lazy"
