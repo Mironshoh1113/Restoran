@@ -66,6 +66,17 @@ class RestaurantController extends Controller
             // Handle checkbox properly
             $data['is_active'] = $request->has('is_active');
             
+            // Handle file uploads
+            if ($request->hasFile('logo')) {
+                $logoPath = $request->file('logo')->store('restaurants/logos', 'public');
+                $data['logo'] = $logoPath;
+            }
+            
+            if ($request->hasFile('bot_image')) {
+                $botImagePath = $request->file('bot_image')->store('restaurants/bot-images', 'public');
+                $data['bot_image'] = $botImagePath;
+            }
+            
             // Log the creation attempt
             \Log::info('Restaurant creation attempt', [
                 'data' => $data,
@@ -159,6 +170,25 @@ class RestaurantController extends Controller
             
             // Handle checkbox properly
             $data['is_active'] = $request->has('is_active');
+            
+            // Handle file uploads
+            if ($request->hasFile('logo')) {
+                // Delete old logo if exists
+                if ($restaurant->logo) {
+                    \Storage::disk('public')->delete($restaurant->logo);
+                }
+                $logoPath = $request->file('logo')->store('restaurants/logos', 'public');
+                $data['logo'] = $logoPath;
+            }
+            
+            if ($request->hasFile('bot_image')) {
+                // Delete old bot image if exists
+                if ($restaurant->bot_image) {
+                    \Storage::disk('public')->delete($restaurant->bot_image);
+                }
+                $botImagePath = $request->file('bot_image')->store('restaurants/bot-images', 'public');
+                $data['bot_image'] = $botImagePath;
+            }
             
             // Log the update attempt
             \Log::info('Restaurant update attempt', [
