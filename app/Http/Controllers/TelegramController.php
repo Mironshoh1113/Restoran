@@ -784,8 +784,8 @@ class TelegramController extends Controller
                 })
             ]);
 
-            Log::info('Rendering simple web interface view for debugging');
-            return view('web-interface.simple', compact('restaurant', 'categories', 'botToken'));
+            Log::info('Rendering enhanced web interface view');
+            return view('web-interface.enhanced', compact('restaurant', 'categories', 'botToken'));
 
         } catch (\Exception $e) {
             Log::error('Error serving web interface', [
