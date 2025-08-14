@@ -131,6 +131,37 @@ Route::post('/orders', function (Request $request) {
             'payment_method' => $data['payment_method']
         ]);
 
+        // Upsert telegram user with customer's info for admin visibility
+        try {
+            if (!empty($data['telegram_chat_id'])) {
+                $telegramUser = \App\Models\TelegramUser::updateOrCreate(
+                    [
+                        'restaurant_id' => $restaurant->id,
+                        'telegram_id' => (string) $data['telegram_chat_id'],
+                    ],
+                    [
+                        'first_name' => $data['customer_name'] ?? 'Telegram User',
+                        'phone_number' => $data['customer_phone'] ?? null,
+                        'is_active' => true,
+                        'last_activity' => now(),
+                    ]
+                );
+
+                // Save address and last payment method in settings JSON
+                $settings = $telegramUser->settings ?? [];
+                $settings['last_delivery_address'] = $data['customer_address'] ?? null;
+                $settings['last_payment_method'] = $data['payment_method'] ?? null;
+                $telegramUser->settings = $settings;
+                $telegramUser->save();
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to upsert TelegramUser from WebApp order', [
+                'restaurant_id' => $restaurant->id,
+                'chat_id' => $data['telegram_chat_id'] ?? null,
+                'error' => $e->getMessage()
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'order_id' => $order->id,
