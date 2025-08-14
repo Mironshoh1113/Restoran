@@ -50,6 +50,9 @@ Route::post('/deploy', function () {
     }
 }); 
 
+// Telegram webhook - API route
+Route::post('/telegram-webhook/{token}', [TelegramController::class, 'webhook'])->name('api.telegram.webhook');
+
 // Debug route for testing orders API
 Route::post('/test-orders', function (Request $request) {
     return response()->json([

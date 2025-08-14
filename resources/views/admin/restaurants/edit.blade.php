@@ -446,6 +446,119 @@
                             <p class="text-sm text-gray-600 mb-6">Web App ning ko'rinishini va ranglarini sozlang</p>
                         </div>
 
+                        <!-- Design Templates -->
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-magic text-purple-600 mr-2"></i>
+                                Tayyor dizayn shablonlari
+                            </h4>
+                            <p class="text-sm text-gray-600 mb-4">Tezda boshlaish uchun tayyor shablonlardan birini tanlang</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                                <!-- Modern Template -->
+                                <div class="design-template cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 transition-all duration-200" 
+                                     data-template="modern">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h5 class="font-semibold text-gray-800">Modern</h5>
+                                        <div class="flex space-x-1">
+                                            <div class="w-4 h-4 rounded-full" style="background: #667eea;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #764ba2;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #ff6b35;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-16 rounded-lg mb-2 flex items-center justify-center">
+                                        <span class="text-white text-sm font-medium">Zamonaviy dizayn</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Zamonaviy va professional ko'rinish</p>
+                                </div>
+
+                                <!-- Fresh Template -->
+                                <div class="design-template cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-green-500 transition-all duration-200" 
+                                     data-template="fresh">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h5 class="font-semibold text-gray-800">Fresh</h5>
+                                        <div class="flex space-x-1">
+                                            <div class="w-4 h-4 rounded-full" style="background: #10b981;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #059669;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #34d399;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-green-500 to-emerald-600 h-16 rounded-lg mb-2 flex items-center justify-center">
+                                        <span class="text-white text-sm font-medium">Yangi ta'm</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Tabiiy va toza ko'rinish</p>
+                                </div>
+
+                                <!-- Sunset Template -->
+                                <div class="design-template cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-orange-500 transition-all duration-200" 
+                                     data-template="sunset">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h5 class="font-semibold text-gray-800">Sunset</h5>
+                                        <div class="flex space-x-1">
+                                            <div class="w-4 h-4 rounded-full" style="background: #ff7e5f;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #feb47b;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #ff6b6b;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-orange-500 to-pink-500 h-16 rounded-lg mb-2 flex items-center justify-center">
+                                        <span class="text-white text-sm font-medium">Issiq atmosfera</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Issiq va do'stona muhit</p>
+                                </div>
+
+                                <!-- Ocean Template -->
+                                <div class="design-template cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 transition-all duration-200" 
+                                     data-template="ocean">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h5 class="font-semibold text-gray-800">Ocean</h5>
+                                        <div class="flex space-x-1">
+                                            <div class="w-4 h-4 rounded-full" style="background: #3b82f6;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #06b6d4;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #0ea5e9;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-16 rounded-lg mb-2 flex items-center justify-center">
+                                        <span class="text-white text-sm font-medium">Osudaga ko'rinish</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Tinch va osoyishta muhit</p>
+                                </div>
+
+                                <!-- Royal Template -->
+                                <div class="design-template cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-purple-500 transition-all duration-200" 
+                                     data-template="royal">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h5 class="font-semibold text-gray-800">Royal</h5>
+                                        <div class="flex space-x-1">
+                                            <div class="w-4 h-4 rounded-full" style="background: #8b5cf6;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #a855f7;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #c084fc;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 h-16 rounded-lg mb-2 flex items-center justify-center">
+                                        <span class="text-white text-sm font-medium">Qirollik darajasi</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Hashamatli va nafis ko'rinish</p>
+                                </div>
+
+                                <!-- Dark Template -->
+                                <div class="design-template cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-gray-500 transition-all duration-200" 
+                                     data-template="dark">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h5 class="font-semibold text-gray-800">Dark</h5>
+                                        <div class="flex space-x-1">
+                                            <div class="w-4 h-4 rounded-full" style="background: #374151;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #1f2937;"></div>
+                                            <div class="w-4 h-4 rounded-full" style="background: #f59e0b;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-gray-700 to-gray-900 h-16 rounded-lg mb-2 flex items-center justify-center">
+                                        <span class="text-white text-sm font-medium">Qora mavzu</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Zamonaviy qora dizayn</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Color Settings -->
                         <div>
                             <h4 class="font-medium text-gray-800 mb-4 flex items-center">
@@ -856,6 +969,161 @@ document.getElementById('restaurantForm').addEventListener('submit', function(e)
             document.body.removeChild(errorMsg);
         }, 5000);
     }
+});
+
+// Design template functionality
+const designTemplates = {
+    modern: {
+        primary_color: '#667eea',
+        secondary_color: '#764ba2',
+        accent_color: '#ff6b35',
+        text_color: '#2c3e50',
+        bg_color: '#f8f9fa',
+        card_bg: '#ffffff',
+        border_radius: '16px',
+        shadow: '0 8px 32px rgba(0,0,0,0.1)'
+    },
+    fresh: {
+        primary_color: '#10b981',
+        secondary_color: '#059669',
+        accent_color: '#34d399',
+        text_color: '#064e3b',
+        bg_color: '#f0fdf4',
+        card_bg: '#ffffff',
+        border_radius: '12px',
+        shadow: '0 4px 16px rgba(16,185,129,0.15)'
+    },
+    sunset: {
+        primary_color: '#ff7e5f',
+        secondary_color: '#feb47b',
+        accent_color: '#ff6b6b',
+        text_color: '#7c2d12',
+        bg_color: '#fef7f3',
+        card_bg: '#ffffff',
+        border_radius: '20px',
+        shadow: '0 12px 48px rgba(255,126,95,0.2)'
+    },
+    ocean: {
+        primary_color: '#3b82f6',
+        secondary_color: '#06b6d4',
+        accent_color: '#0ea5e9',
+        text_color: '#1e40af',
+        bg_color: '#f0f9ff',
+        card_bg: '#ffffff',
+        border_radius: '14px',
+        shadow: '0 8px 32px rgba(59,130,246,0.15)'
+    },
+    royal: {
+        primary_color: '#8b5cf6',
+        secondary_color: '#a855f7',
+        accent_color: '#c084fc',
+        text_color: '#581c87',
+        bg_color: '#faf5ff',
+        card_bg: '#ffffff',
+        border_radius: '18px',
+        shadow: '0 16px 64px rgba(139,92,246,0.2)'
+    },
+    dark: {
+        primary_color: '#374151',
+        secondary_color: '#1f2937',
+        accent_color: '#f59e0b',
+        text_color: '#f9fafb',
+        bg_color: '#111827',
+        card_bg: '#1f2937',
+        border_radius: '12px',
+        shadow: '0 8px 32px rgba(0,0,0,0.4)'
+    }
+};
+
+// Apply design template
+function applyDesignTemplate(templateName) {
+    const template = designTemplates[templateName];
+    if (!template) return;
+
+    // Apply colors and settings to form inputs
+    Object.keys(template).forEach(key => {
+        const input = document.getElementById(key);
+        
+        if (input && key.includes('color')) {
+            // For color inputs
+            input.value = template[key];
+            const textInput = input.nextElementSibling;
+            if (textInput) textInput.value = template[key];
+        } else if (input && (key === 'border_radius' || key === 'shadow')) {
+            // For select inputs
+            input.value = template[key];
+        }
+    });
+
+    // Update previews
+    updatePreviews();
+    
+    // Show success message with template name
+    const templateNames = {
+        modern: 'Modern',
+        fresh: 'Fresh',
+        sunset: 'Sunset',
+        ocean: 'Ocean',
+        royal: 'Royal',
+        dark: 'Dark'
+    };
+    
+    const successMsg = document.createElement('div');
+    successMsg.innerHTML = `<i class="fas fa-check mr-2"></i>${templateNames[templateName]} shablon muvaffaqiyatli qo'llanildi!`;
+    successMsg.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transform translate-x-full opacity-0 transition-all duration-300';
+    document.body.appendChild(successMsg);
+    
+    // Animate in
+    setTimeout(() => {
+        successMsg.classList.remove('translate-x-full', 'opacity-0');
+    }, 100);
+    
+    // Remove after delay
+    setTimeout(() => {
+        successMsg.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => {
+            if (document.body.contains(successMsg)) {
+                document.body.removeChild(successMsg);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Add template selection handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click listeners to design templates
+    document.querySelectorAll('.design-template').forEach(template => {
+        template.addEventListener('click', function() {
+            // Remove active state from all templates
+            document.querySelectorAll('.design-template').forEach(t => {
+                t.classList.remove('border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-200');
+                t.classList.add('border-gray-200');
+            });
+            
+            // Add active state to clicked template
+            this.classList.remove('border-gray-200');
+            this.classList.add('border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-200');
+            
+            // Apply the template
+            const templateName = this.getAttribute('data-template');
+            applyDesignTemplate(templateName);
+        });
+        
+        // Add hover effects
+        template.addEventListener('mouseenter', function() {
+            if (!this.classList.contains('border-blue-500')) {
+                this.classList.add('shadow-lg');
+                this.style.transform = 'scale(1.02)';
+            }
+        });
+        
+        template.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('border-blue-500')) {
+                this.classList.remove('shadow-lg');
+                this.style.transform = 'scale(1)';
+            }
+        });
+    });
 });
 </script>
 @endsection 
