@@ -15,7 +15,7 @@ if (!$botToken) {
 }
 
 // Your domain URL
-$domain = 'https://your-domain.com'; // Change this to your actual domain
+$domain = 'https://simpsons.uz'; // Updated to correct domain
 
 // Webhook URL
 $webhookUrl = $domain . '/api/telegram-webhook/' . $botToken;
