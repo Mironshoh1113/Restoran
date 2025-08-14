@@ -227,8 +227,8 @@ Route::post('/orders', function (Request $request) {
     }
 }); 
 
-// Telegram webhook route
-Route::post('/telegram-webhook/{token}', [TelegramController::class, 'webhook']);
+// Telegram webhook route - accept both GET and POST
+Route::match(['get', 'post'], '/telegram-webhook/{token}', [TelegramController::class, 'webhook']);
 
 // Debug webhook route
 Route::post('/debug-webhook/{token}', function (Request $request, $token) {
