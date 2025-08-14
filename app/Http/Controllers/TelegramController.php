@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Restaurant;
-use App\Models\Project;
 use App\Models\Category;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\TelegramUser;
+use App\Models\TelegramMessage;
 use App\Services\TelegramService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 
 class TelegramController extends Controller
 {
@@ -24,841 +24,563 @@ class TelegramController extends Controller
     }
 
     /**
-     * Handle webhook from Telegram
+     * Handle webhook from Telegram - Production Ready
      */
     public function webhook(Request $request, $token)
     {
+        // Always return 200 OK to Telegram to prevent retries
         try {
             // Handle GET requests (for webhook verification)
             if ($request->isMethod('GET')) {
-                // Validate token format
-                if (!preg_match('/^\d+:[A-Za-z0-9_-]+$/', $token)) {
-                    Log::warning('Invalid token format in GET request', ['token' => $token]);
-                    return response('Bad Request', 400);
-                }
-
-                // Find restaurant by bot token
-                $restaurant = Restaurant::where('bot_token', $token)->first();
-                
-                if (!$restaurant) {
-                    Log::error('Restaurant not found for bot token in GET request: ' . $token);
-                    return response('Not Found', 404);
-                }
-
-                Log::info('Webhook GET request verified', [
-                    'restaurant_id' => $restaurant->id,
-                    'restaurant_name' => $restaurant->name,
-                    'token' => $token
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Webhook endpoint is working',
-                    'restaurant' => $restaurant->name,
-                    'timestamp' => now()->toISOString()
-                ]);
+                return $this->handleGetRequest($token);
             }
 
             // Handle POST requests (actual webhook data)
-            // Rate limiting
-            $rateLimitKey = "webhook_rate_limit_{$token}";
-            if (Cache::get($rateLimitKey, 0) > 100) { // Max 100 requests per minute
-                Log::warning('Webhook rate limit exceeded', ['token' => $token]);
-                return response('Too Many Requests', 429);
-            }
-            Cache::increment($rateLimitKey);
-            Cache::expire($rateLimitKey, 60); // 1 minute
+            return $this->handlePostRequest($request, $token);
 
+        } catch (\Exception $e) {
+            // Catch-all for any unexpected errors
+            Log::critical('Critical error in webhook handler', [
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
+            ]);
+            return response('OK', 200);
+        }
+    }
+
+    /**
+     * Handle GET requests for webhook verification
+     */
+    private function handleGetRequest($token)
+    {
+        try {
             // Validate token format
-            if (!preg_match('/^\d+:[A-Za-z0-9_-]+$/', $token)) {
-                Log::warning('Invalid token format', ['token' => $token]);
-                return response('Bad Request', 400);
+            if (!$this->isValidToken($token)) {
+                Log::warning('Invalid token format in GET request');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid token format'
+                ], 200);
             }
 
             // Find restaurant by bot token
             $restaurant = Restaurant::where('bot_token', $token)->first();
             
             if (!$restaurant) {
-                Log::error('Restaurant not found for bot token: ' . $token);
-                return response('OK'); // Return OK to prevent Telegram from retrying
+                Log::error('Restaurant not found for bot token in GET request');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Restaurant not found'
+                ], 200);
             }
 
-            // Validate request data
-            $update = $request->validate([
-                'message' => 'nullable|array',
-                'callback_query' => 'nullable|array',
-                'edited_message' => 'nullable|array',
-                'channel_post' => 'nullable|array',
-                'edited_channel_post' => 'nullable|array',
-                'inline_query' => 'nullable|array',
-                'chosen_inline_result' => 'nullable|array',
-                'shipping_query' => 'nullable|array',
-                'pre_checkout_query' => 'nullable|array',
-                'poll' => 'nullable|array',
-                'poll_answer' => 'nullable|array',
-                'my_chat_member' => 'nullable|array',
-                'chat_member' => 'nullable|array',
-                'chat_join_request' => 'nullable|array',
-            ]);
-
-            Log::info('Telegram Webhook validated', [
+            Log::info('Webhook GET request verified', [
                 'restaurant_id' => $restaurant->id,
-                'restaurant_name' => $restaurant->name,
-                'update_type' => array_keys(array_filter($update))
+                'restaurant_name' => $restaurant->name
             ]);
 
-            // Set bot token for this request
-            $this->telegramService->setBotToken($token);
+            return response()->json([
+                'success' => true,
+                'message' => 'Webhook endpoint is working',
+                'restaurant' => $restaurant->name,
+                'timestamp' => now()->toISOString()
+            ], 200);
 
-            // Handle different types of updates
-            if (isset($update['message'])) {
-                $this->handleMessage($update['message']);
-            } elseif (isset($update['callback_query'])) {
-                $this->handleCallbackQuery($update['callback_query']);
+        } catch (\Exception $e) {
+            Log::error('Error in webhook GET request', [
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal error'
+            ], 200);
+        }
+    }
+
+    /**
+     * Handle POST requests with webhook data
+     */
+    private function handlePostRequest($request, $token)
+    {
+        try {
+            // Basic validation first
+            if (!$token || strlen($token) < 10) {
+                Log::warning('Invalid or empty token in POST request');
+                return response('OK', 200);
             }
 
-            return response('OK');
+            // Validate token format
+            if (!$this->isValidToken($token)) {
+                Log::warning('Invalid token format in POST request');
+                return response('OK', 200);
+            }
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Webhook validation error', [
-                'token' => $token,
-                'errors' => $e->errors()
-            ]);
-            return response('Bad Request', 400);
+            // Find restaurant by bot token
+            $restaurant = Restaurant::where('bot_token', $token)->first();
+            
+            if (!$restaurant) {
+                Log::error('Restaurant not found for bot token in POST request');
+                return response('OK', 200);
+            }
+
+            // Get request data safely
+            $requestData = $request->all();
+            
+            // Basic validation of request structure
+            if (empty($requestData)) {
+                Log::warning('Empty request data received');
+                return response('OK', 200);
+            }
+
+            // Process the update safely
+            $this->processWebhookUpdate($restaurant, $requestData, $token);
+
+            return response('OK', 200);
+
         } catch (\Exception $e) {
-            Log::error('Webhook error', [
-                'token' => $token,
+            Log::error('Error in webhook POST request', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'line' => $e->getLine()
+            ]);
+            return response('OK', 200);
+        }
+    }
+
+    /**
+     * Validate bot token format
+     */
+    private function isValidToken($token)
+    {
+        return preg_match('/^\d+:[A-Za-z0-9_-]+$/', $token);
+    }
+
+    /**
+     * Process webhook update safely
+     */
+    private function processWebhookUpdate($restaurant, $requestData, $token)
+    {
+        try {
+            // Handle different types of updates
+            if (isset($requestData['message'])) {
+                $this->handleMessage($restaurant, $requestData['message']);
+            } elseif (isset($requestData['callback_query'])) {
+                $this->handleCallbackQuery($restaurant, $requestData['callback_query']);
+            } elseif (isset($requestData['edited_message'])) {
+                Log::info('Edited message received', ['restaurant_id' => $restaurant->id]);
+            } else {
+                Log::info('Unhandled update type', [
+                    'restaurant_id' => $restaurant->id,
+                    'update_keys' => array_keys($requestData)
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error processing webhook update', [
+                'error' => $e->getMessage(),
+                'restaurant_id' => $restaurant->id
+            ]);
+        }
+    }
+
+    /**
+     * Handle regular message
+     */
+    private function handleMessage($restaurant, $message)
+    {
+        try {
+            if (!isset($message['from']['id']) || !isset($message['chat']['id'])) {
+                Log::warning('Invalid message structure', ['restaurant_id' => $restaurant->id]);
+                return;
+            }
+
+            $userId = $message['from']['id'];
+            $chatId = $message['chat']['id'];
+            $text = $message['text'] ?? '';
+
+            // Create or update telegram user
+            $telegramUser = TelegramUser::updateOrCreate(
+                [
+                    'telegram_chat_id' => $chatId,
+                    'restaurant_id' => $restaurant->id
+                ],
+                [
+                    'first_name' => $message['from']['first_name'] ?? '',
+                    'last_name' => $message['from']['last_name'] ?? '',
+                    'username' => $message['from']['username'] ?? '',
+                    'language_code' => $message['from']['language_code'] ?? 'uz',
+                    'is_active' => true,
+                    'last_activity_at' => now()
+                ]
+            );
+
+            // Store the message
+            TelegramMessage::create([
+                'telegram_user_id' => $telegramUser->id,
+                'restaurant_id' => $restaurant->id,
+                'message_type' => 'text',
+                'content' => $text,
+                'telegram_message_id' => $message['message_id'] ?? null
+            ]);
+
+            // Process commands
+            if (strpos($text, '/') === 0) {
+                $this->handleCommand($restaurant, $telegramUser, $text);
+            } else {
+                $this->sendDefaultResponse($restaurant, $telegramUser);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error handling message', [
+                'error' => $e->getMessage(),
+                'restaurant_id' => $restaurant->id
+            ]);
+        }
+    }
+
+    /**
+     * Handle bot commands
+     */
+    private function handleCommand($restaurant, $telegramUser, $command)
+    {
+        try {
+            $command = strtolower(trim($command));
+
+            switch ($command) {
+                case '/start':
+                    $this->sendWelcomeMessage($restaurant, $telegramUser);
+                    break;
+                case '/menu':
+                    $this->sendMenuMessage($restaurant, $telegramUser);
+                    break;
+                case '/help':
+                    $this->sendHelpMessage($restaurant, $telegramUser);
+                    break;
+                default:
+                    $this->sendUnknownCommandMessage($restaurant, $telegramUser);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error handling command', [
+                'error' => $e->getMessage(),
+                'restaurant_id' => $restaurant->id
+            ]);
+        }
+    }
+
+    /**
+     * Send welcome message
+     */
+    private function sendWelcomeMessage($restaurant, $telegramUser)
+    {
+        try {
+            $message = "🎉 Xush kelibsiz!\n\n";
+            $message .= "🏪 Restoran: {$restaurant->name}\n";
+            $message .= "📱 Buyurtma berish uchun quyidagi tugmani bosing:\n\n";
+            
+            $webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
+            
+            $keyboard = [
+                'inline_keyboard' => [
+                    [
+                        [
+                            'text' => '🛒 Buyurtma berish',
+                            'web_app' => ['url' => $webAppUrl]
+                        ]
+                    ],
+                    [
+                        [
+                            'text' => '📋 Menyu',
+                            'callback_data' => 'show_menu'
+                        ],
+                        [
+                            'text' => '❓ Yordam',
+                            'callback_data' => 'show_help'
+                        ]
+                    ]
+                ]
+            ];
+
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_chat_id, $message, $keyboard);
+
+        } catch (\Exception $e) {
+            Log::error('Error sending welcome message', [
+                'error' => $e->getMessage(),
+                'restaurant_id' => $restaurant->id
+            ]);
+        }
+    }
+
+    /**
+     * Send menu message
+     */
+    private function sendMenuMessage($restaurant, $telegramUser)
+    {
+        try {
+            $message = "📋 <b>{$restaurant->name}</b> menyusi:\n\n";
+            
+            $categories = $restaurant->categories()->with('menuItems')->get();
+            
+            foreach ($categories as $category) {
+                $message .= "🍽 <b>{$category->name}</b>\n";
+                foreach ($category->menuItems as $item) {
+                    $price = number_format($item->price, 0, '.', ' ');
+                    $message .= "• {$item->name} - {$price} so'm\n";
+                }
+                $message .= "\n";
+            }
+            
+            $webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
+            
+            $keyboard = [
+                'inline_keyboard' => [
+                    [
+                        [
+                            'text' => '🛒 Buyurtma berish',
+                            'web_app' => ['url' => $webAppUrl]
+                        ]
+                    ]
+                ]
+            ];
+
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_chat_id, $message, $keyboard);
+
+        } catch (\Exception $e) {
+            Log::error('Error sending menu message', [
+                'error' => $e->getMessage(),
+                'restaurant_id' => $restaurant->id
+            ]);
+        }
+    }
+
+    /**
+     * Send help message
+     */
+    private function sendHelpMessage($restaurant, $telegramUser)
+    {
+        try {
+            $message = "❓ <b>Yordam</b>\n\n";
+            $message .= "📋 /menu - Menyuni ko'rish\n";
+            $message .= "🛒 Buyurtma berish uchun \"Buyurtma berish\" tugmasini bosing\n";
+            $message .= "📞 Aloqa: {$restaurant->phone}\n";
+            if ($restaurant->address) {
+                $message .= "📍 Manzil: {$restaurant->address}\n";
+            }
+
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_chat_id, $message);
+
+        } catch (\Exception $e) {
+            Log::error('Error sending help message', [
+                'error' => $e->getMessage(),
+                'restaurant_id' => $restaurant->id
+            ]);
+        }
+    }
+
+    /**
+     * Send unknown command message
+     */
+    private function sendUnknownCommandMessage($restaurant, $telegramUser)
+    {
+        try {
+            $message = "❓ Noma'lum buyruq.\n\n";
+            $message .= "Mavjud buyruqlar:\n";
+            $message .= "/start - Botni ishga tushirish\n";
+            $message .= "/menu - Menyuni ko'rish\n";
+            $message .= "/help - Yordam\n";
+
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_chat_id, $message);
+
+        } catch (\Exception $e) {
+            Log::error('Error sending unknown command message', [
+                'error' => $e->getMessage(),
+                'restaurant_id' => $restaurant->id
+            ]);
+        }
+    }
+
+    /**
+     * Send default response for regular messages
+     */
+    private function sendDefaultResponse($restaurant, $telegramUser)
+    {
+        try {
+            $message = "Salom! Buyurtma berish uchun quyidagi tugmani bosing:";
+            
+            $webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
+            
+            $keyboard = [
+                'inline_keyboard' => [
+                    [
+                        [
+                            'text' => '🛒 Buyurtma berish',
+                            'web_app' => ['url' => $webAppUrl]
+                        ]
+                    ]
+                ]
+            ];
+
+            $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_chat_id, $message, $keyboard);
+
+        } catch (\Exception $e) {
+            Log::error('Error sending default response', [
+                'error' => $e->getMessage(),
+                'restaurant_id' => $restaurant->id
+            ]);
+        }
+    }
+
+    /**
+     * Handle callback query
+     */
+    private function handleCallbackQuery($restaurant, $callbackQuery)
+    {
+        try {
+            // Acknowledge the callback query
+            $this->answerCallbackQuery($restaurant->bot_token, $callbackQuery['id']);
+            
+            // Process the callback data
+            $data = $callbackQuery['data'] ?? '';
+            $chatId = $callbackQuery['from']['id'] ?? null;
+            
+            if (!$chatId) return;
+
+            // Find telegram user
+            $telegramUser = TelegramUser::where('telegram_chat_id', $chatId)
+                ->where('restaurant_id', $restaurant->id)
+                ->first();
+
+            if (!$telegramUser) {
+                Log::warning('Telegram user not found for callback query', [
+                    'restaurant_id' => $restaurant->id,
+                    'chat_id' => $chatId
+                ]);
+                return;
+            }
+
+            switch ($data) {
+                case 'show_menu':
+                    $this->sendMenuMessage($restaurant, $telegramUser);
+                    break;
+                case 'show_help':
+                    $this->sendHelpMessage($restaurant, $telegramUser);
+                    break;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error handling callback query', [
+                'error' => $e->getMessage(),
+                'restaurant_id' => $restaurant->id
+            ]);
+        }
+    }
+
+    /**
+     * Answer callback query
+     */
+    private function answerCallbackQuery($botToken, $callbackQueryId)
+    {
+        try {
+            $url = "https://api.telegram.org/bot{$botToken}/answerCallbackQuery";
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['callback_query_id' => $callbackQueryId]));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+
+            curl_exec($ch);
+            curl_close($ch);
+
+        } catch (\Exception $e) {
+            Log::error('Error answering callback query', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Send telegram message safely
+     */
+    private function sendTelegramMessage($botToken, $chatId, $message, $keyboard = null)
+    {
+        try {
+            $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
+            
+            $data = [
+                'chat_id' => $chatId,
+                'text' => $message,
+                'parse_mode' => 'HTML'
+            ];
+            
+            if ($keyboard) {
+                $data['reply_markup'] = json_encode($keyboard);
+            }
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode !== 200) {
+                Log::warning('Failed to send Telegram message', [
+                    'http_code' => $httpCode,
+                    'response' => substr($response, 0, 200)
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error sending Telegram message', [
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Serve web interface for Telegram Web App
+     */
+    public function webInterface(Request $request, $token = null)
+    {
+        try {
+            $botToken = $token ?? $request->query('bot_token');
+            
+            if (!$botToken) {
+                return response('Bot token not provided', 400);
+            }
+
+            $restaurant = Restaurant::where('bot_token', $botToken)->first();
+            
+            if (!$restaurant) {
+                return response('Restaurant not found', 404);
+            }
+
+            $categories = $restaurant->categories()->with('menuItems')->get();
+
+            return view('web-interface.enhanced', compact('restaurant', 'categories', 'botToken'));
+
+        } catch (\Exception $e) {
+            Log::error('Error serving web interface', [
+                'error' => $e->getMessage(),
+                'token' => $token ?? 'null'
             ]);
             return response('Internal Server Error', 500);
         }
     }
 
     /**
-     * Handle incoming messages
-     */
-    protected function handleMessage($message)
-    {
-        $chatId = $message['chat']['id'];
-        $text = $message['text'] ?? '';
-        $contact = $message['contact'] ?? null;
-
-        // Handle web app data
-        if (isset($message['web_app_data'])) {
-            $this->handleWebAppData($chatId, $message['web_app_data']);
-            return;
-        }
-
-        // Save or update telegram user
-        $telegramUser = $this->saveTelegramUser($message['from']);
-
-        // Save incoming message
-        if ($telegramUser && $text) {
-            // Check if this exact message was already processed recently (within last 5 seconds)
-            $recentMessage = \App\Models\TelegramMessage::where('restaurant_id', $telegramUser->restaurant_id)
-                ->where('telegram_user_id', $telegramUser->id)
-                ->where('message_text', $text)
-                ->where('direction', 'incoming')
-                ->where('created_at', '>=', now()->subSeconds(5))
-                ->first();
-            
-            if ($recentMessage) {
-                Log::warning('Duplicate message detected, skipping', [
-                    'message_id' => $message['message_id'] ?? null,
-                    'text' => $text,
-                    'chat_id' => $chatId,
-                    'restaurant_id' => $telegramUser->restaurant_id
-                ]);
-                // Don't process duplicate messages
-                return;
-            }
-            
-            $this->saveIncomingMessage($telegramUser, $text, $message['message_id'] ?? null, $message);
-        }
-
-        // Handle contact sharing
-        if ($contact) {
-            $this->handleContact($chatId, $contact);
-            return;
-        }
-
-        // Handle text commands
-        Log::info('Message received', ['text' => $text, 'chat_id' => $chatId, 'text_length' => strlen($text)]);
-        
-        // Debug: Check exact text match
-        if ($text === '📊 Buyurtmalarim') {
-            Log::info('Buyurtmalarim detected, calling handleMyOrders', ['chat_id' => $chatId]);
-            $this->handleMyOrders($chatId);
-            return;
-        }
-        
-        // Debug: Check if text contains Buyurtmalarim
-        if (strpos($text, 'Buyurtmalarim') !== false) {
-            Log::info('Buyurtmalarim found in text', ['text' => $text, 'chat_id' => $chatId]);
-            $this->handleMyOrders($chatId);
-            return;
-        }
-        
-        switch ($text) {
-            case '/start':
-                $this->handleStart($chatId);
-                break;
-            case '📋 Menyu':
-                $this->handleMenu($chatId);
-                break;
-            case '🛒 Savat':
-                $this->handleCart($chatId);
-                break;
-            case '📞 Buyurtma qilish':
-                $this->handleOrder($chatId);
-                break;
-            case 'ℹ️ Yordam':
-                $this->handleHelp($chatId);
-                break;
-            default:
-                $this->handleUnknownCommand($chatId, $text);
-        }
-    }
-
-    /**
-     * Handle callback queries (inline keyboard buttons)
-     */
-    protected function handleCallbackQuery($callbackQuery)
-    {
-        $chatId = $callbackQuery['message']['chat']['id'];
-        $data = $callbackQuery['data'];
-        $messageId = $callbackQuery['message']['message_id'];
-
-        // Parse callback data
-        $parts = explode('_', $data);
-        $action = $parts[0] ?? '';
-
-        switch ($action) {
-            case 'category':
-                $categoryId = $parts[1] ?? null;
-                $this->handleCategorySelection($chatId, $categoryId);
-                break;
-            case 'add':
-                $itemId = $parts[2] ?? null;
-                $this->handleAddToCart($chatId, $itemId);
-                break;
-            case 'remove':
-                $itemId = $parts[2] ?? null;
-                $this->handleRemoveFromCart($chatId, $itemId);
-                break;
-            case 'pay':
-                $orderId = $parts[2] ?? null;
-                $paymentType = $parts[1] ?? 'cash';
-                $this->handlePayment($chatId, $orderId, $paymentType);
-                break;
-            case 'cancel':
-                $orderId = $parts[2] ?? null;
-                $this->handleCancelOrder($chatId, $orderId);
-                break;
-                         case 'order':
-                 if ($parts[1] === 'details') {
-                     $orderId = $parts[2] ?? null;
-                     $this->handleOrderDetails($chatId, $orderId);
-                 }
-                 break;
-             case 'back':
-                 if ($parts[1] === 'to' && $parts[2] === 'orders') {
-                     $this->handleMyOrders($chatId);
-                 }
-                 break;
-             case 'refresh_orders':
-                 $this->handleMyOrders($chatId);
-                 break;
-             case 'contact_admin':
-                 $this->handleContact($chatId, null);
-                 break;
-        }
-    }
-
-    /**
-     * Handle /start command
-     */
-    protected function handleStart($chatId)
-    {
-        // Get current bot token
-        $botToken = $this->telegramService->getBotToken();
-        
-        // Find restaurant by bot token
-        $restaurant = Restaurant::where('bot_token', $botToken)->first();
-        
-        if (!$restaurant) {
-            $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
-            return;
-        }
-
-        // Check if user is already registered
-        $user = \App\Models\User::where('telegram_chat_id', $chatId)->first();
-        
-        if (!$user) {
-            // Create new user
-            $user = \App\Models\User::create([
-                'name' => 'Telegram User',
-                'email' => 'telegram_' . $chatId . '@example.com',
-                'telegram_chat_id' => $chatId,
-                'password' => bcrypt(Str::random(16)),
-                'role' => 'customer'
-            ]);
-            
-            Log::info('New Telegram user created', [
-                'chat_id' => $chatId,
-                'user_id' => $user->id,
-                'restaurant_id' => $restaurant->id
-            ]);
-        }
-
-        // Create web interface URL for Telegram Web App
-        $webAppUrl = url("/web-interface/app/{$restaurant->bot_token}");
-        
-        $message = "🍽 *{$restaurant->name}*\n\n";
-        $message .= "Xush kelibsiz! Restoran menyusini ko'rish va buyurtma berish uchun quyidagi tugmani bosing:\n\n";
-        $message .= "📱 *Menyuni ochish* - mahsulotlarni ko'rish va buyurtma berish uchun";
-        
-        $keyboard = [
-            [
-                ['text' => '🍽 Menyuni ochish', 'web_app' => ['url' => $webAppUrl]]
-            ],
-            [
-                ['text' => '📞 Aloqa', 'callback_data' => 'contact'],
-                ['text' => '📍 Manzil', 'callback_data' => 'location']
-            ]
-        ];
-        
-        $this->telegramService->sendMessageWithKeyboard($chatId, $message, $keyboard);
-    }
-
-    /**
-     * Send welcome message with web interface
-     */
-    protected function sendWelcomeWithWebInterface($chatId, $restaurant, $user)
-    {
-        // Generate unique session token for web interface
-        $sessionToken = Str::random(32);
-        
-        // Store session data in cache
-        Cache::put("web_session_{$sessionToken}", [
-            'chat_id' => $chatId,
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $user->id,
-            'bot_token' => $restaurant->bot_token,
-            'created_at' => now()
-        ], 3600); // 1 hour
-
-        // Create web interface URL with bot token
-        $webUrl = url("/web-interface?bot_token={$restaurant->bot_token}");
-        
-        $message = "🍽 *{$restaurant->name}*\n\n";
-        $message .= "Xush kelibsiz! Restoran menyusini ko'rish uchun quyidagi tugmani bosing:\n\n";
-        $message .= "📱 *Web sahifani ochish* - menyu va buyurtma berish uchun";
-        
-        $keyboard = [
-            [
-                ['text' => '🍽 Menyuni ko\'rish', 'web_app' => ['url' => $webUrl]]
-            ],
-            [
-                ['text' => '📞 Aloqa', 'callback_data' => 'contact'],
-                ['text' => '📍 Manzil', 'callback_data' => 'location']
-            ]
-        ];
-        
-        $this->telegramService->sendMessageWithKeyboard($chatId, $message, $keyboard);
-    }
-
-    /**
-     * Handle web app data from Telegram
-     */
-    protected function handleWebAppData($chatId, $webAppData)
-    {
-        $data = json_decode($webAppData, true);
-        
-        if (!$data) {
-            $this->telegramService->sendMessage($chatId, 'Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
-            return;
-        }
-        
-        // Handle different web app actions
-        switch ($data['action'] ?? '') {
-            case 'order_placed':
-                $this->handleOrderPlaced($chatId, $data);
-                break;
-            case 'menu_viewed':
-                $this->handleMenuViewed($chatId, $data);
-                break;
-            default:
-                $this->telegramService->sendMessage($chatId, 'Buyurtma qabul qilindi! Tez orada siz bilan bog\'lanamiz.');
-        }
-    }
-
-    /**
-     * Handle order placed from web interface
-     */
-    protected function handleOrderPlaced($chatId, $data)
-    {
-        $orderData = $data['order'] ?? [];
-        $restaurant = Restaurant::where('bot_token', $this->telegramService->getBotToken())->first();
-        
-        if (!$restaurant) {
-            $this->telegramService->sendMessage($chatId, 'Xatolik yuz berdi.');
-            return;
-        }
-        
-        // Create order
-        $order = Order::create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $data['user_id'] ?? null,
-            'telegram_chat_id' => $chatId,
-            'total_amount' => $orderData['total'] ?? 0,
-            'delivery_address' => $orderData['address'] ?? '',
-            'payment_method' => $orderData['payment_method'] ?? 'cash',
-            'status' => 'pending',
-            'items' => $orderData['items'] ?? [], // Store as array directly
-            'customer_name' => $orderData['customer_name'] ?? '',
-            'customer_phone' => $orderData['customer_phone'] ?? ''
-        ]);
-        
-        // Send confirmation to user
-        $message = "✅ *Buyurtma qabul qilindi!*\n\n";
-        $message .= "📋 Buyurtma raqami: *#{$order->id}*\n";
-        $message .= "💰 Jami: *{$order->total_amount} so'm*\n";
-        $message .= "📍 Manzil: *{$order->delivery_address}*\n";
-        $message .= "💳 To'lov: *" . ($order->payment_method === 'card' ? 'Karta' : 'Naqd pul') . "*\n\n";
-        $message .= "Tez orada siz bilan bog'lanamiz!";
-        
-        $this->telegramService->sendMessage($chatId, $message);
-        
-        // Notify admin about new order
-        $this->notifyAdminAboutOrder($order);
-    }
-
-    /**
-     * Handle menu viewed from web interface
-     */
-    protected function handleMenuViewed($chatId, $data)
-    {
-        $this->telegramService->sendMessage($chatId, '🍽 Menyu ko\'rildi. Buyurtma berish uchun menyuni oching.');
-    }
-
-    /**
-     * Web interface for Telegram users (from Web App)
+     * Serve web interface from app
      */
     public function webInterfaceFromApp(Request $request)
     {
-        try {
-            Log::info('Web interface from Telegram Web App request received', [
-                'request_data' => $request->all(),
-                'headers' => $request->headers->all(),
-                'user_agent' => $request->header('User-Agent')
-            ]);
-            
-            // Get bot token from query parameter
-            $botToken = $request->get('bot_token');
-            
-            // For testing purposes, if no bot token, use first restaurant's bot token
-            if (!$botToken) {
-                $firstRestaurant = Restaurant::where('is_active', true)->first();
-                if ($firstRestaurant && $firstRestaurant->bot_token) {
-                    $botToken = $firstRestaurant->bot_token;
-                    Log::info('Using first restaurant bot token for testing', ['bot_token' => $botToken]);
-                }
-            }
-            
-            // Validate bot token format
-            if ($botToken && !preg_match('/^\d+:[A-Za-z0-9_-]+$/', $botToken)) {
-                Log::error('Invalid bot token format: ' . $botToken);
-                return response()->json(['error' => 'Invalid bot token format'], 400);
-            }
-            
-            // Find restaurant by bot token
-            if ($botToken) {
-                $restaurant = Restaurant::where('bot_token', $botToken)->first();
-            } else {
-                // Fallback to first restaurant for testing
-                $restaurant = Restaurant::where('is_active', true)->first();
-            }
-            
-            if (!$restaurant) {
-                Log::error('No restaurant available for web interface', ['bot_token' => $botToken]);
-                return response()->json(['error' => 'Restaurant not found'], 404);
-            }
-            
-            // Check if restaurant is active
-            if (!$restaurant->is_active) {
-                Log::error('Restaurant is not active: ' . $restaurant->id);
-                return response()->json(['error' => 'Restaurant is not active'], 400);
-            }
-            
-            Log::info('Restaurant found for web interface', [
-                'restaurant_id' => $restaurant->id,
-                'restaurant_name' => $restaurant->name,
-                'bot_token' => $botToken
-            ]);
-            
-            // Get categories and menu items for this specific restaurant
-            $categories = Category::where('restaurant_id', $restaurant->id)
-                ->with(['menuItems' => function($query) {
-                    $query->where('is_active', true);
-                }])
-                ->get();
-            
-            // Create a mock user for direct access
-            $user = (object) [
-                'id' => 0,
-                'name' => 'Telegram User',
-                'phone' => null
-            ];
-            
-            Log::info('Web interface loaded successfully for Telegram Web App', [
-                'restaurant_id' => $restaurant->id,
-                'categories_count' => $categories->count(),
-                'bot_token' => $botToken
-            ]);
-            
-            return view('web-interface.enhanced', compact('restaurant', 'user', 'categories', 'botToken'));
-            
-        } catch (\Exception $e) {
-            Log::error('Web interface error for Telegram Web App', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'error' => 'Server error: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Extract bot token from Telegram init data
-     */
-    protected function extractBotTokenFromInitData($initData)
-    {
-        // This is a simplified version. In production, you should verify the hash
-        $data = [];
-        parse_str($initData, $data);
-        
-        // Try to get bot token from various sources
-        $botToken = $data['bot_token'] ?? null;
-        
-        if (!$botToken) {
-            // Try to find bot token from restaurant that matches the user
-            $user = $data['user'] ?? null;
-            if ($user) {
-                $userData = json_decode($user, true);
-                $chatId = $userData['id'] ?? null;
-                
-                if ($chatId) {
-                    // Find restaurant by checking which bot this user is chatting with
-                    // This is a simplified approach
-                    $restaurant = Restaurant::where('admin_telegram_chat_id', $chatId)->first();
-                    if ($restaurant) {
-                        return $restaurant->bot_token;
-                    }
-                }
-            }
-        }
-        
-        return $botToken;
-    }
-
-    /**
-     * Web interface for Telegram users
-     */
-    public function webInterface($token)
-    {
-        try {
-            // Get session data from cache
-            $sessionData = Cache::get("web_session_{$token}");
-            
-            if (!$sessionData) {
-                Log::error('Session expired for web interface', ['token' => $token]);
-                return response('Session expired', 404);
-            }
-            
-            $restaurant = Restaurant::find($sessionData['restaurant_id']);
-            $user = \App\Models\User::find($sessionData['user_id']);
-            
-            if (!$restaurant || !$user) {
-                Log::error('Invalid session data for web interface', [
-                    'token' => $token,
-                    'session_data' => $sessionData,
-                    'restaurant_found' => !!$restaurant,
-                    'user_found' => !!$user
-                ]);
-                return response('Invalid session', 404);
-            }
-            
-            // Check if restaurant is active
-            if (!$restaurant->is_active) {
-                Log::error('Restaurant is not active for web interface', ['restaurant_id' => $restaurant->id]);
-                return response('Restaurant is not active', 400);
-            }
-            
-            // Get categories and menu items for this specific restaurant
-            $categories = Category::where('restaurant_id', $restaurant->id)
-                ->with(['menuItems' => function($query) {
-                    $query->where('is_active', true);
-                }])
-                ->get();
-            
-            // Pass bot token to view
-            $botToken = $restaurant->bot_token;
-            
-            Log::info('Web interface loaded successfully', [
-                'token' => $token,
-                'restaurant_id' => $restaurant->id,
-                'user_id' => $user->id,
-                'categories_count' => $categories->count(),
-                'bot_token' => $botToken
-            ]);
-            
-            return view('web-interface.enhanced', compact('restaurant', 'user', 'categories', 'token', 'botToken'));
-            
-        } catch (\Exception $e) {
-            Log::error('Web interface error', [
-                'token' => $token,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response('Server error', 500);
-        }
-    }
-
-    /**
-     * Get menu data for web interface without token
-     */
-    public function getMenuWithoutToken(Request $request)
-    {
-        // Get bot token from request
-        $botToken = $request->get('bot_token');
-        
-        if (!$botToken) {
-            return response()->json(['error' => 'Bot token required'], 400);
-        }
-        
-        $restaurant = Restaurant::where('bot_token', $botToken)->first();
-        
-        if (!$restaurant) {
-            return response()->json(['error' => 'Restaurant not found'], 404);
-        }
-        
-        $categories = Category::where('restaurant_id', $restaurant->id)
-            ->with(['menuItems' => function($query) {
-                $query->where('is_active', true);
-            }])
-            ->get();
-        
-        return response()->json([
-            'restaurant' => $restaurant,
-            'categories' => $categories
-        ]);
-    }
-
-    /**
-     * Get menu data for web interface
-     */
-    public function getMenu($token)
-    {
-        $sessionData = Cache::get("web_session_{$token}");
-        
-        if (!$sessionData) {
-            return response()->json(['error' => 'Session expired'], 404);
-        }
-        
-        $restaurant = Restaurant::find($sessionData['restaurant_id']);
-        
-        if (!$restaurant) {
-            return response()->json(['error' => 'Restaurant not found'], 404);
-        }
-        
-        $categories = Category::where('restaurant_id', $restaurant->id)
-            ->with(['menuItems' => function($query) {
-                $query->where('is_active', true);
-            }])
-            ->get();
-        
-        return response()->json([
-            'restaurant' => $restaurant,
-            'categories' => $categories
-        ]);
-    }
-
-    /**
-     * Place order from web interface without token
-     */
-    public function placeOrderWithoutToken(Request $request)
-    {
-        try {
-            // Log the incoming request for debugging
-            Log::info('Order placement request received', [
-                'request_data' => $request->all(),
-                'headers' => $request->headers->all()
-            ]);
-            
-            // Get bot token from request
-            $botToken = $request->get('bot_token');
-            $restaurantId = $request->get('restaurant_id');
-            
-            Log::info('Bot token and restaurant ID received for order placement', [
-                'bot_token' => $botToken,
-                'bot_token_length' => $botToken ? strlen($botToken) : 0,
-                'restaurant_id' => $restaurantId,
-                'request_data' => $request->all()
-            ]);
-            
-            // Find restaurant by bot token or ID
-            $restaurant = null;
-            
-            if ($botToken) {
-                $restaurant = Restaurant::where('bot_token', $botToken)->first();
-                
-                if (!$restaurant) {
-                    Log::error('Restaurant not found for bot token', [
-                        'bot_token' => $botToken,
-                        'available_restaurants' => Restaurant::pluck('name', 'bot_token')->toArray()
-                    ]);
-                }
-            }
-            
-            // If no restaurant found by token, try by ID
-            if (!$restaurant && $restaurantId) {
-                $restaurant = Restaurant::find($restaurantId);
-                if (!$restaurant) {
-                    Log::error('Restaurant not found for ID', [
-                        'restaurant_id' => $restaurantId
-                    ]);
-                }
-            }
-            
-            // If still no restaurant, use first active restaurant as last resort
-            if (!$restaurant) {
-                Log::warning('No restaurant found by token or ID, using first active restaurant as fallback');
-                $restaurant = Restaurant::where('is_active', true)->first();
-                
-                if (!$restaurant) {
-                    Log::error('No active restaurants found in database');
-                    return response()->json(['error' => 'No active restaurants available'], 500);
-                }
-            }
-            
-            Log::info('Restaurant found for order placement', [
-                'restaurant_id' => $restaurant->id,
-                'restaurant_name' => $restaurant->name,
-                'bot_token' => $botToken,
-                'used_fallback' => (!$botToken && !$restaurantId)
-            ]);
-            
-            // Validate request
-            $validated = $request->validate([
-                'items' => 'required|array',
-                'items.*.id' => 'required|exists:menu_items,id',
-                'items.*.quantity' => 'required|integer|min:1',
-                'delivery_address' => 'required|string',
-                'payment_method' => 'required|in:cash,card',
-                'customer_name' => 'required|string',
-                'customer_phone' => 'required|string',
-                'telegram_chat_id' => 'nullable|numeric',
-                'bot_token' => 'nullable|string',
-                'restaurant_id' => 'nullable|integer'
-            ]);
-            
-            Log::info('Request validation passed', ['validated_data' => $validated]);
-            
-            // Calculate total
-            $total = 0;
-            $orderItems = [];
-            
-            foreach ($request->items as $item) {
-                $menuItem = MenuItem::find($item['id']);
-                if (!$menuItem) {
-                    Log::error('Menu item not found', ['item_id' => $item['id']]);
-                    return response()->json(['error' => 'Menu item not found: ' . $item['id']], 404);
-                }
-                
-                // Verify menu item belongs to the correct restaurant
-                if ($menuItem->restaurant_id != $restaurant->id) {
-                    Log::error('Menu item does not belong to restaurant', [
-                        'menu_item_id' => $item['id'],
-                        'menu_item_restaurant_id' => $menuItem->restaurant_id,
-                        'order_restaurant_id' => $restaurant->id
-                    ]);
-                    return response()->json(['error' => 'Invalid menu item for this restaurant'], 400);
-                }
-                
-                $subtotal = $menuItem->price * $item['quantity'];
-                $total += $subtotal;
-                
-                $orderItems[] = [
-                    'menu_item_id' => $item['id'],
-                    'name' => $menuItem->name,
-                    'price' => $menuItem->price,
-                    'quantity' => $item['quantity'],
-                    'subtotal' => $subtotal
-                ];
-            }
-            
-            Log::info('Order calculation completed', [
-                'total' => $total,
-                'items_count' => count($orderItems)
-            ]);
-            
-            // Create order
-            $order = Order::create([
-                'restaurant_id' => $restaurant->id,
-                'user_id' => null,
-                'project_id' => null,
-                'telegram_chat_id' => $request->telegram_chat_id ? (string) $request->telegram_chat_id : null,
-                'total_amount' => $total,
-                'delivery_address' => $request->delivery_address,
-                'payment_method' => $request->payment_method,
-                'status' => 'new',
-                'items' => $orderItems,
-                'customer_name' => $request->customer_name,
-                'customer_phone' => $request->customer_phone,
-                'order_number' => 'WEB-' . str_pad(time(), 10, '0', STR_PAD_LEFT),
-                'total_price' => $total,
-                'payment_type' => $request->payment_method,
-                'address' => $request->delivery_address,
-                'notes' => 'Web interface orqali zakaz qilindi'
-            ]);
-            
-            Log::info('Order created successfully', [
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'restaurant_id' => $restaurant->id,
-                'total_amount' => $total,
-                'items_count' => count($orderItems)
-            ]);
-            
-            Log::info('Order created successfully', [
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'restaurant_id' => $restaurant->id
-            ]);
-            
-            // Notify admin about new order
-            $this->notifyAdminAboutOrder($order);
-            
-            return response()->json([
-                'success' => true,
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'message' => 'Order placed successfully'
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Order placement failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json([
-                'error' => 'Order placement failed: ' . $e->getMessage()
-            ], 500);
-        }
+        return $this->webInterface($request);
     }
 
     /**
@@ -867,864 +589,104 @@ class TelegramController extends Controller
     public function placeOrder(Request $request, $token)
     {
         try {
-            Log::info('Order placement with token request received', [
-                'token' => $token,
-                'request_data' => $request->all()
-            ]);
+            $restaurant = Restaurant::where('bot_token', $token)->first();
             
-            // Validate token format
-            if (!preg_match('/^[a-zA-Z0-9]{32,}$/', $token)) {
-                Log::warning('Invalid token format for order placement', ['token' => $token]);
-                return response()->json(['error' => 'Invalid token format'], 400);
+            if (!$restaurant) {
+                return response()->json(['success' => false, 'error' => 'Restaurant not found'], 404);
             }
-            
-            $sessionData = Cache::get("web_session_{$token}");
-            
-            if (!$sessionData) {
-                Log::error('Session expired for order placement', ['token' => $token]);
-                return response()->json(['error' => 'Session expired or invalid'], 401);
-            }
-            
-            // Validate session data structure
-            if (!isset($sessionData['restaurant_id']) || !isset($sessionData['user_id'])) {
-                Log::error('Invalid session data structure', ['session_data' => $sessionData]);
-                return response()->json(['error' => 'Invalid session data'], 400);
-            }
-            
-            $restaurant = Restaurant::find($sessionData['restaurant_id']);
-            $user = \App\Models\User::find($sessionData['user_id']);
-            
-            if (!$restaurant || !$user) {
-                Log::error('Invalid session data for order placement', [
-                    'session_data' => $sessionData,
-                    'restaurant_found' => !!$restaurant,
-                    'user_found' => !!$user
-                ]);
-                return response()->json(['error' => 'Invalid session data'], 400);
-            }
-            
-            Log::info('Session validation passed', [
-                'restaurant_id' => $restaurant->id,
-                'user_id' => $user->id
-            ]);
-            
-            // Validate request
-            $validated = $request->validate([
-                'items' => 'required|array',
-                'items.*.id' => 'required|exists:menu_items,id',
+
+            // Validate request data
+            $data = $request->validate([
+                'items' => 'required|array|min:1',
+                'items.*.id' => 'required|integer',
                 'items.*.quantity' => 'required|integer|min:1',
-                'delivery_address' => 'required|string',
-                'payment_method' => 'required|in:cash,card',
-                'customer_name' => 'required|string',
-                'customer_phone' => 'required|string',
-                'telegram_chat_id' => 'nullable|numeric'
+                'customer_name' => 'nullable|string|max:255',
+                'customer_phone' => 'nullable|string|max:255',
+                'customer_address' => 'nullable|string|max:1000',
+                'customer_notes' => 'nullable|string|max:1000'
             ]);
-            
-            Log::info('Request validation passed', ['validated_data' => $validated]);
-            
-            // Calculate total
-            $total = 0;
+
+            // Calculate total and create order
+            $totalPrice = 0;
             $orderItems = [];
-            
-            foreach ($request->items as $item) {
+
+            foreach ($data['items'] as $item) {
                 $menuItem = MenuItem::find($item['id']);
-                if (!$menuItem) {
-                    Log::error('Menu item not found', ['item_id' => $item['id']]);
-                    return response()->json(['error' => 'Menu item not found: ' . $item['id']], 404);
+                if ($menuItem && $menuItem->restaurant_id == $restaurant->id) {
+                    $itemTotal = $menuItem->price * $item['quantity'];
+                    $totalPrice += $itemTotal;
+                    $orderItems[] = [
+                        'menu_item_id' => $menuItem->id,
+                        'quantity' => $item['quantity'],
+                        'price' => $menuItem->price,
+                        'total' => $itemTotal
+                    ];
                 }
-                $subtotal = $menuItem->price * $item['quantity'];
-                $total += $subtotal;
-                
-                $orderItems[] = [
-                    'menu_item_id' => $item['id'],
-                    'name' => $menuItem->name,
-                    'price' => $menuItem->price,
-                    'quantity' => $item['quantity'],
-                    'subtotal' => $subtotal
-                ];
             }
-            
-            Log::info('Order calculation completed', [
-                'total' => $total,
-                'items_count' => count($orderItems)
-            ]);
-            
-            // Prepare order data
-            $orderData = [
-                'restaurant_id' => $restaurant->id,
-                'user_id' => $user->id,
-                'telegram_chat_id' => $sessionData['chat_id'] ? (string) $sessionData['chat_id'] : null,
-                'total_amount' => $total,
-                'delivery_address' => $request->delivery_address,
-                'payment_method' => $request->payment_method,
-                'status' => 'new',
-                'items' => $orderItems,
-                'customer_name' => $request->customer_name,
-                'customer_phone' => $request->customer_phone,
-                // Add required fields from original schema
-                'order_number' => 'WEB-' . time(),
-                'total_price' => $total,
-                'payment_type' => $request->payment_method,
-                'address' => $request->delivery_address,
-                'notes' => 'Web interface orqali zakaz qilindi'
-            ];
-            
-            Log::info('Order data prepared', ['order_data' => $orderData]);
-            
+
+            if (empty($orderItems)) {
+                return response()->json(['success' => false, 'error' => 'No valid items found'], 400);
+            }
+
             // Create order
-            $order = Order::create($orderData);
-            
-            Log::info('Order created successfully', [
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
+            $order = Order::create([
                 'restaurant_id' => $restaurant->id,
-                'total_amount' => $total,
-                'items_count' => count($orderItems)
+                'customer_name' => $data['customer_name'] ?? 'Telegram User',
+                'customer_phone' => $data['customer_phone'] ?? 'N/A',
+                'delivery_address' => $data['customer_address'] ?? 'Telegram Order',
+                'notes' => $data['customer_notes'] ?? '',
+                'total_price' => $totalPrice,
+                'status' => 'pending',
+                'payment_method' => 'cash',
+                'bot_token' => $token
             ]);
-            
-            // Send confirmation to Telegram
-            $this->handleOrderPlaced($sessionData['chat_id'], [
-                'order' => [
-                    'id' => $order->id,
-                    'total' => $total,
-                    'address' => $request->delivery_address,
-                    'payment_method' => $request->payment_method,
-                    'customer_name' => $request->customer_name,
-                    'customer_phone' => $request->customer_phone,
-                    'items' => $orderItems
-                ],
-                'user_id' => $user->id
+
+            // Create order items
+            foreach ($orderItems as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'menu_item_id' => $item['menu_item_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price']
+                ]);
+            }
+
+            Log::info('Order placed successfully', [
+                'order_id' => $order->id,
+                'restaurant_id' => $restaurant->id,
+                'total_price' => $totalPrice
             ]);
-            
+
             return response()->json([
                 'success' => true,
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'message' => 'Buyurtma qabul qilindi!'
+                'message' => 'Buyurtma muvaffaqiyatli qabul qilindi!',
+                'order_id' => $order->id
             ]);
-            
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Order validation error', [
-                'errors' => $e->errors(),
-                'request_data' => $request->all()
-            ]);
-            return response()->json([
-                'error' => 'Validation error: ' . implode(', ', $e->errors())
-            ], 422);
+
         } catch (\Exception $e) {
-            Log::error('Order placement error', [
+            Log::error('Error placing order', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
+                'token' => $token ?? 'null'
             ]);
-            
+
             return response()->json([
-                'error' => 'Server error: ' . $e->getMessage()
+                'success' => false,
+                'error' => 'Buyurtma berishda xatolik yuz berdi'
             ], 500);
         }
     }
 
     /**
-     * Notify admin about new order
+     * Place order without token (from app)
      */
-    protected function notifyAdminAboutOrder($order)
+    public function placeOrderWithoutToken(Request $request)
     {
-        $restaurant = $order->restaurant;
+        $botToken = $request->input('bot_token');
         
-        $message = "🆕 *Yangi buyurtma!*\n\n";
-        $message .= "📋 Buyurtma raqami: *#{$order->order_number}*\n";
-        $message .= "🏪 Restoran: *{$restaurant->name}*\n";
-        $message .= "👤 Mijoz: *{$order->customer_name}*\n";
-        $message .= "📞 Telefon: *{$order->customer_phone}*\n";
-        $message .= "📍 Manzil: *" . ($order->delivery_address ?: $order->address) . "*\n";
-        $message .= "💰 Jami: *" . ($order->total_amount ?: $order->total_price) . " so'm*\n";
-        $message .= "💳 To'lov: *" . (($order->payment_method ?: $order->payment_type) === 'card' ? 'Karta' : 'Naqd pul') . "*\n\n";
-        
-        // Send to admin if admin has telegram chat id
-        if ($restaurant->admin_telegram_chat_id) {
-            $this->telegramService->sendMessage($restaurant->admin_telegram_chat_id, $message);
-        }
-    }
-
-    /**
-     * Handle menu request
-     */
-    protected function handleMenu($chatId)
-    {
-        $restaurant = $this->getRestaurantByChatId($chatId);
-        if (!$restaurant) {
-            $this->sendRestaurantNotFound($chatId);
-            return;
+        if (!$botToken) {
+            return response()->json(['success' => false, 'error' => 'Bot token not provided'], 400);
         }
 
-        $categories = Category::whereHas('project', function($query) use ($restaurant) {
-            $query->where('restaurant_id', $restaurant->id);
-        })->get();
-
-        $this->telegramService->sendMenuCategories($chatId, $categories);
-    }
-
-    /**
-     * Handle category selection
-     */
-    protected function handleCategorySelection($chatId, $categoryId)
-    {
-        $category = Category::find($categoryId);
-        if (!$category) {
-            $this->telegramService->sendMessage($chatId, 'Kategoriya topilmadi.');
-            return;
-        }
-
-        $items = MenuItem::where('category_id', $categoryId)->get();
-        $this->telegramService->sendMenuItems($chatId, $items);
-    }
-
-    /**
-     * Handle add to cart
-     */
-    protected function handleAddToCart($chatId, $itemId)
-    {
-        $item = MenuItem::find($itemId);
-        if (!$item) {
-            $this->telegramService->sendMessage($chatId, 'Taom topilmadi.');
-            return;
-        }
-
-        // Get or create cart for this user
-        $cart = Cache::get("cart_{$chatId}", []);
-        
-        if (isset($cart[$itemId])) {
-            $cart[$itemId]['quantity']++;
-        } else {
-            $cart[$itemId] = [
-                'id' => $item->id,
-                'name' => $item->name,
-                'price' => $item->price,
-                'quantity' => 1
-            ];
-        }
-
-        Cache::put("cart_{$chatId}", $cart, 3600); // 1 hour
-
-        $this->telegramService->sendMessage($chatId, "✅ {$item->name} savatga qo'shildi!");
-    }
-
-    /**
-     * Handle cart view
-     */
-    protected function handleCart($chatId)
-    {
-        $cart = Cache::get("cart_{$chatId}", []);
-        
-        if (empty($cart)) {
-            $this->telegramService->sendMessage($chatId, config('telegram.messages.cart_empty'));
-            return;
-        }
-
-        $message = "🛒 Savat:\n\n";
-        $total = 0;
-        $keyboard = [];
-
-        foreach ($cart as $itemId => $item) {
-            $subtotal = $item['price'] * $item['quantity'];
-            $total += $subtotal;
-            
-            $message .= "• {$item['name']} x{$item['quantity']} = " . number_format($subtotal, 0, ',', ' ') . " so'm\n";
-            
-            $keyboard[] = [
-                ['text' => "➖ {$item['name']}", 'callback_data' => "remove_item_{$itemId}"],
-                ['text' => "➕ {$item['name']}", 'callback_data' => "add_item_{$itemId}"]
-            ];
-        }
-
-        $message .= "\n<b>Jami: " . number_format($total, 0, ',', ' ') . " so'm</b>";
-
-        if (!empty($keyboard)) {
-            $keyboard[] = [['text' => '📞 Buyurtma qilish', 'callback_data' => 'checkout']];
-            $inlineKeyboard = $this->telegramService->createInlineKeyboard($keyboard);
-            $this->telegramService->sendMessage($chatId, $message, $inlineKeyboard);
-        }
-    }
-
-    /**
-     * Handle order checkout
-     */
-    protected function handleOrder($chatId)
-    {
-        $cart = Cache::get("cart_{$chatId}", []);
-        
-        if (empty($cart)) {
-            $this->telegramService->sendMessage($chatId, config('telegram.messages.cart_empty'));
-            return;
-        }
-
-        // Check if user has shared contact
-        $userContact = Cache::get("user_contact_{$chatId}");
-        if (!$userContact) {
-            $this->requestContact($chatId);
-            return;
-        }
-
-        // Create order
-        $restaurant = $this->getRestaurantByChatId($chatId);
-        if (!$restaurant) {
-            $this->sendRestaurantNotFound($chatId);
-            return;
-        }
-
-        $project = Project::where('restaurant_id', $restaurant->id)->first();
-        if (!$project) {
-            $this->telegramService->sendMessage($chatId, 'Proyekt topilmadi.');
-            return;
-        }
-
-        $order = Order::create([
-            'project_id' => $project->id,
-            'customer_name' => $userContact['name'] ?? 'N/A',
-            'customer_phone' => $userContact['phone'] ?? 'N/A',
-            'customer_telegram_id' => $chatId,
-            'delivery_address' => 'Telegram orqali buyurtma',
-            'payment_type' => 'cash',
-            'total_amount' => array_sum(array_map(function($item) {
-                return $item['price'] * $item['quantity'];
-            }, $cart)),
-            'status' => 'new'
-        ]);
-
-        // Create order items
-        foreach ($cart as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'menu_item_id' => $item['id'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price']
-            ]);
-        }
-
-        // Clear cart
-        Cache::forget("cart_{$chatId}");
-
-        // Send success message
-        $message = str_replace(
-            ['{order_number}', '{total_amount}'],
-            [$order->order_number, number_format($order->total_amount, 0, ',', ' ')],
-            config('telegram.messages.order_success')
-        );
-
-        $this->telegramService->sendMessage($chatId, $message);
-
-        // Send notification to restaurant
-        $this->telegramService->sendOrderStatusNotification($order);
-    }
-
-    /**
-     * Handle my orders
-     */
-    protected function handleMyOrders($chatId)
-    {
-        try {
-            Log::info('Starting handleMyOrders', ['chat_id' => $chatId]);
-            
-            // Send immediate response
-            $this->telegramService->sendMessage($chatId, '🔍 Buyurtmalaringiz qidirilmoqda...');
-            
-            // Get current bot token
-            $botToken = $this->telegramService->getBotToken();
-            
-            if (!$botToken) {
-                $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
-                return;
-            }
-            
-            // Find restaurant by bot token
-            $restaurant = Restaurant::where('bot_token', $botToken)->first();
-            
-            if (!$restaurant) {
-                $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
-                return;
-            }
-
-                         // Get active orders for this user from this restaurant (last 5 orders)
-             $orders = Order::where('telegram_chat_id', $chatId)
-                 ->where('restaurant_id', $restaurant->id)
-                 ->whereNotIn('status', ['delivered', 'cancelled'])
-                 ->orderBy('created_at', 'desc')
-                 ->limit(5)
-                 ->get();
-             
-             // If no active orders, show recent completed orders
-             if ($orders->isEmpty()) {
-                 $orders = Order::where('telegram_chat_id', $chatId)
-                     ->where('restaurant_id', $restaurant->id)
-                     ->orderBy('created_at', 'desc')
-                     ->limit(3)
-                     ->get();
-             }
-
-            if ($orders->isEmpty()) {
-                $this->telegramService->sendMessage($chatId, 'Sizda hali buyurtmalar yo\'q.');
-                return;
-            }
-
-            Log::info('Found orders for user', [
-                'chat_id' => $chatId,
-                'restaurant_id' => $restaurant->id,
-                'orders_count' => $orders->count(),
-                'orders' => $orders->pluck('id', 'order_number')->toArray()
-            ]);
-
-            if ($orders->isEmpty()) {
-                $this->telegramService->sendMessage($chatId, 'Sizda hali buyurtmalar yo\'q.');
-                return;
-            }
-
-                         // Check if we have active orders
-             $activeOrders = Order::where('telegram_chat_id', $chatId)
-                 ->where('restaurant_id', $restaurant->id)
-                 ->whereNotIn('status', ['delivered', 'cancelled'])
-                 ->count();
-             
-             if ($activeOrders > 0) {
-                 $message = "📊 *Faol buyurtmalar:*\n\n";
-             } else {
-                 $message = "📊 *So'nggi buyurtmalar:*\n\n";
-             }
-             
-             foreach ($orders as $order) {
-                 $status = [
-                     'new' => '⏳',
-                     'preparing' => '👨‍🍳',
-                     'on_way' => '🚚',
-                     'delivered' => '✅',
-                     'cancelled' => '❌'
-                 ][$order->status] ?? '❓';
- 
-                 $message .= "📦 #{$order->order_number} {$status}\n";
-                 $message .= "💰 " . number_format($order->total_price ?? 0, 0, ',', ' ') . " so'm\n";
-                 $message .= "📅 " . $order->created_at->format('d.m.Y H:i') . "\n\n";
-             }
-             
-             // Add total orders count
-             $totalOrders = Order::where('telegram_chat_id', $chatId)
-                 ->where('restaurant_id', $restaurant->id)
-                 ->count();
-             
-                          if ($totalOrders > 5) {
-                 $message .= "📋 Jami: {$totalOrders} ta buyurtma\n";
-                 $message .= "💡 Barcha buyurtmalarni ko'rish uchun admin bilan bog'laning\n\n";
-             }
-             
-             // Add quick status summary
-             $activeCount = Order::where('telegram_chat_id', $chatId)
-                 ->where('restaurant_id', $restaurant->id)
-                 ->whereNotIn('status', ['delivered', 'cancelled'])
-                 ->count();
-             
-             if ($activeCount > 0) {
-                 $message .= "🔄 Faol buyurtmalar: {$activeCount} ta";
-             }
- 
-             // Create inline keyboard for order actions
-             $keyboard = [
-                 [['text' => '🔄 Yangilash', 'callback_data' => 'refresh_orders']],
-                 [['text' => '📞 Admin bilan bog\'lanish', 'callback_data' => 'contact_admin']]
-             ];
-             $inlineKeyboard = $this->telegramService->createInlineKeyboard($keyboard);
-             
-             $this->telegramService->sendMessage($chatId, $message, $inlineKeyboard);
-        } catch (\Exception $e) {
-            Log::error('Error in handleMyOrders: ' . $e->getMessage(), [
-                'chat_id' => $chatId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            $this->telegramService->sendMessage($chatId, 'Kechirasiz, xatolik yuz berdi.');
-        }
-    }
-
-    /**
-     * Handle order details
-     */
-    protected function handleOrderDetails($chatId, $orderId)
-    {
-        try {
-            Log::info('Starting handleOrderDetails', ['chat_id' => $chatId, 'order_id' => $orderId]);
-            
-            // Get current bot token
-            $botToken = $this->telegramService->getBotToken();
-            
-            if (!$botToken) {
-                Log::error('Bot token not set in handleOrderDetails', ['chat_id' => $chatId]);
-                $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
-                return;
-            }
-            
-            // Find restaurant by bot token
-            $restaurant = Restaurant::where('bot_token', $botToken)->first();
-            
-            if (!$restaurant) {
-                Log::error('Restaurant not found for bot token', [
-                    'chat_id' => $chatId,
-                    'bot_token' => $botToken
-                ]);
-                $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
-                return;
-            }
-
-            // Get order details
-            $order = Order::where('id', $orderId)
-                ->where('telegram_chat_id', $chatId)
-                ->where('restaurant_id', $restaurant->id)
-                ->first();
-
-            if (!$order) {
-                Log::error('Order not found', [
-                    'chat_id' => $chatId,
-                    'order_id' => $orderId,
-                    'restaurant_id' => $restaurant->id
-                ]);
-                $this->telegramService->sendMessage($chatId, 'Buyurtma topilmadi.');
-                return;
-            }
-
-            // Get order items
-            $orderItems = OrderItem::where('order_id', $order->id)
-                ->with('menuItem')
-                ->get();
-
-            // Status mapping
-            $status = [
-                'new' => '⏳ Yangi',
-                'preparing' => '👨‍🍳 Tayyorlanmoqda',
-                'on_way' => '🚚 Yolda',
-                'delivered' => '✅ Yetkazildi',
-                'cancelled' => '❌ Bekor'
-            ][$order->status] ?? 'Nomalum';
-
-            // Build message
-            $message = "📋 *Buyurtma #{$order->order_number}*\n\n";
-            $message .= "🏪 Restoran: *{$restaurant->name}*\n";
-            $message .= "👤 Mijoz: *{$order->customer_name}*\n";
-            $message .= "📞 Telefon: *{$order->customer_phone}*\n";
-            
-            if ($order->delivery_address) {
-                $message .= "📍 Manzil: *{$order->delivery_address}*\n";
-            }
-            
-            $message .= "📅 Sana: *{$order->created_at->format('d.m.Y H:i')}*\n";
-            $message .= "📊 Holat: *{$status}*\n";
-            $message .= "💳 To'lov: *" . ($order->payment_type === 'card' ? 'Karta' : 'Naqd pul') . "*\n\n";
-            
-            // Add items
-            if ($orderItems->isNotEmpty()) {
-                $message .= "🍽️ *Buyurtma tarkibi:*\n\n";
-                foreach ($orderItems as $item) {
-                    $subtotal = $item->price * $item->quantity;
-                    $message .= "• {$item->menuItem->name} x{$item->quantity} = " . number_format($subtotal, 0, ',', ' ') . " so'm\n";
-                }
-                $message .= "\n";
-            }
-            
-            $message .= "💰 *Jami: " . number_format($order->total_price ?? 0, 0, ',', ' ') . " so'm*\n\n";
-            
-            // Add additional info if available
-            if ($order->address) {
-                $message .= "📍 *Manzil:* {$order->address}\n\n";
-            }
-
-            // Create back button
-            $keyboard = [
-                [['text' => '🔙 Buyurtmalarimga qaytish', 'callback_data' => 'back_to_orders']]
-            ];
-            $inlineKeyboard = $this->telegramService->createInlineKeyboard($keyboard);
-
-            Log::info('Sending order details message', [
-                'chat_id' => $chatId,
-                'order_id' => $orderId,
-                'message_length' => strlen($message)
-            ]);
-
-            $result = $this->telegramService->sendMessage($chatId, $message, $inlineKeyboard);
-            
-            if ($result['ok']) {
-                Log::info('Order details message sent successfully', [
-                    'chat_id' => $chatId,
-                    'order_id' => $orderId,
-                    'message_id' => $result['result']['message_id'] ?? null
-                ]);
-            } else {
-                Log::error('Failed to send order details message', [
-                    'chat_id' => $chatId,
-                    'order_id' => $orderId,
-                    'error' => $result['error'] ?? 'Unknown error',
-                    'result' => $result
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::error('Error in handleOrderDetails: ' . $e->getMessage(), [
-                'chat_id' => $chatId,
-                'order_id' => $orderId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            $this->telegramService->sendMessage($chatId, 'Kechirasiz, xatolik yuz berdi.');
-        }
-    }
-
-    /**
-     * Handle help
-     */
-    protected function handleHelp($chatId)
-    {
-        $restaurant = $this->getRestaurantByChatId($chatId);
-        if (!$restaurant) {
-            $this->sendRestaurantNotFound($chatId);
-            return;
-        }
-
-        $message = str_replace(
-            ['{phone}', '{address}'],
-            [$restaurant->phone ?? 'N/A', $restaurant->address ?? 'N/A'],
-            config('telegram.messages.help')
-        );
-
-        $this->telegramService->sendMessage($chatId, $message);
-    }
-
-    /**
-     * Handle contact sharing
-     */
-    protected function handleContact($chatId, $contact)
-    {
-        // Get current bot token
-        $botToken = $this->telegramService->getBotToken();
-        
-        // Find restaurant by bot token
-        $restaurant = Restaurant::where('bot_token', $botToken)->first();
-        
-        if (!$restaurant) {
-            $this->telegramService->sendMessage($chatId, 'Kechirasiz, bot sozlanmagan.');
-            return;
-        }
-
-        // Create or update user
-        $user = \App\Models\User::updateOrCreate(
-            ['telegram_chat_id' => $chatId],
-            [
-                'name' => $contact['first_name'] . ' ' . ($contact['last_name'] ?? ''),
-                'phone' => $contact['phone_number'],
-                'email' => 'telegram_' . $chatId . '@example.com', // Temporary email
-                'password' => bcrypt(Str::random(16)), // Random password
-                'role' => 'user',
-                'restaurant_id' => $restaurant->id
-            ]
-        );
-
-        // Send welcome message with main menu
-        $this->telegramService->sendWelcomeMessage($chatId, $restaurant);
-    }
-
-    /**
-     * Request contact from user
-     */
-    protected function requestContact($chatId)
-    {
-        $keyboard = [
-            [
-                [
-                    'text' => '📱 Raqamni yuborish',
-                    'request_contact' => true
-                ]
-            ]
-        ];
-
-        $replyKeyboard = $this->telegramService->createReplyKeyboard($keyboard, true, true);
-        $this->telegramService->sendMessage($chatId, 'Buyurtma qilish uchun avval raqamingizni yuboring:', $replyKeyboard);
-    }
-
-    /**
-     * Handle unknown commands
-     */
-    protected function handleUnknownCommand($chatId, $text)
-    {
-        $this->telegramService->sendMessage($chatId, "Kechirasiz, \"{$text}\" buyrug'i tushunilmadi. Menyudan tanlang.");
-    }
-
-    /**
-     * Get restaurant by chat ID (you might need to adjust this logic)
-     */
-    protected function getRestaurantByChatId($chatId)
-    {
-        // Get current bot token
-        $botToken = $this->telegramService->getBotToken();
-        
-        // This is a simplified version. You might want to store user-restaurant mapping
-        return Restaurant::where('bot_token', $botToken)->first();
-    }
-
-    /**
-     * Handle remove from cart
-     */
-    protected function handleRemoveFromCart($chatId, $itemId)
-    {
-        $item = MenuItem::find($itemId);
-        if (!$item) {
-            $this->telegramService->sendMessage($chatId, 'Taom topilmadi.');
-            return;
-        }
-
-        // Get cart for this user
-        $cart = Cache::get("cart_{$chatId}", []);
-        
-        if (isset($cart[$itemId])) {
-            if ($cart[$itemId]['quantity'] > 1) {
-                $cart[$itemId]['quantity']--;
-            } else {
-                unset($cart[$itemId]);
-            }
-        }
-
-        Cache::put("cart_{$chatId}", $cart, 3600); // 1 hour
-
-        $this->telegramService->sendMessage($chatId, "➖ {$item->name} savatdan olindi!");
-    }
-
-    /**
-     * Handle payment
-     */
-    protected function handlePayment($chatId, $orderId, $paymentType)
-    {
-        $order = Order::find($orderId);
-        if (!$order) {
-            $this->telegramService->sendMessage($chatId, 'Buyurtma topilmadi.');
-            return;
-        }
-
-        // Update order payment type
-        $order->update(['payment_type' => $paymentType]);
-
-        $this->telegramService->sendMessage($chatId, "To'lov turi: " . ($paymentType === 'card' ? 'Karta' : 'Naqd pul'));
-    }
-
-    /**
-     * Handle cancel order
-     */
-    protected function handleCancelOrder($chatId, $orderId)
-    {
-        $order = Order::find($orderId);
-        if (!$order) {
-            $this->telegramService->sendMessage($chatId, 'Buyurtma topilmadi.');
-            return;
-        }
-
-        // Update order status
-        $order->update(['status' => 'cancelled']);
-
-        $this->telegramService->sendMessage($chatId, "Buyurtma bekor qilindi.");
-    }
-
-    /**
-     * Send restaurant not found message
-     */
-    protected function sendRestaurantNotFound($chatId)
-    {
-        $this->telegramService->sendMessage($chatId, 'Kechirasiz, restoran topilmadi.');
-    }
-
-    /**
-     * Save or update telegram user
-     */
-    protected function saveTelegramUser($userData)
-    {
-        try {
-            // Get current bot token
-            $botToken = $this->telegramService->getBotToken();
-            
-            // Find restaurant by bot token
-            $restaurant = Restaurant::where('bot_token', $botToken)->first();
-            
-            if (!$restaurant) {
-                Log::error('Restaurant not found for bot token: ' . $botToken);
-                return null;
-            }
-
-            // First, save or update global telegram user
-            $globalUser = \App\Models\GlobalTelegramUser::updateOrCreate(
-                ['telegram_id' => $userData['id']],
-                [
-                    'username' => $userData['username'] ?? null,
-                    'first_name' => $userData['first_name'] ?? null,
-                    'last_name' => $userData['last_name'] ?? null,
-                    'language_code' => $userData['language_code'] ?? 'uz',
-                    'is_bot' => $userData['is_bot'] ?? false,
-                    'last_activity' => now(),
-                ]
-            );
-
-            // Then, save or update restaurant-specific user
-            $telegramUser = \App\Models\TelegramUser::updateOrCreate(
-                [
-                    'restaurant_id' => $restaurant->id,
-                    'telegram_id' => $userData['id']
-                ],
-                [
-                    'username' => $userData['username'] ?? null,
-                    'first_name' => $userData['first_name'] ?? null,
-                    'last_name' => $userData['last_name'] ?? null,
-                    'language_code' => $userData['language_code'] ?? 'uz',
-                    'is_bot' => $userData['is_bot'] ?? false,
-                    'last_activity' => now(),
-                ]
-            );
-
-            Log::info('Telegram user saved/updated', [
-                'global_user_id' => $globalUser->id,
-                'restaurant_id' => $restaurant->id,
-                'restaurant_name' => $restaurant->name,
-                'telegram_id' => $userData['id'],
-                'username' => $userData['username'] ?? null
-            ]);
-
-            return $telegramUser;
-
-        } catch (\Exception $e) {
-            Log::error('Error saving telegram user', [
-                'user_data' => $userData,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return null;
-        }
-    }
-
-    /**
-     * Save incoming message
-     */
-    protected function saveIncomingMessage($telegramUser, $messageText, $messageId = null, $messageData = null)
-    {
-        if (!$telegramUser) {
-            Log::error('Cannot save message: telegram user is null');
-            return null;
-        }
-
-        $message = \App\Models\TelegramMessage::create([
-            'restaurant_id' => $telegramUser->restaurant_id,
-            'telegram_user_id' => $telegramUser->id,
-            'message_id' => $messageId,
-            'direction' => 'incoming',
-            'message_text' => $messageText,
-            'message_data' => $messageData,
-            'message_type' => 'text',
-            'is_read' => false,
-        ]);
-
-        Log::info('Incoming message saved', [
-            'restaurant_id' => $telegramUser->restaurant_id,
-            'telegram_user_id' => $telegramUser->id,
-            'message_text' => $messageText,
-            'message_id' => $messageId
-        ]);
-
-        return $message;
+        return $this->placeOrder($request, $botToken);
     }
 } 

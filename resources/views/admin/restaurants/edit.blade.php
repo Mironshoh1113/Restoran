@@ -11,23 +11,23 @@
             <p class="text-gray-600">{{ $restaurant->name }}</p>
         </div>
         <div class="flex items-center space-x-3">
-            <a href="{{ route('admin.restaurants.show', $restaurant) }}" 
+        <a href="{{ route('admin.restaurants.show', $restaurant) }}" 
                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
                 <i class="fas fa-eye"></i>
                 <span>Ko'rish</span>
             </a>
             <a href="{{ route('admin.restaurants.index') }}" 
-               class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                <i class="fas fa-arrow-left"></i>
-                <span>Orqaga</span>
-            </a>
-        </div>
+           class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+            <i class="fas fa-arrow-left"></i>
+            <span>Orqaga</span>
+        </a>
     </div>
-
+        </div>
+        
     <!-- Main Form Container -->
     <form action="{{ route('admin.restaurants.update', $restaurant) }}" method="POST" enctype="multipart/form-data" id="restaurantForm">
-        @csrf
-        @method('PUT')
+            @csrf
+            @method('PUT')
         
         <!-- Tab Navigation -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -60,16 +60,16 @@
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Asosiy ma'lumotlar</h3>
                             <p class="text-sm text-gray-600 mb-6">Restoran haqidagi asosiy ma'lumotlarni kiriting</p>
                         </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
                                 <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Restoran nomi *</label>
-                                <input type="text" id="name" name="name" value="{{ old('name', $restaurant->name) }}" required
+                        <input type="text" id="name" name="name" value="{{ old('name', $restaurant->name) }}" required
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                        placeholder="Restoran nomi kiriting">
-                                @error('name')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
+                        @error('name')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                             </div>
                             
                             <div>
@@ -81,50 +81,50 @@
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
-                        </div>
-                        
-                        <div>
-                            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Tavsif</label>
-                            <textarea id="description" name="description" rows="3"
+                    </div>
+                    
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Tavsif</label>
+                        <textarea id="description" name="description" rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                       placeholder="Restoran haqida qisqacha ma'lumot">{{ old('description', $restaurant->description) }}</textarea>
-                            @error('description')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        
-                        <div>
+                        @error('description')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <div>
                             <label for="address" class="block text-sm font-medium text-gray-700 mb-2">Manzil *</label>
-                            <textarea id="address" name="address" rows="3" required
+                        <textarea id="address" name="address" rows="3" required
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                       placeholder="Restoran manzili">{{ old('address', $restaurant->address) }}</textarea>
-                            @error('address')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        
+                        @error('address')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="working_hours" class="block text-sm font-medium text-gray-700 mb-2">Ish vaqti</label>
-                                <input type="text" id="working_hours" name="working_hours" value="{{ old('working_hours', $restaurant->working_hours) }}"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                       placeholder="9:00 - 23:00">
-                                @error('working_hours')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            
+                    <div>
+                        <label for="working_hours" class="block text-sm font-medium text-gray-700 mb-2">Ish vaqti</label>
+                        <input type="text" id="working_hours" name="working_hours" value="{{ old('working_hours', $restaurant->working_hours) }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="9:00 - 23:00">
+                        @error('working_hours')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
                             <div class="flex items-center justify-center">
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $restaurant->is_active) ? 'checked' : '' }}
-                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $restaurant->is_active) ? 'checked' : '' }}
+                                   class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     <span class="ml-2 text-sm text-gray-700">Restoran faol</span>
-                                </label>
+                        </label>
                             </div>
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Telegram Bot Tab -->
                 <div id="telegram-bot-tab" class="tab-content hidden">
                     <div class="space-y-6">
@@ -134,17 +134,17 @@
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="bot_username" class="block text-sm font-medium text-gray-700 mb-2">Bot username</label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">@</span>
-                                    <input type="text" id="bot_username" name="bot_username" value="{{ old('bot_username', $restaurant->bot_username) }}"
-                                           class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                           placeholder="bot_username">
-                                </div>
-                                @error('bot_username')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
+                    <div>
+                        <label for="bot_username" class="block text-sm font-medium text-gray-700 mb-2">Bot username</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">@</span>
+                            <input type="text" id="bot_username" name="bot_username" value="{{ old('bot_username', $restaurant->bot_username) }}"
+                                   class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="bot_username">
+                        </div>
+                        @error('bot_username')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                             </div>
                             
                             <div>
@@ -156,19 +156,19 @@
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
-                        </div>
-                        
-                        <div>
-                            <label for="bot_token" class="block text-sm font-medium text-gray-700 mb-2">Bot token</label>
-                            <input type="text" id="bot_token" name="bot_token" value="{{ old('bot_token', $restaurant->bot_token) }}"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz">
-                            @error('bot_token')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                            <p class="mt-1 text-xs text-gray-500">BotFather dan olingan token</p>
-                        </div>
-
+                    </div>
+                    
+                    <div>
+                        <label for="bot_token" class="block text-sm font-medium text-gray-700 mb-2">Bot token</label>
+                        <input type="text" id="bot_token" name="bot_token" value="{{ old('bot_token', $restaurant->bot_token) }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz">
+                        @error('bot_token')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-1 text-xs text-gray-500">BotFather dan olingan token</p>
+                    </div>
+                    
                         <div>
                             <label for="bot_description" class="block text-sm font-medium text-gray-700 mb-2">Bot tavsifi</label>
                             <textarea id="bot_description" name="bot_description" rows="2"
@@ -180,10 +180,10 @@
                         </div>
 
                         <!-- Bot Status -->
-                        @if($restaurant->bot_token && $restaurant->bot_username)
+                    @if($restaurant->bot_token && $restaurant->bot_username)
                             <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-                                <div class="flex items-center space-x-2">
-                                    <i class="fas fa-check-circle text-green-600"></i>
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-check-circle text-green-600"></i>
                                     <span class="text-sm text-green-800 font-medium">Bot to'liq sozlangan</span>
                                 </div>
                                 <p class="text-xs text-green-600 mt-1">Barcha kerakli ma'lumotlar to'ldirilgan</p>
@@ -432,12 +432,12 @@
                                         <li>Yuqoridagi URL lardan birini joylashtiring</li>
                                         <li>Menu button text: <strong>{{ $restaurant->web_app_button_text ?? 'Menyuni ko\'rish' }}</strong></li>
                                     </ol>
-                                </div>
                             </div>
-                        @endif
-                    </div>
+                        </div>
+                    @endif
                 </div>
-
+            </div>
+            
                 <!-- Design Tab -->
                 <div id="design-tab" class="tab-content hidden">
                     <div class="space-y-8">
@@ -466,10 +466,10 @@
                                             <div class="w-4 h-4 rounded-full" style="background: #ff6b35;"></div>
                                         </div>
                                     </div>
-                                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-16 rounded-lg mb-2 flex items-center justify-center">
-                                        <span class="text-white text-sm font-medium">Zamonaviy dizayn</span>
+                                    <div class="relative h-16 rounded-lg mb-2 flex items-center justify-center overflow-hidden modern-pattern">
+                                        <span class="relative z-10 text-white text-sm font-medium">Zamonaviy dizayn</span>
                                     </div>
-                                    <p class="text-xs text-gray-600">Zamonaviy va professional ko'rinish</p>
+                                    <p class="text-xs text-gray-600">Geometric pattern bilan</p>
                                 </div>
 
                                 <!-- Fresh Template -->
@@ -554,10 +554,220 @@
                                     <div class="bg-gradient-to-r from-gray-700 to-gray-900 h-16 rounded-lg mb-2 flex items-center justify-center">
                                         <span class="text-white text-sm font-medium">Qora mavzu</span>
                                     </div>
-                                    <p class="text-xs text-gray-600">Zamonaviy qora dizayn</p>
+                                    <p class="text-xs text-gray-600">Hex pattern bilan</p>
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Pattern CSS Styles -->
+                        <style>
+                            /* Modern Pattern - Geometric shapes */
+                            .modern-pattern {
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                position: relative;
+                            }
+                            .modern-pattern::before {
+                                content: '';
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                bottom: 0;
+                                background-image: 
+                                    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2) 2px, transparent 2px),
+                                    radial-gradient(circle at 70% 20%, rgba(255,255,255,0.15) 1.5px, transparent 1.5px),
+                                    radial-gradient(circle at 20% 80%, rgba(255,255,255,0.25) 1px, transparent 1px),
+                                    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.18) 2.5px, transparent 2.5px);
+                                background-size: 40px 40px, 60px 60px, 35px 35px, 50px 50px;
+                                animation: float 3s ease-in-out infinite;
+                            }
+
+                            /* Fresh Pattern - Nature dots */
+                            .fresh-pattern {
+                                background: linear-gradient(135deg, #10b981 0%, #059669 50%, #34d399 100%);
+                                position: relative;
+                            }
+                            .fresh-pattern::before {
+                                content: '';
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                bottom: 0;
+                                background-image: 
+                                    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 2px, transparent 2px),
+                                    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 1px, transparent 1px),
+                                    radial-gradient(circle at 40% 70%, rgba(255,255,255,0.25) 1.5px, transparent 1.5px),
+                                    radial-gradient(circle at 60% 50%, rgba(255,255,255,0.2) 1px, transparent 1px);
+                                background-size: 30px 30px, 40px 40px, 35px 35px, 25px 25px;
+                            }
+                            .fresh-pattern::after {
+                                content: '🌱';
+                                position: absolute;
+                                top: 10px;
+                                right: 10px;
+                                font-size: 16px;
+                                animation: sway 2s ease-in-out infinite;
+                            }
+
+                            /* Sunset Pattern - Radiating sun rays */
+                            .sunset-pattern {
+                                background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 50%, #ff6b6b 100%);
+                                position: relative;
+                            }
+                            .sunset-pattern::before {
+                                content: '';
+                                position: absolute;
+                                top: 50%;
+                                left: 50%;
+                                width: 200%;
+                                height: 200%;
+                                background: conic-gradient(
+                                    from 0deg, 
+                                    transparent 87%, 
+                                    rgba(255,255,255,0.15) 90%, 
+                                    transparent 93%
+                                );
+                                transform: translate(-50%, -50%);
+                                animation: rotate 15s linear infinite;
+                            }
+                            .sunset-pattern::after {
+                                content: '☀️';
+                                position: absolute;
+                                top: 8px;
+                                left: 8px;
+                                font-size: 14px;
+                                animation: pulse 2s ease-in-out infinite;
+                            }
+
+                            /* Ocean Pattern - Wave ripples */
+                            .ocean-pattern {
+                                background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #0ea5e9 100%);
+                                position: relative;
+                            }
+                            .ocean-pattern::before {
+                                content: '';
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                bottom: 0;
+                                background: repeating-linear-gradient(
+                                    45deg,
+                                    transparent,
+                                    transparent 6px,
+                                    rgba(255,255,255,0.1) 6px,
+                                    rgba(255,255,255,0.1) 12px
+                                );
+                                animation: wave 3s ease-in-out infinite;
+                            }
+                            .ocean-pattern::after {
+                                content: '🌊';
+                                position: absolute;
+                                bottom: 8px;
+                                right: 8px;
+                                font-size: 14px;
+                                animation: bounce 2.5s ease-in-out infinite;
+                            }
+
+                            /* Royal Pattern - Diamond luxury grid */
+                            .royal-pattern {
+                                background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #c084fc 100%);
+                                position: relative;
+                            }
+                            .royal-pattern::before {
+                                content: '';
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                bottom: 0;
+                                background-image: 
+                                    linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%),
+                                    linear-gradient(-45deg, rgba(255,255,255,0.15) 25%, transparent 25%),
+                                    linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.15) 75%),
+                                    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.15) 75%);
+                                background-size: 16px 16px;
+                                background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+                            }
+                            .royal-pattern::after {
+                                content: '👑';
+                                position: absolute;
+                                top: 6px;
+                                right: 6px;
+                                font-size: 14px;
+                                animation: sparkle 3s ease-in-out infinite;
+                            }
+
+                            /* Dark Pattern - Tech hexagon grid */
+                            .dark-pattern {
+                                background: linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%);
+                                position: relative;
+                            }
+                            .dark-pattern::before {
+                                content: '';
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                bottom: 0;
+                                background-image: 
+                                    radial-gradient(circle at 50% 25%, rgba(245,158,11,0.3) 1.5px, transparent 1.5px),
+                                    radial-gradient(circle at 25% 75%, rgba(245,158,11,0.2) 1px, transparent 1px),
+                                    radial-gradient(circle at 75% 75%, rgba(245,158,11,0.25) 1.2px, transparent 1.2px);
+                                background-size: 24px 24px, 36px 36px, 30px 30px;
+                            }
+                            .dark-pattern::after {
+                                content: '⚡';
+                                position: absolute;
+                                bottom: 6px;
+                                left: 6px;
+                                font-size: 14px;
+                                color: #f59e0b;
+                                animation: flicker 2s ease-in-out infinite;
+                            }
+
+                            /* Animations */
+                            @keyframes rotate {
+                                from { transform: translate(-50%, -50%) rotate(0deg); }
+                                to { transform: translate(-50%, -50%) rotate(360deg); }
+                            }
+
+                            @keyframes wave {
+                                0%, 100% { transform: translateX(0); }
+                                50% { transform: translateX(8px); }
+                            }
+
+                            @keyframes float {
+                                0%, 100% { transform: translateY(0px); }
+                                50% { transform: translateY(-3px); }
+                            }
+
+                            @keyframes sway {
+                                0%, 100% { transform: rotate(-5deg); }
+                                50% { transform: rotate(5deg); }
+                            }
+
+                            @keyframes pulse {
+                                0%, 100% { transform: scale(1); opacity: 1; }
+                                50% { transform: scale(1.1); opacity: 0.8; }
+                            }
+
+                            @keyframes bounce {
+                                0%, 100% { transform: translateY(0); }
+                                50% { transform: translateY(-4px); }
+                            }
+
+                            @keyframes sparkle {
+                                0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+                                50% { transform: scale(1.2) rotate(180deg); opacity: 0.7; }
+                            }
+
+                            @keyframes flicker {
+                                0%, 100% { opacity: 1; }
+                                50% { opacity: 0.6; }
+                            }
+                        </style>
 
                         <!-- Color Settings -->
                         <div>
@@ -566,42 +776,42 @@
                                 Rang sozlamalari
                             </h4>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <label for="primary_color" class="block text-sm font-medium text-gray-700 mb-2">Asosiy rang</label>
-                                    <div class="flex items-center space-x-2">
-                                        <input type="color" id="primary_color" name="primary_color" 
-                                               value="{{ old('primary_color', $restaurant->primary_color ?? '#667eea') }}"
-                                               class="w-12 h-10 border border-gray-300 rounded-lg">
-                                        <input type="text" value="{{ old('primary_color', $restaurant->primary_color ?? '#667eea') }}"
-                                               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                               onchange="document.getElementById('primary_color').value = this.value">
-                                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="primary_color" class="block text-sm font-medium text-gray-700 mb-2">Asosiy rang</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="color" id="primary_color" name="primary_color" 
+                                   value="{{ old('primary_color', $restaurant->primary_color ?? '#667eea') }}"
+                                   class="w-12 h-10 border border-gray-300 rounded-lg">
+                            <input type="text" value="{{ old('primary_color', $restaurant->primary_color ?? '#667eea') }}"
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   onchange="document.getElementById('primary_color').value = this.value">
+                        </div>
                                     <p class="mt-1 text-xs text-gray-500">Header va asosiy elementlar uchun</p>
-                                </div>
-                                
-                                <div>
-                                    <label for="secondary_color" class="block text-sm font-medium text-gray-700 mb-2">Ikkilamchi rang</label>
-                                    <div class="flex items-center space-x-2">
-                                        <input type="color" id="secondary_color" name="secondary_color" 
-                                               value="{{ old('secondary_color', $restaurant->secondary_color ?? '#764ba2') }}"
-                                               class="w-12 h-10 border border-gray-300 rounded-lg">
-                                        <input type="text" value="{{ old('secondary_color', $restaurant->secondary_color ?? '#764ba2') }}"
-                                               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                               onchange="document.getElementById('secondary_color').value = this.value">
-                                    </div>
+                    </div>
+                    
+                    <div>
+                        <label for="secondary_color" class="block text-sm font-medium text-gray-700 mb-2">Ikkilamchi rang</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="color" id="secondary_color" name="secondary_color" 
+                                   value="{{ old('secondary_color', $restaurant->secondary_color ?? '#764ba2') }}"
+                                   class="w-12 h-10 border border-gray-300 rounded-lg">
+                            <input type="text" value="{{ old('secondary_color', $restaurant->secondary_color ?? '#764ba2') }}"
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   onchange="document.getElementById('secondary_color').value = this.value">
+                        </div>
                                     <p class="mt-1 text-xs text-gray-500">Gradient va ikkilamchi elementlar uchun</p>
-                                </div>
-                                
-                                <div>
-                                    <label for="accent_color" class="block text-sm font-medium text-gray-700 mb-2">Aktsent rang</label>
-                                    <div class="flex items-center space-x-2">
-                                        <input type="color" id="accent_color" name="accent_color" 
-                                               value="{{ old('accent_color', $restaurant->accent_color ?? '#ff6b35') }}"
-                                               class="w-12 h-10 border border-gray-300 rounded-lg">
-                                        <input type="text" value="{{ old('accent_color', $restaurant->accent_color ?? '#ff6b35') }}"
-                                               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                               onchange="document.getElementById('accent_color').value = this.value">
+                    </div>
+                    
+                    <div>
+                        <label for="accent_color" class="block text-sm font-medium text-gray-700 mb-2">Aktsent rang</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="color" id="accent_color" name="accent_color" 
+                                   value="{{ old('accent_color', $restaurant->accent_color ?? '#ff6b35') }}"
+                                   class="w-12 h-10 border border-gray-300 rounded-lg">
+                            <input type="text" value="{{ old('accent_color', $restaurant->accent_color ?? '#ff6b35') }}"
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   onchange="document.getElementById('accent_color').value = this.value">
                                     </div>
                                     <p class="mt-1 text-xs text-gray-500">Narxlar va tugmalar uchun</p>
                                 </div>
@@ -688,76 +898,76 @@
                         <div>
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Biznes sozlamalari</h3>
                             <p class="text-sm text-gray-600 mb-6">Yetkazib berish va to'lov sozlamalarini belgilang</p>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="delivery_fee" class="block text-sm font-medium text-gray-700 mb-2">Yetkazib berish to'lovi (so'm)</label>
-                                <input type="number" id="delivery_fee" name="delivery_fee" 
-                                       value="{{ old('delivery_fee', $restaurant->delivery_fee ?? 0) }}" min="0" step="100"
+            </div>
+            
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="delivery_fee" class="block text-sm font-medium text-gray-700 mb-2">Yetkazib berish to'lovi (so'm)</label>
+                        <input type="number" id="delivery_fee" name="delivery_fee" 
+                               value="{{ old('delivery_fee', $restaurant->delivery_fee ?? 0) }}" min="0" step="100"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                        placeholder="0">
                                 <p class="mt-1 text-xs text-gray-500">0 qiymati bepul yetkazib berishni bildiradi</p>
-                            </div>
-                            
-                            <div>
-                                <label for="min_order_amount" class="block text-sm font-medium text-gray-700 mb-2">Minimal buyurtma miqdori (so'm)</label>
-                                <input type="number" id="min_order_amount" name="min_order_amount" 
-                                       value="{{ old('min_order_amount', $restaurant->min_order_amount ?? 0) }}" min="0" step="1000"
+                    </div>
+                    
+                    <div>
+                        <label for="min_order_amount" class="block text-sm font-medium text-gray-700 mb-2">Minimal buyurtma miqdori (so'm)</label>
+                        <input type="number" id="min_order_amount" name="min_order_amount" 
+                               value="{{ old('min_order_amount', $restaurant->min_order_amount ?? 0) }}" min="0" step="1000"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                        placeholder="0">
                                 <p class="mt-1 text-xs text-gray-500">Bu miqdordan kam buyurtmalar qabul qilinmaydi</p>
-                            </div>
-                        </div>
-                        
+                    </div>
+                </div>
+                
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-4">To'lov usullari</label>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                    <input type="checkbox" name="payment_methods[]" value="cash" 
-                                           {{ in_array('cash', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
-                                           class="rounded border-gray-300 text-blue-600">
+                            <input type="checkbox" name="payment_methods[]" value="cash" 
+                                   {{ in_array('cash', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
+                                   class="rounded border-gray-300 text-blue-600">
                                     <span class="ml-3 text-sm text-gray-700 flex items-center">
                                         <i class="fas fa-money-bill-wave text-green-500 mr-2"></i>
                                         Naqd pul
                                     </span>
-                                </label>
+                        </label>
                                 
                                 <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                    <input type="checkbox" name="payment_methods[]" value="card" 
-                                           {{ in_array('card', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
-                                           class="rounded border-gray-300 text-blue-600">
+                            <input type="checkbox" name="payment_methods[]" value="card" 
+                                   {{ in_array('card', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
+                                   class="rounded border-gray-300 text-blue-600">
                                     <span class="ml-3 text-sm text-gray-700 flex items-center">
                                         <i class="fas fa-credit-card text-blue-500 mr-2"></i>
                                         Karta
                                     </span>
-                                </label>
+                        </label>
                                 
                                 <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                    <input type="checkbox" name="payment_methods[]" value="click" 
-                                           {{ in_array('click', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
-                                           class="rounded border-gray-300 text-blue-600">
+                            <input type="checkbox" name="payment_methods[]" value="click" 
+                                   {{ in_array('click', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
+                                   class="rounded border-gray-300 text-blue-600">
                                     <span class="ml-3 text-sm text-gray-700 flex items-center">
                                         <i class="fas fa-mobile-alt text-orange-500 mr-2"></i>
                                         Click
                                     </span>
-                                </label>
+                        </label>
                                 
                                 <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                    <input type="checkbox" name="payment_methods[]" value="payme" 
-                                           {{ in_array('payme', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
-                                           class="rounded border-gray-300 text-blue-600">
+                            <input type="checkbox" name="payment_methods[]" value="payme" 
+                                   {{ in_array('payme', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
+                                   class="rounded border-gray-300 text-blue-600">
                                     <span class="ml-3 text-sm text-gray-700 flex items-center">
                                         <i class="fas fa-wallet text-purple-500 mr-2"></i>
                                         Payme
                                     </span>
-                                </label>
+                        </label>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
+            
             <!-- Form Actions -->
             <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between">
                 <div class="flex items-center text-sm text-gray-600">
@@ -768,18 +978,18 @@
                 <div class="flex items-center space-x-3">
                     <a href="{{ route('admin.restaurants.index') }}" 
                        class="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors">
-                        Bekor qilish
-                    </a>
-                    <button type="submit" 
+                    Bekor qilish
+                </a>
+                <button type="submit" 
                             class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center space-x-2">
                         <i class="fas fa-save"></i>
                         <span>Saqlash</span>
-                    </button>
+                </button>
                 </div>
             </div>
-        </div>
-    </form>
-
+            </div>
+        </form>
+    
     <!-- Danger Zone -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200">
         <div class="p-6 border-b border-gray-200">
