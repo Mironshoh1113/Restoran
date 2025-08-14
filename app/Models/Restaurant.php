@@ -23,10 +23,28 @@ class Restaurant extends Model
         'phone',
         'address',
         'logo',
+        'primary_color',
+        'secondary_color',
+        'accent_color',
+        'text_color',
+        'bg_color',
+        'card_bg',
+        'border_radius',
+        'shadow',
+        'description',
+        'working_hours',
+        'delivery_fee',
+        'min_order_amount',
+        'payment_methods',
+        'social_links',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'delivery_fee' => 'decimal:2',
+        'min_order_amount' => 'decimal:2',
+        'payment_methods' => 'array',
+        'social_links' => 'array',
     ];
 
     public function owner(): BelongsTo

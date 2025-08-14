@@ -6,211 +6,486 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $restaurant->name }} - Menyu</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <meta name="bot-token" content="{{ $botToken ?? '' }}">
+    
     <style>
-        body { background: #f8f9fa; }
-        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
-        .card { border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 15px; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: none; }
-        .quantity-btn { width: 35px; height: 35px; border-radius: 50%; }
-        .cart-fixed { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        
-        /* Product image styles */
-        .product-image {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        :root {
+            --primary-color: {{ $restaurant->primary_color ?? '#667eea' }};
+            --secondary-color: {{ $restaurant->secondary_color ?? '#764ba2' }};
+            --accent-color: {{ $restaurant->accent_color ?? '#ff6b35' }};
+            --text-color: {{ $restaurant->text_color ?? '#2c3e50' }};
+            --bg-color: {{ $restaurant->bg_color ?? '#f8f9fa' }};
+            --card-bg: {{ $restaurant->card_bg ?? '#ffffff' }};
+            --border-radius: {{ $restaurant->border_radius ?? '16px' }};
+            --shadow: {{ $restaurant->shadow ?? '0 8px 32px rgba(0,0,0,0.1)' }};
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
         }
         
-        .product-image-placeholder {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 8px;
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .restaurant-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .restaurant-info h1 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .restaurant-info p {
+            color: rgba(255,255,255,0.9);
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        /* Categories */
+        .categories-container {
+            padding: 1rem 0;
+            background: white;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            position: sticky;
+            top: 100px;
+            z-index: 999;
+        }
+
+        .category-tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 0.5rem;
+            padding: 0 1rem;
+            scrollbar-width: none;
+        }
+
+        .category-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-tab {
+            background: white;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .category-tab.active {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .category-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Menu Items */
+        .menu-container {
+            padding: 1rem;
+        }
+
+        .menu-item {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .menu-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .menu-item-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+
+        .menu-item-image-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             display: flex;
             align-items: center;
             justify-content: center;
             color: #6c757d;
-            font-size: 24px;
+            font-size: 3rem;
         }
-        
-        /* Card improvements */
-        .card-body {
-            padding: 1rem;
+
+        .menu-item-content {
+            padding: 1.5rem;
         }
-        
-        .card-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #212529;
-            margin-bottom: 0.25rem;
+
+        .menu-item-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
         }
-        
-        .card-text {
-            font-size: 0.875rem;
+
+        .menu-item-description {
             color: #6c757d;
-            line-height: 1.4;
+            margin-bottom: 1rem;
+            line-height: 1.5;
         }
-        
-        /* Responsive improvements */
-        @media (max-width: 576px) {
-            .product-image, .product-image-placeholder {
-                width: 60px;
-                height: 60px;
+
+        .menu-item-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: space-between;
+        }
+
+        .quantity-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-btn.minus {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .quantity-btn.plus {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .quantity-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .quantity-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            min-width: 40px;
+            text-align: center;
+        }
+
+        /* Cart */
+        .cart-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+        }
+
+        .cart-content {
+            padding: 1.5rem;
+        }
+
+        .cart-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .cart-total {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .cart-count {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .checkout-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #dee2e6;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .restaurant-info h1 {
+                font-size: 1.25rem;
             }
             
-            .card-body {
-                padding: 0.75rem;
+            .menu-item-content {
+                padding: 1rem;
             }
             
-            .card-title {
-                font-size: 0.9rem;
+            .menu-item-title {
+                font-size: 1.1rem;
             }
             
-            .card-text {
-                font-size: 0.8rem;
+            .cart-content {
+                padding: 1rem;
             }
         }
-        
-        /* Telegram dark theme */
-        .telegram-dark {
-            background: #1a1a1a !important;
-            color: #ffffff !important;
+
+        /* Dark Theme Support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1a1a1a;
+                --card-bg: #2a2a2a;
+                --text-color: #ffffff;
+            }
         }
-        
-        .telegram-dark .navbar {
-            background: #2a2a2a !important;
-        }
-        
-        .telegram-dark .card {
-            background: #2a2a2a !important;
-            color: #ffffff !important;
-        }
-        
-        .telegram-dark .card-title {
-            color: #ffffff !important;
-        }
-        
-        .telegram-dark .card-text {
-            color: #cccccc !important;
-        }
-        
-        .telegram-dark .cart-fixed {
-            background: #2a2a2a !important;
-            color: #ffffff !important;
-        }
-        
-        .telegram-dark .modal-content {
-            background: #2a2a2a !important;
-            color: #ffffff !important;
-        }
-        
-        .telegram-dark .form-control {
-            background: #3a3a3a !important;
-            color: #ffffff !important;
-            border-color: #4a4a4a !important;
-        }
-        
-        .telegram-dark .form-control:focus {
-            background: #3a3a3a !important;
-            color: #ffffff !important;
-            border-color: #667eea !important;
+
+        /* Telegram Theme Integration */
+        .telegram-theme {
+            --bg-color: var(--tg-theme-bg-color, #ffffff);
+            --text-color: var(--tg-theme-text-color, #2c3e50);
+            --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+            --primary-color: var(--tg-theme-button-color, #667eea);
         }
     </style>
 </head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+<body class="telegram-theme">
+    <!-- Header -->
+    <header class="header">
         <div class="container">
-            <span class="navbar-brand fw-bold">{{ $restaurant->name }}</span>
-            <small class="text-white-50">{{ $restaurant->description ?? 'Restoran menyusi' }}</small>
-        </div>
-    </nav>
-
-    <div class="container mt-3 mb-5">
-        <!-- Categories -->
-        <div class="row mb-3">
-            <div class="col-12">
-                <div class="btn-group w-100" role="group">
-                    @foreach($categories as $category)
-                        <input type="radio" class="btn-check" name="category" id="cat-{{ $category->id }}" 
-                               {{ $loop->first ? 'checked' : '' }}>
-                        <label class="btn btn-outline-primary" for="cat-{{ $category->id }}">
-                            {{ $category->name }}
-                        </label>
-                    @endforeach
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    @if($restaurant->logo)
+                        <img src="{{ asset('storage/' . $restaurant->logo) }}" 
+                             alt="{{ $restaurant->name }}" 
+                             class="restaurant-logo"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div class="restaurant-logo" style="display: none; background: rgba(255,255,255,0.2);">
+                            <i class="fas fa-utensils text-white" style="font-size: 1.5rem; line-height: 60px; text-align: center; width: 100%;"></i>
+                        </div>
+                    @else
+                        <div class="restaurant-logo" style="background: rgba(255,255,255,0.2);">
+                            <i class="fas fa-utensils text-white" style="font-size: 1.5rem; line-height: 60px; text-align: center; width: 100%;"></i>
+                        </div>
+                    @endif
+                </div>
+                <div class="col">
+                    <div class="restaurant-info">
+                        <h1>{{ $restaurant->name }}</h1>
+                        <p>{{ $restaurant->description ?? 'Zamonaviy restoran menyusi' }}</p>
+                    </div>
                 </div>
             </div>
         </div>
+    </header>
 
-        <!-- Menu Items -->
+    <!-- Categories -->
+    <div class="categories-container">
+        <div class="category-tabs">
+            @foreach($categories as $category)
+                <div class="category-tab {{ $loop->first ? 'active' : '' }}" 
+                     onclick="switchCategory({{ $category->id }})">
+                    {{ $category->name }}
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- Menu Container -->
+    <div class="menu-container">
         @foreach($categories as $category)
             <div class="category-content {{ $loop->first ? '' : 'd-none' }}" id="cat-content-{{ $category->id }}">
-                @foreach($category->menuItems as $item)
-                    <div class="card mb-3" data-item-id="{{ $item->id }}" data-price="{{ $item->price }}">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-3">
-                                    <!-- Product Image -->
+                @if($category->menuItems->isEmpty())
+                    <div class="empty-state">
+                        <i class="fas fa-utensils"></i>
+                        <h5>Bu kategoriyada hali taomlar yo'q</h5>
+                        <p>Tez orada yangi taomlar qo'shiladi</p>
+                    </div>
+                @else
+                    @foreach($category->menuItems as $item)
+                        <div class="menu-item" data-item-id="{{ $item->id }}" data-price="{{ $item->price }}">
+                            <div class="row g-0">
+                                <div class="col-md-4">
                                     @if($item->image && !empty(trim($item->image)))
                                         <img src="{{ asset('storage/' . $item->image) }}" 
                                              alt="{{ $item->name }}" 
-                                             class="product-image"
+                                             class="menu-item-image"
                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        <div class="product-image-placeholder" 
-                                             style="display: none;">
-                                            <i class="fas fa-utensils text-muted"></i>
+                                        <div class="menu-item-image-placeholder" style="display: none;">
+                                            <i class="fas fa-utensils"></i>
                                         </div>
                                     @else
-                                        <div class="product-image-placeholder">
-                                            <i class="fas fa-utensils text-muted"></i>
+                                        <div class="menu-item-image-placeholder">
+                                            <i class="fas fa-utensils"></i>
                                         </div>
                                     @endif
                                 </div>
-                                <div class="col-5">
-                                    <h6 class="card-title mb-1">{{ $item->name }}</h6>
-                                    <p class="card-text text-muted small mb-2">{{ $item->description }}</p>
-                                    <strong class="text-success">{{ number_format($item->price) }} so'm</strong>
-                                </div>
-                                <div class="col-4 text-end">
-                                    <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-secondary quantity-btn" 
-                                                onclick="changeQuantity({{ $item->id }}, -1)">-</button>
-                                        <span class="btn btn-sm btn-outline-secondary" id="qty-{{ $item->id }}">0</span>
-                                        <button class="btn btn-sm btn-outline-primary quantity-btn" 
-                                                onclick="changeQuantity({{ $item->id }}, 1)">+</button>
+                                <div class="col-md-8">
+                                    <div class="menu-item-content">
+                                        <h3 class="menu-item-title">{{ $item->name }}</h3>
+                                        @if($item->description)
+                                            <p class="menu-item-description">{{ $item->description }}</p>
+                                        @endif
+                                        <div class="menu-item-price">{{ number_format($item->price) }} so'm</div>
+                                        <div class="quantity-controls">
+                                            <button class="quantity-btn minus" onclick="changeQuantity({{ $item->id }}, -1)">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <span class="quantity-display" id="qty-{{ $item->id }}">0</span>
+                                            <button class="quantity-btn plus" onclick="changeQuantity({{ $item->id }}, 1)">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                @endif
             </div>
         @endforeach
     </div>
 
     <!-- Fixed Cart -->
-    <div class="cart-fixed p-3">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-6">
-                    <strong>Jami: <span id="cart-total">0</span> so'm</strong>
+    <div class="cart-fixed">
+        <div class="cart-content">
+            <div class="cart-summary">
+                <div class="cart-total">
+                    Jami: <span id="cart-total-price">0</span> so'm
                 </div>
-                <div class="col-6 text-end">
-                    <button class="btn btn-primary" id="order-btn" onclick="showOrderModal()" disabled>
-                        Buyurtma berish
-                    </button>
-                </div>
+                <div class="cart-count" id="cart-total-items">0</div>
             </div>
+            <button class="checkout-btn" id="checkout-btn" onclick="proceedToCheckout()" disabled>
+                <i class="fas fa-shopping-cart me-2"></i>Buyurtma berish
+            </button>
         </div>
     </div>
 
-    <!-- Order Modal -->
-    <div class="modal fade" id="orderModal" tabindex="-1">
+    <!-- Checkout Modal -->
+    <div class="modal fade" id="checkoutModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -218,144 +493,58 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Cart Items -->
-                    <div class="mb-3">
-                        <h6>Savat</h6>
-                        <div id="modal-cart-items"></div>
-                        <hr>
-                        <div class="text-end">
-                            <strong>Jami: <span id="modal-total">0</span> so'm</strong>
-                        </div>
+                    <div id="checkout-items"></div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Jami:</h6>
+                        <h5 id="checkout-total">0 so'm</h5>
                     </div>
-
-                    <!-- Order Form -->
-                    <form id="orderForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Ismingiz</label>
-                                <input type="text" class="form-control" id="customerName" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Telefon</label>
-                                <input type="tel" class="form-control" id="customerPhone" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Manzil</label>
-                            <textarea class="form-control" id="deliveryAddress" rows="2" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">To'lov usuli</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment" id="cash" value="cash" checked>
-                                <label class="form-check-label" for="cash">Naqd pul</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment" id="card" value="card">
-                                <label class="form-check-label" for="card">Karta</label>
-                            </div>
-                        </div>
-                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
-                    <button type="button" class="btn btn-primary" onclick="submitOrder()">
-                        <span id="submit-text">Buyurtma berish</span>
-                        <span id="submit-spinner" class="d-none">
-                            <i class="fas fa-spinner fa-spin"></i> Yuborilmoqda...
-                        </span>
-                    </button>
+                    <button type="button" class="btn btn-primary" onclick="confirmOrder()">Tasdiqlash</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-body text-center py-4">
-                    <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3">Buyurtma qabul qilindi!</h5>
-                    <p class="text-muted">Tez orada siz bilan bog'lanamiz</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Telegram Web App
-        let tg = null;
-        let telegramChatId = null;
+        // Global variables
         let cart = {};
-        let orderModal, successModal;
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize modals
-            orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
-            successModal = new bootstrap.Modal(document.getElementById('successModal'));
-
-            // Initialize Telegram Web App
-            if (window.Telegram && window.Telegram.WebApp) {
-                tg = window.Telegram.WebApp;
-                tg.ready();
-                tg.expand();
-                
-                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                    telegramChatId = tg.initDataUnsafe.user.id;
-                }
-                console.log('Telegram Web App initialized');
-                
-                // Set Telegram theme
-                if (tg.colorScheme === 'dark') {
-                    document.body.classList.add('telegram-dark');
-                }
-            }
-
-            // Category switching
-            document.querySelectorAll('input[name="category"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    // Hide all category contents first
-                    document.querySelectorAll('.category-content').forEach(content => {
-                        content.classList.add('d-none');
-                    });
-                    
-                    // Show only selected category
-                    const selectedCategoryId = this.id.replace('cat-', '');
-                    const selectedContent = document.getElementById('cat-content-' + selectedCategoryId);
-                    if (selectedContent) {
-                        selectedContent.classList.remove('d-none');
-                        console.log('Switched to category:', selectedCategoryId);
-                    }
-                });
+        let currentCategory = {{ $categories->first()->id ?? 1 }};
+        
+        // Initialize Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        // Apply Telegram theme
+        document.body.classList.add('telegram-theme');
+        
+        // Category switching
+        function switchCategory(categoryId) {
+            // Hide all category contents
+            document.querySelectorAll('.category-content').forEach(content => {
+                content.classList.add('d-none');
             });
             
-            // Initialize product images
-            initializeProductImages();
-        });
-        
-        // Initialize product images with error handling
-        function initializeProductImages() {
-            const images = document.querySelectorAll('.product-image');
-            images.forEach(img => {
-                img.addEventListener('load', function() {
-                    console.log('Image loaded successfully:', this.src);
-                });
-                
-                img.addEventListener('error', function() {
-                    console.log('Image failed to load:', this.src);
-                    this.style.display = 'none';
-                    const placeholder = this.nextElementSibling;
-                    if (placeholder && placeholder.classList.contains('product-image-placeholder')) {
-                        placeholder.style.display = 'flex';
-                    }
-                });
+            // Remove active class from all tabs
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
             });
+            
+            // Show selected category content
+            document.getElementById(`cat-content-${categoryId}`).classList.remove('d-none');
+            
+            // Add active class to selected tab
+            event.target.classList.add('active');
+            
+            currentCategory = categoryId;
         }
-
-        // Cart functions
+        
+        // Quantity management
         function changeQuantity(itemId, change) {
             const currentQty = cart[itemId] || 0;
             const newQty = Math.max(0, currentQty + change);
@@ -366,153 +555,137 @@
                 cart[itemId] = newQty;
             }
             
+            // Update display
             document.getElementById(`qty-${itemId}`).textContent = newQty;
             updateCart();
         }
-
+        
+        // Update cart display
         function updateCart() {
-            let total = 0;
-            let hasItems = false;
+            let totalPrice = 0;
+            let totalItems = 0;
             
-            for (let itemId in cart) {
-                hasItems = true;
-                const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
-                if (itemElement) {
-                    const price = parseInt(itemElement.dataset.price);
-                    total += price * cart[itemId];
-                }
+            Object.keys(cart).forEach(itemId => {
+                const qty = cart[itemId];
+                const price = parseFloat(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price);
+                totalPrice += qty * price;
+                totalItems += qty;
+            });
+            
+            document.getElementById('cart-total-price').textContent = totalPrice.toLocaleString();
+            document.getElementById('cart-total-items').textContent = totalItems;
+            
+            // Enable/disable checkout button
+            const checkoutBtn = document.getElementById('checkout-btn');
+            if (totalItems > 0) {
+                checkoutBtn.disabled = false;
+            } else {
+                checkoutBtn.disabled = true;
             }
-            
-            document.getElementById('cart-total').textContent = total.toLocaleString();
-            document.getElementById('order-btn').disabled = !hasItems;
         }
-
-        // Order functions
-        function showOrderModal() {
-            renderModalCart();
-            orderModal.show();
-        }
-
-        function renderModalCart() {
-            const container = document.getElementById('modal-cart-items');
-            let total = 0;
-            let html = '';
+        
+        // Proceed to checkout
+        function proceedToCheckout() {
+            if (Object.keys(cart).length === 0) return;
             
-            for (let itemId in cart) {
+            let checkoutHtml = '';
+            let totalPrice = 0;
+            
+            Object.keys(cart).forEach(itemId => {
+                const qty = cart[itemId];
                 const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
-                if (itemElement) {
-                    const name = itemElement.querySelector('.card-title').textContent;
-                    const price = parseInt(itemElement.dataset.price);
-                    const qty = cart[itemId];
-                    const subtotal = price * qty;
-                    total += subtotal;
-                    
-                    // Get image if available
-                    const imageElement = itemElement.querySelector('.product-image');
-                    const imageHtml = imageElement ? 
-                        `<img src="${imageElement.src}" alt="${name}" class="product-image" style="width: 40px; height: 40px;">` :
-                        `<div class="product-image-placeholder" style="width: 40px; height: 40px; font-size: 16px;"><i class="fas fa-utensils"></i></div>`;
-                    
-                    html += `
-                        <div class="d-flex align-items-center mb-3 p-2 border rounded">
-                            <div class="me-3">
-                                ${imageHtml}
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-bold">${name}</div>
-                                <div class="text-muted small">${qty} ta x ${price.toLocaleString()} so'm</div>
-                            </div>
-                            <div class="text-end">
-                                <strong class="text-success">${subtotal.toLocaleString()} so'm</strong>
-                            </div>
+                const name = itemElement.querySelector('.menu-item-title').textContent;
+                const price = parseFloat(itemElement.dataset.price);
+                const itemTotal = qty * price;
+                totalPrice += itemTotal;
+                
+                checkoutHtml += `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <strong>${name}</strong>
+                            <br><small class="text-muted">${qty} x ${price.toLocaleString()} so'm</small>
                         </div>
-                    `;
-                }
-            }
+                        <strong>${itemTotal.toLocaleString()} so'm</strong>
+                    </div>
+                `;
+            });
             
-            container.innerHTML = html;
-            document.getElementById('modal-total').textContent = total.toLocaleString();
+            document.getElementById('checkout-items').innerHTML = checkoutHtml;
+            document.getElementById('checkout-total').textContent = totalPrice.toLocaleString() + ' so\'m';
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+            modal.show();
         }
-
-        function submitOrder() {
-            const form = document.getElementById('orderForm');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            // Get form data
+        
+        // Confirm order
+        function confirmOrder() {
+            if (Object.keys(cart).length === 0) return;
+            
+            // Prepare order data
             const orderData = {
-                items: Object.keys(cart).map(id => ({
-                    id: parseInt(id),
-                    quantity: cart[id]
+                restaurant_id: {{ $restaurant->id }},
+                items: Object.keys(cart).map(itemId => ({
+                    menu_item_id: parseInt(itemId),
+                    quantity: cart[itemId],
+                    price: parseFloat(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price)
                 })),
-                customer_name: document.getElementById('customerName').value,
-                customer_phone: document.getElementById('customerPhone').value,
-                delivery_address: document.getElementById('deliveryAddress').value,
-                payment_method: document.querySelector('input[name="payment"]:checked').value,
-                telegram_chat_id: telegramChatId
+                total_amount: Object.keys(cart).reduce((total, itemId) => {
+                    const qty = cart[itemId];
+                    const price = parseFloat(document.querySelector(`[data-item-id="${itemId}"]`).dataset.price);
+                    return total + (qty * price);
+                }, 0),
+                telegram_chat_id: tg.initDataUnsafe?.user?.id || null,
+                bot_token: '{{ $botToken }}'
             };
-
-            // Get bot token
-            const botToken = document.querySelector('meta[name="bot-token"]')?.getAttribute('content');
-            if (botToken) {
-                orderData.bot_token = botToken;
-            }
-
-            // Show loading
-            document.getElementById('submit-text').classList.add('d-none');
-            document.getElementById('submit-spinner').classList.remove('d-none');
-
-            // Submit order
-            fetch('/web-interface/order', {
+            
+            // Send order to server
+            fetch('/api/orders', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify(orderData)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    orderModal.hide();
-                    successModal.show();
-                    
-                    // Send to Telegram
-                    if (tg && tg.sendData) {
-                        tg.sendData(JSON.stringify({
-                            action: 'order_placed',
-                            order_id: data.order_id
-                        }));
-                    }
-                    
-                    // Close after 3 seconds
-                    setTimeout(() => {
-                        if (tg && tg.close) {
-                            tg.close();
-                        } else {
-                            successModal.hide();
-                            location.reload();
-                        }
-                    }, 3000);
-                    
                     // Clear cart
                     cart = {};
                     updateCart();
+                    
+                    // Update all quantity displays
+                    Object.keys(cart).forEach(itemId => {
+                        document.getElementById(`qty-${itemId}`).textContent = '0';
+                    });
+                    
+                    // Hide modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+                    modal.hide();
+                    
+                    // Show success message
+                    tg.showAlert('Buyurtmangiz muvaffaqiyatli qabul qilindi! 🎉');
+                    
+                    // Send order to Telegram bot
+                    tg.sendData(JSON.stringify({
+                        action: 'order_placed',
+                        order_id: data.order_id
+                    }));
                 } else {
-                    alert('Xatolik: ' + (data.error || 'Noma\'lum xatolik'));
+                    tg.showAlert('Xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.');
                 }
             })
             .catch(error => {
-                console.error('Order error:', error);
-                alert('Xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.');
-            })
-            .finally(() => {
-                document.getElementById('submit-text').classList.remove('d-none');
-                document.getElementById('submit-spinner').classList.add('d-none');
+                console.error('Error:', error);
+                tg.showAlert('Xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.');
             });
         }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCart();
+        });
     </script>
 </body>
 </html> 

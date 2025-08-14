@@ -38,12 +38,26 @@ class RestaurantController extends Controller
             $data = $request->only([
                 'name',
                 'phone',
-                'address', 
+                'address',
+                'description',
+                'working_hours',
                 'bot_token',
                 'bot_username',
                 'bot_name',
                 'bot_description',
-                'is_active'
+                'is_active',
+                'primary_color',
+                'secondary_color',
+                'accent_color',
+                'text_color',
+                'bg_color',
+                'card_bg',
+                'border_radius',
+                'shadow',
+                'delivery_fee',
+                'min_order_amount',
+                'payment_methods',
+                'social_links'
             ]);
             
             // Add owner user ID
@@ -122,11 +136,25 @@ class RestaurantController extends Controller
                 'name',
                 'phone', 
                 'address',
+                'description',
+                'working_hours',
                 'bot_token',
                 'bot_username',
                 'bot_name',
                 'bot_description',
-                'is_active'
+                'is_active',
+                'primary_color',
+                'secondary_color',
+                'accent_color',
+                'text_color',
+                'bg_color',
+                'card_bg',
+                'border_radius',
+                'shadow',
+                'delivery_fee',
+                'min_order_amount',
+                'payment_methods',
+                'social_links'
             ]);
             
             // Handle checkbox properly
