@@ -30,6 +30,7 @@ class Order extends Model
         'delivery_address',
         'payment_method',
         'items',
+        'bot_token',
     ];
 
     protected $casts = [
