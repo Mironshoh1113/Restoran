@@ -61,7 +61,11 @@ Route::post('/orders', function (Request $request) {
             'items.*.price' => 'required|numeric|min:0',
             'total_amount' => 'required|numeric|min:0',
             'telegram_chat_id' => 'nullable|integer',
-            'bot_token' => 'required|string'
+            'bot_token' => 'required|string',
+            'customer_name' => 'nullable|string|max:255',
+            'customer_phone' => 'nullable|string|max:255',
+            'customer_address' => 'nullable|string|max:1000',
+            'customer_notes' => 'nullable|string|max:1000'
         ]);
 
         // Verify bot token
@@ -71,16 +75,17 @@ Route::post('/orders', function (Request $request) {
             ->first();
 
         if (!$restaurant) {
-            return response()->json(['error' => 'Invalid restaurant or bot token'], 400);
+            return response()->json(['success' => false, 'error' => 'Invalid restaurant or bot token'], 400);
         }
 
         // Create order
         $order = \App\Models\Order::create([
             'restaurant_id' => $data['restaurant_id'],
             'order_number' => 'ORD-' . time() . '-' . rand(1000, 9999),
-            'customer_name' => 'Telegram User',
-            'customer_phone' => 'N/A',
-            'delivery_address' => 'Telegram Order',
+            'customer_name' => $data['customer_name'] ?? 'Telegram User',
+            'customer_phone' => $data['customer_phone'] ?? 'N/A',
+            'delivery_address' => $data['customer_address'] ?? 'Telegram Order',
+            'notes' => $data['customer_notes'] ?? '',
             'total_price' => $data['total_amount'],
             'status' => 'new',
             'payment_method' => 'telegram',
@@ -104,7 +109,9 @@ Route::post('/orders', function (Request $request) {
             'order_id' => $order->id,
             'restaurant_id' => $data['restaurant_id'],
             'telegram_chat_id' => $data['telegram_chat_id'],
-            'total_amount' => $data['total_amount']
+            'total_amount' => $data['total_amount'],
+            'customer_name' => $data['customer_name'] ?? 'N/A',
+            'customer_phone' => $data['customer_phone'] ?? 'N/A'
         ]);
 
         return response()->json([
@@ -113,9 +120,22 @@ Route::post('/orders', function (Request $request) {
             'message' => 'Order created successfully'
         ]);
 
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        \Log::error('Validation error creating order from Telegram Web App', [
+            'errors' => $e->errors(),
+            'data' => $request->all()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'error' => 'Validation failed',
+            'details' => $e->errors()
+        ], 422);
+
     } catch (\Exception $e) {
         \Log::error('Error creating order from Telegram Web App', [
             'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
             'data' => $request->all()
         ]);
 

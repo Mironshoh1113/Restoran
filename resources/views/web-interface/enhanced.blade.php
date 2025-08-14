@@ -30,8 +30,8 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-color) !important;
-            color: var(--text-color) !important;
+            background: var(--bg-color, #f8f9fa) !important;
+            color: var(--text-color, #2c3e50) !important;
             line-height: 1.6;
             overflow-x: hidden;
         }
@@ -52,13 +52,13 @@
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+            background: linear-gradient(135deg, var(--primary-color, #667eea), var(--secondary-color, #764ba2)) !important;
             padding: 1rem 0;
             position: sticky;
             top: 0;
             z-index: 1000;
             backdrop-filter: blur(10px);
-            box-shadow: var(--shadow) !important;
+            box-shadow: var(--shadow, 0 8px 32px rgba(0,0,0,0.1)) !important;
         }
 
         .restaurant-logo {
@@ -87,7 +87,7 @@
         /* Categories */
         .categories-container {
             padding: 1rem 0;
-            background: var(--card-bg) !important;
+            background: var(--card-bg, #ffffff) !important;
             border-bottom: 1px solid rgba(0,0,0,0.1);
             position: sticky;
             top: 100px;
@@ -108,9 +108,9 @@
         }
 
         .category-tab {
-            background: var(--card-bg) !important;
-            border: 2px solid var(--primary-color) !important;
-            color: var(--primary-color) !important;
+            background: var(--card-bg, #ffffff) !important;
+            border: 2px solid var(--primary-color, #667eea) !important;
+            color: var(--primary-color, #667eea) !important;
             padding: 0.75rem 1.5rem;
             border-radius: 25px;
             font-weight: 600;
@@ -122,7 +122,7 @@
         }
 
         .category-tab.active {
-            background: var(--primary-color) !important;
+            background: var(--primary-color, #667eea) !important;
             color: white !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
@@ -139,9 +139,9 @@
         }
 
         .menu-item {
-            background: var(--card-bg) !important;
-            border-radius: var(--border-radius) !important;
-            box-shadow: var(--shadow) !important;
+            background: var(--card-bg, #ffffff) !important;
+            border-radius: var(--border-radius, 16px) !important;
+            box-shadow: var(--shadow, 0 8px 32px rgba(0,0,0,0.1)) !important;
             margin-bottom: 1rem;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -174,7 +174,7 @@
             justify-content: center;
             color: #6c757d;
             font-size: 3rem;
-            border-radius: var(--border-radius);
+            border-radius: var(--border-radius, 16px);
             border: 2px dashed #dee2e6;
         }
 
@@ -185,7 +185,7 @@
         .menu-item-title {
             font-size: 1.25rem;
             font-weight: 700;
-            color: var(--text-color) !important;
+            color: var(--text-color, #2c3e50) !important;
             margin-bottom: 0.5rem;
         }
 
@@ -198,7 +198,7 @@
         .menu-item-price {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--accent-color) !important;
+            color: var(--accent-color, #ff6b35) !important;
             margin-bottom: 1rem;
         }
 
@@ -229,7 +229,7 @@
         }
 
         .quantity-btn.plus {
-            background: var(--accent-color) !important;
+            background: var(--accent-color, #ff6b35) !important;
             color: white;
         }
 
@@ -240,7 +240,7 @@
         .quantity-display {
             font-size: 1.2rem;
             font-weight: 600;
-            color: var(--text-color) !important;
+            color: var(--text-color, #2c3e50) !important;
             min-width: 40px;
             text-align: center;
         }
@@ -251,7 +251,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: var(--card-bg) !important;
+            background: var(--card-bg, #ffffff) !important;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
@@ -273,11 +273,11 @@
         .cart-total {
             font-size: 1.25rem;
             font-weight: 700;
-            color: var(--text-color) !important;
+            color: var(--text-color, #2c3e50) !important;
         }
 
         .cart-count {
-            background: var(--accent-color) !important;
+            background: var(--accent-color, #ff6b35) !important;
             color: white;
             padding: 0.25rem 0.75rem;
             border-radius: 20px;
@@ -287,11 +287,11 @@
 
         .checkout-btn {
             width: 100%;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+            background: linear-gradient(135deg, var(--primary-color, #667eea), var(--secondary-color, #764ba2)) !important;
             color: white;
             border: none;
             padding: 1rem;
-            border-radius: var(--border-radius) !important;
+            border-radius: var(--border-radius, 16px) !important;
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
@@ -312,20 +312,20 @@
         /* Search and Filters */
         .search-container {
             padding: 1rem;
-            background: var(--card-bg) !important;
+            background: var(--card-bg, #ffffff) !important;
             border-bottom: 1px solid rgba(0,0,0,0.1);
         }
 
         .search-input {
             width: 100%;
             padding: 0.75rem 1rem;
-            border: 2px solid var(--primary-color) !important;
+            border: 2px solid var(--primary-color, #667eea) !important;
             border-radius: 25px;
             font-size: 1rem;
             outline: none;
             transition: all 0.3s ease;
-            background: var(--card-bg) !important;
-            color: var(--text-color) !important;
+            background: var(--card-bg, #ffffff) !important;
+            color: var(--text-color, #2c3e50) !important;
         }
 
         .search-input:focus {
@@ -334,14 +334,14 @@
 
         .filters-container {
             padding: 1rem;
-            background: var(--card-bg) !important;
+            background: var(--card-bg, #ffffff) !important;
             border-bottom: 1px solid rgba(0,0,0,0.1);
         }
 
         .filter-btn {
-            background: var(--card-bg) !important;
-            border: 1px solid var(--primary-color) !important;
-            color: var(--primary-color) !important;
+            background: var(--card-bg, #ffffff) !important;
+            border: 1px solid var(--primary-color, #667eea) !important;
+            color: var(--primary-color, #667eea) !important;
             padding: 0.5rem 1rem;
             border-radius: 20px;
             font-size: 0.9rem;
@@ -352,7 +352,7 @@
         }
 
         .filter-btn.active {
-            background: var(--primary-color) !important;
+            background: var(--primary-color, #667eea) !important;
             color: white !important;
         }
 
@@ -380,14 +380,14 @@
         }
 
         .checkout-modal-content {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
+            background: var(--card-bg, #ffffff);
+            border-radius: var(--border-radius, 16px);
             padding: 2rem;
             max-width: 500px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow, 0 8px 32px rgba(0,0,0,0.1));
         }
 
         .checkout-modal-header {
@@ -396,7 +396,7 @@
         }
 
         .checkout-modal-header h3 {
-            color: var(--text-color);
+            color: var(--text-color, #2c3e50);
             font-size: 1.5rem;
             font-weight: 700;
         }
@@ -408,7 +408,7 @@
         .form-label {
             display: block;
             margin-bottom: 0.5rem;
-            color: var(--text-color);
+            color: var(--text-color, #2c3e50);
             font-weight: 600;
         }
 
@@ -419,13 +419,13 @@
             border-radius: 8px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            background: var(--card-bg);
-            color: var(--text-color);
+            background: var(--card-bg, #ffffff);
+            color: var(--text-color, #2c3e50);
         }
 
         .form-input:focus {
             outline: none;
-            border-color: var(--primary-color);
+            border-color: var(--primary-color, #667eea);
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
@@ -452,7 +452,7 @@
         }
 
         .btn-primary {
-            background: var(--primary-color);
+            background: var(--primary-color, #667eea);
             color: white;
         }
 
@@ -524,121 +524,124 @@
             }
         }
 
-        /* Telegram Theme Integration */
+        /* Telegram Theme Integration - DISABLED to use custom colors */
+        /*
         .telegram-theme {
             --bg-color: var(--tg-theme-bg-color, var(--bg-color));
             --text-color: var(--tg-theme-text-color, var(--text-color));
             --card-bg: var(--tg-theme-secondary-bg-color, var(--card-bg));
             --primary-color: var(--tg-theme-button-color, var(--primary-color));
         }
+        */
 
         /* Force apply custom colors */
-        .custom-theme {
-            background: var(--bg-color) !important;
-            color: var(--text-color) !important;
+        body {
+            background: var(--bg-color, #f8f9fa) !important;
+            color: var(--text-color, #2c3e50) !important;
         }
 
-        .custom-theme .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+        .header {
+            background: linear-gradient(135deg, var(--primary-color, #667eea), var(--secondary-color, #764ba2)) !important;
         }
 
-        .custom-theme .category-tab {
-            border-color: var(--primary-color) !important;
-            color: var(--primary-color) !important;
+        .category-tab {
+            border-color: var(--primary-color, #667eea) !important;
+            color: var(--primary-color, #667eea) !important;
+            background: var(--card-bg, #ffffff) !important;
         }
 
-        .custom-theme .category-tab.active {
-            background: var(--primary-color) !important;
+        .category-tab.active {
+            background: var(--primary-color, #667eea) !important;
             color: white !important;
         }
 
-        .custom-theme .menu-item {
-            background: var(--card-bg) !important;
-            border-radius: var(--border-radius) !important;
-            box-shadow: var(--shadow) !important;
+        .menu-item {
+            background: var(--card-bg, #ffffff) !important;
+            border-radius: var(--border-radius, 16px) !important;
+            box-shadow: var(--shadow, 0 8px 32px rgba(0,0,0,0.1)) !important;
         }
 
-        .custom-theme .menu-item-title {
-            color: var(--text-color) !important;
+        .menu-item-title {
+            color: var(--text-color, #2c3e50) !important;
         }
 
-        .custom-theme .menu-item-price {
-            color: var(--accent-color) !important;
+        .menu-item-price {
+            color: var(--accent-color, #ff6b35) !important;
         }
 
-        .custom-theme .quantity-btn.plus {
-            background: var(--accent-color) !important;
+        .quantity-btn.plus {
+            background: var(--accent-color, #ff6b35) !important;
         }
 
-        .custom-theme .cart-fixed {
-            background: var(--card-bg) !important;
+        .cart-fixed {
+            background: var(--card-bg, #ffffff) !important;
         }
 
-        .custom-theme .cart-total {
-            color: var(--text-color) !important;
+        .cart-total {
+            color: var(--text-color, #2c3e50) !important;
         }
 
-        .custom-theme .cart-count {
-            background: var(--accent-color) !important;
+        .cart-count {
+            background: var(--accent-color, #ff6b35) !important;
         }
 
-        .custom-theme .checkout-btn {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
-            border-radius: var(--border-radius) !important;
+        .checkout-btn {
+            background: linear-gradient(135deg, var(--primary-color, #667eea), var(--secondary-color, #764ba2)) !important;
+            border-radius: var(--border-radius, 16px) !important;
         }
 
-        .custom-theme .search-container,
-        .custom-theme .filters-container {
-            background: var(--card-bg) !important;
+        .search-container,
+        .filters-container {
+            background: var(--card-bg, #ffffff) !important;
         }
 
-        .custom-theme .search-input {
-            border-color: var(--primary-color) !important;
-            background: var(--card-bg) !important;
-            color: var(--text-color) !important;
+        .search-input {
+            border-color: var(--primary-color, #667eea) !important;
+            background: var(--card-bg, #ffffff) !important;
+            color: var(--text-color, #2c3e50) !important;
         }
 
-        .custom-theme .filter-btn {
-            background: var(--card-bg) !important;
-            border-color: var(--primary-color) !important;
-            color: var(--primary-color) !important;
+        .filter-btn {
+            background: var(--card-bg, #ffffff) !important;
+            border-color: var(--primary-color, #667eea) !important;
+            color: var(--primary-color, #667eea) !important;
         }
 
-        .custom-theme .filter-btn.active {
-            background: var(--primary-color) !important;
+        .filter-btn.active {
+            background: var(--primary-color, #667eea) !important;
             color: white !important;
         }
 
-        .custom-theme .checkout-modal-content {
-            background: var(--card-bg) !important;
-            border-radius: var(--border-radius) !important;
-            box-shadow: var(--shadow) !important;
+        .checkout-modal-content {
+            background: var(--card-bg, #ffffff) !important;
+            border-radius: var(--border-radius, 16px) !important;
+            box-shadow: var(--shadow, 0 8px 32px rgba(0,0,0,0.1)) !important;
         }
 
-        .custom-theme .checkout-modal-header h3 {
-            color: var(--text-color) !important;
+        .checkout-modal-header h3 {
+            color: var(--text-color, #2c3e50) !important;
         }
 
-        .custom-theme .form-label {
-            color: var(--text-color) !important;
+        .form-label {
+            color: var(--text-color, #2c3e50) !important;
         }
 
-        .custom-theme .form-input {
-            background: var(--card-bg) !important;
-            color: var(--text-color) !important;
+        .form-input {
+            background: var(--card-bg, #ffffff) !important;
+            color: var(--text-color, #2c3e50) !important;
             border-color: #e2e8f0;
         }
 
-        .custom-theme .form-input:focus {
-            border-color: var(--primary-color) !important;
+        .form-input:focus {
+            border-color: var(--primary-color, #667eea) !important;
         }
 
-        .custom-theme .btn-primary {
-            background: var(--primary-color) !important;
+        .btn-primary {
+            background: var(--primary-color, #667eea) !important;
         }
     </style>
 </head>
-<body class="telegram-theme custom-theme">
+<body>
     <!-- Header -->
     <header class="header">
         <div class="container">
@@ -826,7 +829,7 @@
         tg.expand();
         
         // Apply Telegram theme
-        document.body.classList.add('telegram-theme');
+        // document.body.classList.add('telegram-theme'); // DISABLED
         
         // Apply custom restaurant settings
         function applyCustomSettings() {
@@ -842,8 +845,9 @@
             document.documentElement.style.setProperty('--border-radius', restaurantSettings.borderRadius);
             document.documentElement.style.setProperty('--shadow', restaurantSettings.shadow);
             
-            // Force apply custom colors to all elements
-            document.body.classList.add('custom-theme');
+            // Force apply to body
+            document.body.style.background = restaurantSettings.bgColor;
+            document.body.style.color = restaurantSettings.textColor;
             
             // Update specific elements that might not inherit CSS variables
             updateElementStyles();
