@@ -360,6 +360,106 @@
             transform: translateY(-1px);
         }
 
+        /* Checkout Modal */
+        .checkout-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .checkout-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkout-modal-content {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+        .checkout-modal-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .checkout-modal-header h3 {
+            color: var(--text-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkout-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -416,6 +516,11 @@
             .menu-item-image,
             .menu-item-image-placeholder {
                 height: 150px;
+            }
+            
+            .checkout-modal-content {
+                padding: 1.5rem;
+                margin: 1rem;
             }
         }
 
@@ -503,6 +608,34 @@
             background: var(--primary-color) !important;
             color: white !important;
         }
+
+        .custom-theme .checkout-modal-content {
+            background: var(--card-bg) !important;
+            border-radius: var(--border-radius) !important;
+            box-shadow: var(--shadow) !important;
+        }
+
+        .custom-theme .checkout-modal-header h3 {
+            color: var(--text-color) !important;
+        }
+
+        .custom-theme .form-label {
+            color: var(--text-color) !important;
+        }
+
+        .custom-theme .form-input {
+            background: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border-color: #e2e8f0;
+        }
+
+        .custom-theme .form-input:focus {
+            border-color: var(--primary-color) !important;
+        }
+
+        .custom-theme .btn-primary {
+            background: var(--primary-color) !important;
+        }
     </style>
 </head>
 <body class="telegram-theme custom-theme">
@@ -576,7 +709,7 @@
                             <div class="row g-0">
                                 <div class="col-md-4">
                                     @if($item->image && !empty(trim($item->image)))
-                                        <img src="{{ asset($item->image) }}"
+                                        <img src="{{ asset('storage/' . $item->image) }}"
                                              alt="{{ $item->name }}" 
                                              class="menu-item-image"
                                              loading="lazy"
@@ -616,6 +749,43 @@
         @endforeach
     </div>
 
+    <!-- Checkout Modal -->
+    <div class="checkout-modal" id="checkoutModal">
+        <div class="checkout-modal-content">
+            <div class="checkout-modal-header">
+                <h3>Buyurtma ma'lumotlari</h3>
+                <p class="text-muted">Iltimos, ma'lumotlaringizni kiriting</p>
+            </div>
+            
+            <form id="checkoutForm">
+                <div class="form-group">
+                    <label class="form-label">Ismingiz</label>
+                    <input type="text" class="form-input" id="customerName" name="customer_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Telefon raqam</label>
+                    <input type="tel" class="form-input" id="customerPhone" name="customer_phone" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Manzil</label>
+                    <textarea class="form-input" id="customerAddress" name="customer_address" rows="3" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Izoh (ixtiyoriy)</label>
+                    <textarea class="form-input" id="customerNotes" name="customer_notes" rows="2"></textarea>
+                </div>
+                
+                <div class="checkout-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCheckoutModal()">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary">Buyurtmani tasdiqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Fixed Cart -->
     <div class="cart-fixed">
         <div class="cart-content">
@@ -625,7 +795,7 @@
                 </div>
                 <div class="cart-count" id="cart-total-items">0</div>
             </div>
-            <button class="checkout-btn" id="checkout-btn" onclick="proceedToCheckout()" disabled>
+            <button class="checkout-btn" id="checkout-btn" onclick="openCheckoutModal()" disabled>
                 <i class="fas fa-shopping-cart me-2"></i>Buyurtma berish
             </button>
         </div>
@@ -660,7 +830,9 @@
         
         // Apply custom restaurant settings
         function applyCustomSettings() {
-            // Update CSS variables
+            console.log('Applying restaurant settings:', restaurantSettings);
+            
+            // Update CSS variables on document root
             document.documentElement.style.setProperty('--primary-color', restaurantSettings.primaryColor);
             document.documentElement.style.setProperty('--secondary-color', restaurantSettings.secondaryColor);
             document.documentElement.style.setProperty('--accent-color', restaurantSettings.accentColor);
@@ -675,14 +847,28 @@
             
             // Update specific elements that might not inherit CSS variables
             updateElementStyles();
+            
+            console.log('CSS variables updated:', {
+                '--primary-color': getComputedStyle(document.documentElement).getPropertyValue('--primary-color'),
+                '--secondary-color': getComputedStyle(document.documentElement).getPropertyValue('--secondary-color'),
+                '--accent-color': getComputedStyle(document.documentElement).getPropertyValue('--accent-color'),
+                '--text-color': getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
+                '--bg-color': getComputedStyle(document.documentElement).getPropertyValue('--bg-color'),
+                '--card-bg': getComputedStyle(document.documentElement).getPropertyValue('--card-bg'),
+                '--border-radius': getComputedStyle(document.documentElement).getPropertyValue('--border-radius'),
+                '--shadow': getComputedStyle(document.documentElement).getPropertyValue('--shadow')
+            });
         }
         
         // Update specific element styles
         function updateElementStyles() {
+            console.log('Updating element styles...');
+            
             // Update header gradient
             const header = document.querySelector('.header');
             if (header) {
                 header.style.background = `linear-gradient(135deg, ${restaurantSettings.primaryColor}, ${restaurantSettings.secondaryColor})`;
+                console.log('Header background updated');
             }
             
             // Update category tabs
@@ -691,12 +877,14 @@
                 tab.style.borderColor = restaurantSettings.primaryColor;
                 tab.style.color = restaurantSettings.primaryColor;
             });
+            console.log('Category tabs updated:', categoryTabs.length);
             
             // Update active category tab
             const activeTab = document.querySelector('.category-tab.active');
             if (activeTab) {
                 activeTab.style.background = restaurantSettings.primaryColor;
                 activeTab.style.color = 'white';
+                console.log('Active tab updated');
             }
             
             // Update menu items
@@ -706,6 +894,7 @@
                 item.style.borderRadius = restaurantSettings.borderRadius;
                 item.style.boxShadow = restaurantSettings.shadow;
             });
+            console.log('Menu items updated:', menuItems.length);
             
             // Update menu item titles
             const menuTitles = document.querySelectorAll('.menu-item-title');
@@ -776,6 +965,33 @@
                 btn.style.borderColor = restaurantSettings.primaryColor;
                 btn.style.color = restaurantSettings.primaryColor;
             });
+            
+            // Update checkout modal
+            const checkoutModal = document.querySelector('.checkout-modal-content');
+            if (checkoutModal) {
+                checkoutModal.style.background = restaurantSettings.cardBg;
+                checkoutModal.style.borderRadius = restaurantSettings.borderRadius;
+                checkoutModal.style.boxShadow = restaurantSettings.shadow;
+            }
+            
+            // Update form elements
+            const formLabels = document.querySelectorAll('.form-label');
+            formLabels.forEach(label => {
+                label.style.color = restaurantSettings.textColor;
+            });
+            
+            const formInputs = document.querySelectorAll('.form-input');
+            formInputs.forEach(input => {
+                input.style.background = restaurantSettings.cardBg;
+                input.style.color = restaurantSettings.textColor;
+            });
+            
+            const primaryBtn = document.querySelector('.btn-primary');
+            if (primaryBtn) {
+                primaryBtn.style.background = restaurantSettings.primaryColor;
+            }
+            
+            console.log('All element styles updated successfully');
         }
         
         // Search functionality
@@ -877,8 +1093,34 @@
             }
         }
         
+        // Checkout modal functions
+        function openCheckoutModal() {
+            document.getElementById('checkoutModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCheckoutModal() {
+            document.getElementById('checkoutModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Handle checkout form submission
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const customerData = {
+                name: document.getElementById('customerName').value,
+                phone: document.getElementById('customerPhone').value,
+                address: document.getElementById('customerAddress').value,
+                notes: document.getElementById('customerNotes').value
+            };
+            
+            // Proceed with order
+            proceedToCheckout(customerData);
+        });
+        
         // Proceed to checkout
-        function proceedToCheckout() {
+        function proceedToCheckout(customerData = null) {
             if (Object.keys(cart).length === 0) return;
             
             // Prepare order data
@@ -895,7 +1137,11 @@
                     return total + (qty * price);
                 }, 0),
                 telegram_chat_id: tg.initDataUnsafe?.user?.id || null,
-                bot_token: '{{ $botToken }}'
+                bot_token: '{{ $botToken }}',
+                customer_name: customerData?.name || 'Anonim',
+                customer_phone: customerData?.phone || 'Kiritilmagan',
+                customer_address: customerData?.address || 'Kiritilmagan',
+                customer_notes: customerData?.notes || ''
             };
             
             // Send order to server
@@ -919,6 +1165,9 @@
                         document.getElementById(`qty-${itemId}`).textContent = '0';
                     });
                     
+                    // Close modal
+                    closeCheckoutModal();
+                    
                     // Show success message
                     tg.showAlert('Buyurtmangiz muvaffaqiyatli qabul qilindi! 🎉');
                     
@@ -939,6 +1188,8 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+            
             // Apply custom settings first
             applyCustomSettings();
             
@@ -947,13 +1198,32 @@
             
             // Log settings for debugging
             console.log('Restaurant settings applied:', restaurantSettings);
+            
+            // Apply settings again after a short delay to ensure they take effect
+            setTimeout(() => {
+                console.log('Applying settings again after delay...');
+                applyCustomSettings();
+            }, 100);
+            
+            // Apply settings again after images load
+            window.addEventListener('load', function() {
+                console.log('Window loaded, applying settings again...');
+                applyCustomSettings();
+            });
         });
         
         // Apply settings when page becomes visible
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
+                console.log('Page became visible, applying settings...');
                 applyCustomSettings();
             }
+        });
+        
+        // Apply settings on window focus
+        window.addEventListener('focus', function() {
+            console.log('Window focused, applying settings...');
+            applyCustomSettings();
         });
     </script>
 </body>

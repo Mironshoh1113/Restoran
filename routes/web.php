@@ -549,3 +549,20 @@ Route::get('/test-enhanced-web-interface', function (Request $request) {
     
     return view('web-interface.enhanced', compact('restaurant', 'categories'));
 })->name('test.enhanced.web.interface');
+
+// Test enhanced web interface with specific restaurant
+Route::get('/test-enhanced-web-interface/{restaurant_id}', function (Request $request, $restaurant_id) {
+    $restaurant = Restaurant::find($restaurant_id);
+    
+    if (!$restaurant) {
+        return response()->json(['error' => 'Restaurant not found'], 404);
+    }
+    
+    $categories = Category::where('restaurant_id', $restaurant->id)
+        ->with(['menuItems' => function($query) {
+            $query->where('is_active', true);
+        }])
+        ->get();
+    
+    return view('web-interface.enhanced', compact('restaurant', 'categories'));
+})->name('test.enhanced.web.interface.specific');
