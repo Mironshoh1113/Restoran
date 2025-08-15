@@ -1434,11 +1434,6 @@ function applyCustomSettings() {
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-	const checkoutBtn = document.getElementById('checkout-btn');
-	if (checkoutBtn) {
-		checkoutBtn.addEventListener('click', function(){ if (Object.keys(cart||{}).length > 0) { openCheckoutPopup(); } });
-	}
-
             console.log('DOM loaded, initializing...');
             
             // Apply custom settings first
