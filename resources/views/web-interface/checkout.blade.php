@@ -13,7 +13,7 @@
 		.card-header { background: linear-gradient(135deg, var(--primary), #764ba2); color:#fff; border-radius:14px 14px 0 0; padding:0.75rem 1rem; }
 		.card-header h5 { margin:0; font-weight:700; font-size:1rem; }
 		.form-label { font-weight:600; font-size:0.9rem; }
-		.form-control { font-size:0.95rem; padding:0.5rem 0.75rem; border-radius:8px; }
+		.form-control, .form-select { font-size:0.95rem; padding:0.5rem 0.75rem; border-radius:8px; }
 		.summary { background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; padding:10px; }
 		.summary .row { font-size:0.9rem; }
 		.btn { font-weight:600; }
@@ -50,6 +50,15 @@
 						<textarea class="form-control" id="address" rows="2" required></textarea>
 					</div>
 					<div class="mb-2">
+						<label class="form-label">To'lov usuli</label>
+						<select id="payment" class="form-select">
+							<option value="cash" selected>Naqd</option>
+							<option value="card">Karta</option>
+							<option value="click">Click</option>
+							<option value="payme">Payme</option>
+						</select>
+					</div>
+					<div class="mb-2">
 						<label class="form-label">Izoh (ixtiyoriy)</label>
 						<textarea class="form-control" id="notes" rows="2"></textarea>
 					</div>
@@ -76,7 +85,7 @@
 				subtotal += (it.price||0)*(it.quantity||0);
 				const row = document.createElement('div');
 				row.className = 'item';
-				row.innerHTML = `<div><strong>${it.name||''}</strong><div class="small">${it.quantity||0} x ${(it.price||0).toLocaleString()} so'm</div></div><div><strong>${((it.price||0)*(it.quantity||0)).toLocaleString()} so'm</strong></div>`;
+				row.innerHTML = `<div><strong>${it.name||''}</strong><div class=\"small\">${it.quantity||0} x ${(it.price||0).toLocaleString()} so'm</div></div><div><strong>${((it.price||0)*(it.quantity||0)).toLocaleString()} so'm</strong></div>`;
 				itemsDiv.appendChild(row);
 			});
 		}
@@ -92,7 +101,8 @@
 				customer_name: document.getElementById('name').value,
 				customer_phone: document.getElementById('phone').value,
 				customer_address: document.getElementById('address').value,
-				customer_notes: document.getElementById('notes').value
+				customer_notes: document.getElementById('notes').value,
+				payment_method: document.getElementById('payment').value
 			};
 			fetch('/api/orders', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) })
 			.then(r=>r.json()).then(data=>{
