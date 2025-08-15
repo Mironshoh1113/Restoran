@@ -53,23 +53,34 @@ function updateCart() {
 
 window.proceedToCheckout = function() {
 	if (Object.keys(cart).length === 0) return;
-	let checkoutHtml = ''; let totalPrice = 0;
+	let checkoutHtml = '';
+	let totalPrice = 0;
 	Object.keys(cart).forEach(itemId => {
 		const qty = cart[itemId];
 		const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+		if (!itemElement) return;
 		const name = itemElement.querySelector('.menu-item-title').textContent;
 		const price = parseFloat(itemElement.dataset.price);
 		const itemTotal = qty * price; totalPrice += itemTotal;
-		checkoutHtml += `<div class="d-flex justify-content-between align-items-center mb-2">
-			<div><strong>${name}</strong><br><small class="text-muted">${qty} x ${price.toLocaleString()} so'm</small></div>
-			<strong>${itemTotal.toLocaleString()} so'm</strong>
-		</div>`;
+		checkoutHtml += `<div class="d-flex justify-content-between align-items-center mb-2">` +
+			`<div><strong>${name}</strong><br><small class=\"text-muted\">${qty} x ${price.toLocaleString()} so'm</small></div>` +
+			`<strong>${itemTotal.toLocaleString()} so'm</strong></div>`;
 	});
 	document.getElementById('checkout-items').innerHTML = checkoutHtml;
 	document.getElementById('checkout-total').textContent = totalPrice.toLocaleString() + " so'm";
 	const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
 	modal.show();
 };
+
+// Listen for order completion from popup
+window.addEventListener('message', function(event) {
+	if (event.origin !== window.location.origin) return;
+	if (event.data && event.data.type === 'order_placed') {
+		cart = {}; updateCart();
+		document.querySelectorAll('[id^="qty-"]').forEach(el => el.textContent = '0');
+		if (tg && tg.showAlert) tg.showAlert('Buyurtmangiz muvaffaqiyatli qabul qilindi! 🎉');
+	}
+});
 
 window.confirmOrder = function() {
 	if (Object.keys(cart).length === 0) return;

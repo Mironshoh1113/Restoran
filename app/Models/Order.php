@@ -32,6 +32,7 @@ class Order extends Model
         'delivery_fee',
         'items',
         'bot_token',
+        'is_paid',
     ];
 
     protected $casts = [
@@ -40,6 +41,7 @@ class Order extends Model
         'delivered_at' => 'datetime',
         'items' => 'array',
         'delivery_fee' => 'decimal:2',
+        'is_paid' => 'boolean',
     ];
 
     protected static function boot()

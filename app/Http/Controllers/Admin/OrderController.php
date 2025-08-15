@@ -39,7 +39,7 @@ class OrderController extends Controller
         $this->authorize('view', $order);
         
         // Load relationships
-        $order->load(['restaurant', 'courier', 'orderItems.menuItem.category']);
+        $order->load(['restaurant', 'courier', 'orderItems.menuItem.category', 'project.restaurant']);
         
         // If order has items JSON (from web interface), decode it
         if ($order->items) {
@@ -59,7 +59,7 @@ class OrderController extends Controller
         $this->authorize('update', $order);
         
         $request->validate([
-            'status' => 'required|in:pending,preparing,on_way,delivered,cancelled'
+            'status' => 'required|in:new,preparing,on_way,delivered,cancelled'
         ]);
 
         $oldStatus = $order->status;
@@ -88,6 +88,28 @@ class OrderController extends Controller
 
         return redirect()->back()
             ->with('success', 'Kuryer tayinlandi.');
+    }
+
+    public function updatePayment(Request $request, Order $order)
+    {
+        $this->authorize('update', $order);
+
+        $request->validate([
+            'is_paid' => 'required|boolean',
+            'payment_method' => 'nullable|string|in:cash,card,click,payme'
+        ]);
+
+        $data = [
+            'is_paid' => (bool) $request->boolean('is_paid'),
+        ];
+
+        if ($request->filled('payment_method')) {
+            $data['payment_method'] = $request->input('payment_method');
+        }
+
+        $order->update($data);
+
+        return redirect()->back()->with('success', "To'lov ma'lumotlari yangilandi.");
     }
 
     protected function sendOrderStatusNotification(Order $order, $oldStatus)

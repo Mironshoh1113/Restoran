@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
 		Route::resource('orders', OrderController::class)->only(['index', 'show']);
 		Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
 		Route::patch('orders/{order}/courier', [OrderController::class, 'assignCourier'])->name('orders.assign-courier');
+		Route::patch('orders/{order}/payment', [OrderController::class, 'updatePayment'])->name('orders.update-payment');
 		
 		// Courier routes
 		Route::resource('couriers', CourierController::class);
@@ -126,6 +127,9 @@ Route::middleware('auth')->group(function () {
 // Web interface for Telegram users
 Route::get('/web-interface/{token}', [TelegramController::class, 'webInterface'])->name('web.interface');
 Route::get('/web-interface', [TelegramController::class, 'webInterfaceFromApp'])->name('web.interface.app');
+Route::get('/web-interface/checkout', function(\Illuminate\Http\Request $request) {
+	return view('web-interface.checkout');
+})->name('web.interface.checkout');
 Route::post('/web-interface/{token}/order', [TelegramController::class, 'placeOrder'])->name('web.place-order');
 Route::post('/web-interface/order', [TelegramController::class, 'placeOrderWithoutToken'])->name('web.place-order-no-token');
 Route::get('/web-interface/{token}/menu', [TelegramController::class, 'getMenu'])->name('web.get-menu');
