@@ -1018,7 +1018,7 @@ function openCheckoutPopup(){
 		localStorage.setItem('checkout_preview', JSON.stringify(preview));
 		const url = `/web-interface/checkout?restaurant_id={{ $restaurant->id }}&bot_token={{ urlencode($botToken ?? $restaurant->bot_token ?? "") }}`;
 		const w = window.open(url, 'checkout', 'width=420,height=700,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no');
-		if(!w){ openCheckoutModal(); }
+		if(!w){ openCheckoutModal(); return false; }
 	} catch(e) {
 		openCheckoutModal();
 	}
