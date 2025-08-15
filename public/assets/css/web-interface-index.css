@@ -232,3 +232,24 @@ body {
 	.modal .modal-title { font-size: 1rem; }
 	.modal .btn { padding: 0.4rem 0.8rem; font-size: 0.9rem; }
 } 
+
+/* Additional 30% shrink for cards */
+.shrink-50 .category-content { grid-template-columns: repeat(2, 1fr); gap: 0.4rem; }
+.shrink-50 .menu-item { margin-bottom: 0.5rem; border-radius: 10px; }
+.shrink-50 .image-container { border-radius: 10px 0 0 10px; }
+.shrink-50 .menu-item-image,
+.shrink-50 .menu-item-image-placeholder,
+.shrink-50 .menu-item-image-fallback { height: 90px; }
+.shrink-50 .menu-item-content { padding: 0.5rem; }
+.shrink-50 .menu-item-title { font-size: 0.8rem; }
+.shrink-50 .menu-item-description { font-size: 0.7rem; }
+.shrink-50 .menu-item-price { font-size: 0.85rem; margin-bottom: 0.4rem; }
+.shrink-50 .quantity-btn { width: 22px; height: 22px; font-size: 0.8rem; }
+.shrink-50 .quantity-display { font-size: 0.8rem; min-width: 22px; }
+
+/* Fullscreen modal refinement */
+.shrink-50 .modal-fullscreen .modal-content { border-radius: 0; }
+.shrink-50 .modal-fullscreen .modal-header,
+.shrink-50 .modal-fullscreen .modal-body,
+.shrink-50 .modal-fullscreen .modal-footer { padding: 0.75rem; }
+.shrink-50 .modal-fullscreen .modal-title { font-size: 1rem; } 
