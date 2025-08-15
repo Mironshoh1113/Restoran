@@ -527,6 +527,42 @@
                 border-radius: var(--border-radius) var(--border-radius) 0 0;
             }
         }
+
+        /* Ultra-small phones */
+        @media (max-width: 420px) {
+            .header { padding: 0.5rem 0; }
+            .restaurant-logo { width: 44px; height: 44px; border: 2px solid rgba(255,255,255,0.3); }
+            .restaurant-info h1 { font-size: 1rem; }
+            .restaurant-info p { font-size: 0.8rem; }
+
+            .categories-container { padding: 0.5rem 0; top: 80px; }
+            .category-tabs { gap: 0.4rem; padding: 0 0.75rem; }
+            .category-tab { padding: 0.5rem 0.9rem; font-size: 0.8rem; border-radius: 18px; }
+
+            .menu-container { padding: 0.5rem; }
+            .menu-item-content { padding: 0.75rem; }
+            .menu-item-title { font-size: 1rem; }
+            .menu-item-description { font-size: 0.85rem; }
+            .menu-item-price { font-size: 1.1rem; margin-bottom: 0.5rem; }
+            .menu-item-image,
+            .menu-item-image-placeholder,
+            .menu-item-image-fallback { height: 130px; }
+
+            .quantity-controls { gap: 0.5rem; }
+            .quantity-btn { width: 34px; height: 34px; font-size: 1rem; }
+            .quantity-display { font-size: 1rem; min-width: 32px; }
+
+            .cart-content { padding: 0.75rem; }
+            .cart-total { font-size: 1.05rem; }
+            .cart-count { padding: 0.15rem 0.5rem; font-size: 0.8rem; }
+            .checkout-btn { padding: 0.75rem; font-size: 1rem; }
+
+            .empty-state i { font-size: 3rem; }
+            .scroll-to-top { width: 42px; height: 42px; font-size: 1rem; bottom: 90px; }
+
+            .modal .modal-title { font-size: 1rem; }
+            .modal .btn { padding: 0.4rem 0.8rem; font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body class="telegram-theme">

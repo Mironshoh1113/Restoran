@@ -706,7 +706,45 @@
 			background: var(--card-bg, #ffffff);
 			padding: 0.75rem 0;
 		}
-    </style>
+
+        /* Ultra-small phones */
+        @media (max-width: 420px) {
+            body { padding-bottom: 120px; }
+            .header { padding: 0.5rem 0; }
+            .restaurant-logo { width: 44px; height: 44px; border: 2px solid rgba(255,255,255,0.3); }
+            .restaurant-info h1 { font-size: 1rem; }
+            .restaurant-info p { font-size: 0.8rem; }
+
+            .search-container { padding: 0.75rem; }
+            .search-input { padding: 0.6rem 0.9rem; font-size: 0.9rem; border-radius: 18px; }
+
+            .categories-container { padding: 0.5rem 0; top: 80px; }
+            .category-tabs { gap: 0.4rem; padding: 0 0.75rem; }
+            .category-tab { padding: 0.45rem 0.9rem; font-size: 0.8rem; border-radius: 18px; }
+
+            .menu-container { padding: 0.5rem; }
+            .category-content { gap: 0.5rem; }
+            .menu-item-image,
+            .menu-item-image-placeholder { height: 110px; }
+            .menu-item-content { padding: 0.6rem; }
+            .menu-item-title { font-size: 0.95rem; }
+            .menu-item-description { font-size: 0.75rem; }
+            .menu-item-price { font-size: 1rem; }
+
+            .quantity-controls { gap: 0.4rem; }
+            .quantity-btn { width: 32px; height: 32px; font-size: 0.95rem; }
+            .quantity-display { font-size: 0.95rem; min-width: 30px; }
+
+            .cart-content { padding: 0.75rem; }
+            .cart-total { font-size: 1.05rem; }
+            .cart-count { padding: 0.15rem 0.5rem; font-size: 0.8rem; }
+            .checkout-btn { padding: 0.75rem; font-size: 1rem; }
+
+            .checkout-modal-content { padding: 0.75rem 0.75rem 4.5rem; }
+            .checkout-actions { gap: 0.5rem; padding: 0.5rem 0.75rem; }
+            .btn { padding: 0.6rem 1rem; font-size: 0.95rem; }
+        }
+	</style>
 </head>
 <body>
     <!-- Header -->
