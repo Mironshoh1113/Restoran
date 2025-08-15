@@ -116,6 +116,19 @@ body {
 .shrink-50 .scroll-to-top { width: 28px; height: 28px; bottom: 80px; font-size: 0.85rem; }
 .shrink-50 .empty-state i { font-size: 2.5rem; }
 
+/* Shrink 50% modal compactness */
+.shrink-50 .modal-dialog { max-width: 520px; margin: 0.75rem auto; }
+.shrink-50 .modal-content { border-radius: 10px; }
+.shrink-50 .modal-header,
+.shrink-50 .modal-body,
+.shrink-50 .modal-footer { padding: 0.5rem 0.75rem; }
+.shrink-50 .modal-title { font-size: 0.9rem; }
+.shrink-50 .modal-body { font-size: 0.85rem; }
+.shrink-50 .modal h6 { font-size: 0.85rem; margin: 0; }
+.shrink-50 .modal .btn { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
+.shrink-50 #checkout-items .mb-2 { margin-bottom: 0.35rem !important; }
+.shrink-50 #checkout-total { font-size: 1rem; }
+
 /* Quantity */
 .quantity-controls { display: flex; align-items: center; gap: 1rem; justify-content: space-between; }
 .quantity-btn { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 1.2rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="uz" class="shrink-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -744,6 +744,29 @@
             .checkout-actions { gap: 0.5rem; padding: 0.5rem 0.75rem; }
             .btn { padding: 0.6rem 1rem; font-size: 0.95rem; }
         }
+		/* Compact 50% scale for enhanced view */
+		.shrink-50 body { font-size: 0.75rem; }
+		.shrink-50 .header { padding: 0.5rem 0; }
+		.shrink-50 .restaurant-logo { width: 36px; height: 36px; }
+		.shrink-50 .restaurant-info h1 { font-size: 1rem; }
+		.shrink-50 .restaurant-info p { font-size: 0.8rem; }
+		.shrink-50 .category-tab { padding: 0.4rem 0.8rem; font-size: 0.75rem; border-radius: 16px; }
+		.shrink-50 .menu-item-image, .shrink-50 .menu-item-image-placeholder { height: 110px; }
+		.shrink-50 .menu-item-content { padding: 0.75rem; }
+		.shrink-50 .menu-item-title { font-size: 0.9rem; }
+		.shrink-50 .menu-item-description { font-size: 0.75rem; }
+		.shrink-50 .menu-item-price { font-size: 1rem; }
+		.shrink-50 .quantity-btn { width: 30px; height: 30px; font-size: 0.9rem; }
+		.shrink-50 .quantity-display { font-size: 0.9rem; min-width: 28px; }
+		.shrink-50 .cart-content { padding: 0.75rem; }
+		.shrink-50 .cart-total { font-size: 1rem; }
+		.shrink-50 .checkout-btn { padding: 0.7rem; font-size: 0.95rem; }
+		.shrink-50 .checkout-modal-content { padding: 0.75rem 0.75rem 4rem; }
+		.shrink-50 .checkout-modal-header h3 { font-size: 1.1rem; }
+		.shrink-50 .form-label { font-size: 0.85rem; }
+		.shrink-50 .form-input { padding: 0.5rem 0.75rem; font-size: 0.9rem; }
+		.shrink-50 .checkout-actions { gap: 0.5rem; padding: 0.5rem 0.75rem; }
+		.shrink-50 .btn { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
 	</style>
 </head>
 <body>
