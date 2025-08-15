@@ -955,7 +955,7 @@
                 </div>
                 <div class="cart-count" id="cart-total-items">0</div>
             </div>
-            <button class="checkout-btn" id="checkout-btn">
+            <button class="checkout-btn" id="checkout-btn" onclick="(function(){ try { const preview = { items: Object.keys(cart||{}).map(id=>({menu_item_id:parseInt(id), name: document.querySelector(`[data-item-id=\"${id}\"] .menu-item-title`)?.textContent||'', price: parseFloat(document.querySelector(`[data-item-id=\"${id}\"]`)?.dataset.price||'0'), quantity: cart[id]})), restaurant_id: {{ $restaurant->id }}, total_amount: Object.keys(cart||{}).reduce((t,id)=>t + (cart[id]*(parseFloat(document.querySelector(`[data-item-id=\"${id}\"]`)?.dataset.price||'0'))),0), telegram_chat_id: (window.Telegram?.WebApp?.initDataUnsafe?.user?.id)||null, bot_token: '{{ $botToken ?? $restaurant->bot_token ?? "" }}' }; localStorage.setItem('checkout_preview', JSON.stringify(preview)); } catch(e){} const url = `/web-interface/checkout?restaurant_id={{ $restaurant->id }}&bot_token={{ urlencode($botToken ?? $restaurant->bot_token ?? "") }}`; const w = window.open(url, 'checkout', 'width=420,height=700,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no'); if(!w){ openCheckoutModal(); } })()
                 <i class="fas fa-shopping-cart me-2"></i>Buyurtma berish
             </button>
         </div>
@@ -996,36 +996,10 @@
         tg.expand();
         
         // Apply Telegram theme
-// document.body.classList.add('telegram-theme'); // DISABLED
-
-// Open compact checkout popup
-function openCheckoutPopup(){
-	try {
-		const items = Object.keys(cart||{}).map(id=>({
-			menu_item_id: parseInt(id),
-			name: document.querySelector(`[data-item-id="${id}"] .menu-item-title`)?.textContent||'',
-			price: parseFloat(document.querySelector(`[data-item-id="${id}"]`)?.dataset.price||'0'),
-			quantity: cart[id]
-		}));
-		const total = Object.keys(cart||{}).reduce((t,id)=>t + (cart[id]*(parseFloat(document.querySelector(`[data-item-id="${id}"]`)?.dataset.price||'0'))),0);
-		const preview = {
-			restaurant_id: {{ $restaurant->id }},
-			items,
-			total_amount: total,
-			telegram_chat_id: (window.Telegram?.WebApp?.initDataUnsafe?.user?.id)||null,
-			bot_token: '{{ $botToken ?? $restaurant->bot_token ?? "" }}'
-		};
-		localStorage.setItem('checkout_preview', JSON.stringify(preview));
-		const url = `/web-interface/checkout?restaurant_id={{ $restaurant->id }}&bot_token={{ urlencode($botToken ?? $restaurant->bot_token ?? "") }}`;
-		const w = window.open(url, 'checkout', 'width=420,height=700,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no');
-		if(!w){ openCheckoutModal(); }
-	} catch(e) {
-		openCheckoutModal();
-	}
-}
-
-// Apply custom restaurant settings
-function applyCustomSettings() {
+        // document.body.classList.add('telegram-theme'); // DISABLED
+        
+        // Apply custom restaurant settings
+        function applyCustomSettings() {
             console.log('Applying restaurant settings:', restaurantSettings);
             
             // Update CSS variables on document root

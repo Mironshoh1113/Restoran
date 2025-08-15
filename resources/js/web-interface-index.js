@@ -53,23 +53,29 @@ function updateCart() {
 
 window.proceedToCheckout = function() {
 	if (Object.keys(cart).length === 0) return;
-	let checkoutHtml = '';
-	let totalPrice = 0;
+	const itemsPreview = [];
 	Object.keys(cart).forEach(itemId => {
-		const qty = cart[itemId];
 		const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
 		if (!itemElement) return;
-		const name = itemElement.querySelector('.menu-item-title').textContent;
+		const name = itemElement.querySelector('.menu-item-title')?.textContent || '';
 		const price = parseFloat(itemElement.dataset.price);
-		const itemTotal = qty * price; totalPrice += itemTotal;
-		checkoutHtml += `<div class="d-flex justify-content-between align-items-center mb-2">` +
-			`<div><strong>${name}</strong><br><small class=\"text-muted\">${qty} x ${price.toLocaleString()} so'm</small></div>` +
-			`<strong>${itemTotal.toLocaleString()} so'm</strong></div>`;
+		const qty = cart[itemId];
+		itemsPreview.push({ menu_item_id: parseInt(itemId, 10), name, price, quantity: qty });
 	});
-	document.getElementById('checkout-items').innerHTML = checkoutHtml;
-	document.getElementById('checkout-total').textContent = totalPrice.toLocaleString() + " so'm";
-	const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
-	modal.show();
+	const totalAmount = itemsPreview.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+	const botToken = document.querySelector('meta[name="bot-token"]').content || '';
+	const restaurantId = parseInt(document.body.getAttribute('data-restaurant-id') || '0', 10);
+	const telegramChatId = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) ? tg.initDataUnsafe.user.id : null;
+	const preview = { restaurant_id: restaurantId, items: itemsPreview, total_amount: totalAmount, bot_token: botToken, telegram_chat_id: telegramChatId };
+	try { localStorage.setItem('checkout_preview', JSON.stringify(preview)); } catch (_e) {}
+	const popupUrl = `/web-interface/checkout?restaurant_id=${restaurantId}&bot_token=${encodeURIComponent(botToken)}`;
+	const features = 'width=420,height=700,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no';
+	const popup = window.open(popupUrl, 'checkout', features);
+	if (!popup) {
+		// Fallback to modal if popup blocked
+		const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+		modal.show();
+	}
 };
 
 // Listen for order completion from popup
