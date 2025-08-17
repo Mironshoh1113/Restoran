@@ -11,7 +11,7 @@
             <p class="text-sm text-gray-600">{{ $order->project->name ?? 'N/A' }}</p>
         </div>
         <div class="flex items-center space-x-2">
-            <a href="{{ route('admin.orders.index') }}" 
+            <a href="{{ route('admin.orders.index', ['page' => request('page')]) }}" 
                class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm">
                 <i class="fas fa-arrow-left"></i>
                 <span>Orqaga</span>

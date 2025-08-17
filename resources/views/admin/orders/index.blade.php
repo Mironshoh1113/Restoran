@@ -196,10 +196,10 @@
                                 @endif
                             </div>
                             <div class="flex items-center space-x-1">
-                                <button onclick="viewOrder({{ $order->id }})" 
-                                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200">
+                                <a href="{{ route('admin.orders.show', ['order' => $order->id, 'page' => request('page')]) }}" 
+                                   class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200 block">
                                     <i class="fas fa-eye text-xs"></i>
-                                </button>
+                                </a>
                                 @if($order->status !== 'delivered' && $order->status !== 'cancelled')
                                     <div class="relative" x-data="{ open: false }">
                                         <button @click="open = !open" 
@@ -238,7 +238,7 @@
                 
                 <!-- Pagination -->
                 <div class="px-4 py-4 border-t border-gray-200 bg-gray-50">
-                    {{ $orders->links() }}
+                    {{ $orders->appends(request()->query())->links() }}
                 </div>
             @else
                 <div class="text-center py-12">
