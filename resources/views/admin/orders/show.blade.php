@@ -38,7 +38,7 @@
             </span>
         </div>
         
-        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST" class="mb-3">
             @csrf
             @method('PATCH')
             <div class="flex items-center space-x-2">
@@ -52,6 +52,31 @@
                 <button type="submit" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-sm">
                     Yangilash
                 </button>
+            </div>
+        </form>
+        
+        <form action="{{ route('admin.orders.update-payment', $order) }}" method="POST">
+            @csrf
+            @method('PATCH')
+            <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-gray-600">To'lov usuli</label>
+                    <select name="payment_method" class="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        @php($allowed = $order->restaurant->payment_methods ?? ['cash','card'])
+                        @if(in_array('cash', $allowed))<option value="cash" {{ ($order->payment_method ?? $order->payment_type) === 'cash' ? 'selected' : '' }}>Naqd</option>@endif
+                        @if(in_array('card', $allowed))<option value="card" {{ ($order->payment_method ?? $order->payment_type) === 'card' ? 'selected' : '' }}>Karta</option>@endif
+                        @if(in_array('click', $allowed))<option value="click" {{ ($order->payment_method ?? $order->payment_type) === 'click' ? 'selected' : '' }}>Click</option>@endif
+                        @if(in_array('payme', $allowed))<option value="payme" {{ ($order->payment_method ?? $order->payment_type) === 'payme' ? 'selected' : '' }}>Payme</option>@endif
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-gray-600">To'langanmi?</label>
+                    <select name="is_paid" class="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <option value="0" {{ !$order->is_paid ? 'selected' : '' }}>Yo'q</option>
+                        <option value="1" {{ $order->is_paid ? 'selected' : '' }}>Ha</option>
+                    </select>
+                </div>
+                <button type="submit" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors text-sm">Saqlash</button>
             </div>
         </form>
     </div>
@@ -76,7 +101,7 @@
                 </div>
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600">To'lov:</span>
-                    <span class="font-medium">{{ ucfirst($order->payment_type ?? 'N/A') }}</span>
+                    <span class="font-medium">{{ ucfirst($order->payment_method ?? $order->payment_type ?? 'N/A') }}</span>
                 </div>
             </div>
         </div>
@@ -87,7 +112,7 @@
             <div class="space-y-2 text-sm">
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600">Jami:</span>
-                    <span class="text-lg font-bold text-blue-600">{{ number_format($order->total_amount, 0, ',', ' ') }} so'm</span>
+                    <span class="text-lg font-bold text-blue-600">{{ number_format($order->total_amount ?? $order->total_price ?? ($order->orderItems->sum(function($i){ return $i->quantity * $i->price; }) + ($order->delivery_fee ?? 0)), 0, ',', ' ') }} so'm</span>
                 </div>
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600">Yetkazish:</span>
@@ -95,8 +120,8 @@
                 </div>
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600">To'lov:</span>
-                    <span class="px-2 py-0.5 text-xs font-semibold rounded {{ $order->is_paid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                        {{ $order->is_paid ? 'To\'langan' : 'To\'lanmagan' }}
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded {{ ($order->is_paid ?? false) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                        {{ ($order->is_paid ?? false) ? 'To\'langan' : 'To\'lanmagan' }}
                     </span>
                 </div>
                 @if($order->courier)

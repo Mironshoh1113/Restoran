@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
 		Route::resource('restaurants', RestaurantController::class);
 		Route::resource('orders', OrderController::class)->only(['index', 'show']);
 		Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+		Route::patch('orders/{order}/payment', [OrderController::class, 'updatePayment'])->name('orders.update-payment');
 		Route::patch('orders/{order}/courier', [OrderController::class, 'assignCourier'])->name('orders.assign-courier');
 		
 		// Courier routes

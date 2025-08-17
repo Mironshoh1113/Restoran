@@ -29,6 +29,7 @@ class Order extends Model
         'total_amount',
         'delivery_address',
         'payment_method',
+        'is_paid',
         'delivery_fee',
         'items',
         'bot_token',
@@ -40,6 +41,7 @@ class Order extends Model
         'delivered_at' => 'datetime',
         'items' => 'array',
         'delivery_fee' => 'decimal:2',
+        'is_paid' => 'boolean',
     ];
 
     protected static function boot()

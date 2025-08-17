@@ -59,7 +59,7 @@ class OrderController extends Controller
         $this->authorize('update', $order);
         
         $request->validate([
-            'status' => 'required|in:pending,preparing,on_way,delivered,cancelled'
+            'status' => 'required|in:new,preparing,on_way,delivered,cancelled'
         ]);
 
         $oldStatus = $order->status;
@@ -88,6 +88,23 @@ class OrderController extends Controller
 
         return redirect()->back()
             ->with('success', 'Kuryer tayinlandi.');
+    }
+
+    public function updatePayment(Request $request, Order $order)
+    {
+        $this->authorize('update', $order);
+
+        $request->validate([
+            'payment_method' => 'required|string|in:cash,card,click,payme',
+            'is_paid' => 'required|boolean',
+        ]);
+
+        $order->update([
+            'payment_method' => $request->payment_method,
+            'is_paid' => (bool) $request->is_paid,
+        ]);
+
+        return redirect()->back()->with('success', "To'lov ma'lumotlari yangilandi.");
     }
 
     protected function sendOrderStatusNotification(Order $order, $oldStatus)

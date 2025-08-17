@@ -420,7 +420,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.5);
-            z-index: 2000;
+            z-index: 10000;
             backdrop-filter: blur(5px);
         }
         
@@ -816,6 +816,7 @@
         <div class="category-tabs">
             @foreach($categories as $category)
                 <div class="category-tab {{ $loop->first ? 'active' : '' }}" 
+                     data-category-id="{{ $category->id }}" 
                      onclick="switchCategory({{ $category->id }})">
                     {{ $category->name }}
                 </div>
@@ -955,7 +956,7 @@
                 </div>
                 <div class="cart-count" id="cart-total-items">0</div>
             </div>
-            <button class="checkout-btn" id="checkout-btn">
+            <button class="checkout-btn" id="checkout-btn" type="button" onclick="handleCheckoutClick()">
                 <i class="fas fa-shopping-cart me-2"></i>Buyurtma berish
             </button>
         </div>
@@ -990,10 +991,22 @@
             shadow: '{{ $restaurant->shadow ?? "0 8px 32px rgba(0,0,0,0.1)" }}'
         };
         
-        // Initialize Telegram Web App
-        let tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        // Initialize Telegram Web App (safe fallback outside Telegram)
+        let tg = {
+            ready: function(){},
+            expand: function(){},
+            showAlert: function(msg){ try { alert(msg); } catch(_) {} },
+            sendData: function(_){},
+            initDataUnsafe: {}
+        };
+        try {
+            if (window.Telegram && window.Telegram.WebApp) {
+                tg = window.Telegram.WebApp;
+                if (typeof tg.ready === 'function') tg.ready();
+                if (typeof tg.expand === 'function') tg.expand();
+            }
+        } catch(_) {}
+
         
         // Apply Telegram theme
 // document.body.classList.add('telegram-theme'); // DISABLED
@@ -1020,6 +1033,26 @@ function openCheckoutPopup(){
 		const w = window.open(url, 'checkout', 'width=420,height=700,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no');
 		if(!w){ openCheckoutModal(); }
 	} catch(e) {
+		openCheckoutModal();
+	}
+}
+
+// Centralized checkout click handler
+function handleCheckoutClick(){
+	try {
+		const totalItems = Object.values(cart||{}).reduce((a,b)=>a + (b||0), 0);
+		if (!totalItems) {
+			try { tg.showAlert("Savatcha bo'sh. Avval taom tanlang."); } catch(_) { alert("Savatcha bo'sh. Avval taom tanlang."); }
+			return;
+		}
+		// In Telegram WebApp: always use in-page modal for best UX
+		if (window.Telegram && window.Telegram.WebApp) {
+			openCheckoutModal();
+			return;
+		}
+		// Outside Telegram: try popup, fallback to modal
+		openCheckoutPopup();
+	} catch(_){
 		openCheckoutModal();
 	}
 }
@@ -1250,13 +1283,25 @@ function applyCustomSettings() {
             document.getElementById(`cat-content-${categoryId}`).classList.remove('d-none');
             
             // Add active class to selected tab
-            event.target.classList.add('active');
+            const clicked = Array.from(document.querySelectorAll('.category-tab')).find(t => t.textContent.trim() === (document.querySelector(`#cat-content-${categoryId}`)?.previousCategoryName || t.textContent));
+            const tabEl = document.querySelector(`.category-tab[onclick=\"switchCategory(${categoryId})\"]`) || clicked;
+            if (tabEl) { tabEl.classList.add('active'); }
             
             currentCategory = categoryId;
             
             // Update styles after category change
             updateElementStyles();
         }
+        
+        // Add click handler for checkout button (open popup or modal)
+        (function(){
+            const btn = document.getElementById('checkout-btn');
+            if (btn) {
+                btn.addEventListener('click', function(){
+                    handleCheckoutClick();
+                });
+            }
+        })();
         
         // Quantity management
         function changeQuantity(itemId, change) {
@@ -1291,8 +1336,9 @@ function applyCustomSettings() {
             
             // Enable/disable checkout button
             const checkoutBtn = document.getElementById('checkout-btn');
-            
-            checkoutBtn.disabled = totalItems === 0;
+            if (checkoutBtn) {
+                checkoutBtn.disabled = totalItems === 0;
+            }
         }
         
         // Checkout modal functions
@@ -1438,6 +1484,16 @@ function applyCustomSettings() {
             
             // Apply custom settings first
             applyCustomSettings();
+            
+            // Wire checkout button
+            try {
+                const btn = document.getElementById('checkout-btn');
+                if (btn) {
+                    btn.addEventListener('click', function(){
+                        handleCheckoutClick();
+                    });
+                }
+            } catch(_) {}
             
             // Update cart
             updateCart();
