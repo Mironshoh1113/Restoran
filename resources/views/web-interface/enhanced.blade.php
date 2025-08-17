@@ -412,17 +412,17 @@
         }
 
         /* Checkout Modal */
-        .checkout-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 10000;
-            backdrop-filter: blur(5px);
-        }
+        		.checkout-modal {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0,0,0,0.5);
+			z-index: 10001;
+			backdrop-filter: blur(5px);
+		}
         
         .checkout-modal.show { display: flex; }
         
@@ -696,15 +696,16 @@
 		.checkout-btn { position: relative; }
 		.menu-item { margin-bottom: 0; }
 		.category-content { margin-bottom: 1rem; }
-		.checkout-modal-content { position: relative; padding-bottom: 5rem; }
+		.checkout-modal-content { position: relative; padding-bottom: 6.5rem; }
 		.checkout-actions {
 			display: flex;
-			gap: 1rem;
-			margin-top: 1rem;
-			position: sticky;
-			bottom: 0;
+			gap: 0.75rem;
+			position: fixed;
+			left: 0; right: 0; bottom: 0;
 			background: var(--card-bg, #ffffff);
-			padding: 0.75rem 0;
+			padding: 0.5rem 0.75rem;
+			box-shadow: 0 -8px 24px rgba(0,0,0,0.08);
+			z-index: 10002;
 		}
 
         /* Ultra-small phones */

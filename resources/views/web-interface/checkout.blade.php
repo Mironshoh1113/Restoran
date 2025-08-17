@@ -75,7 +75,7 @@
 		</div>
 	</div>
 	<!-- Sticky footer actions for mobile -->
-	<div class="footer-actions d-md-none">
+	<div class="footer-actions d-md-none" style="padding-bottom: calc(env(safe-area-inset-bottom) + 8px);">
 		<button type="button" class="btn btn-secondary flex-fill" onclick="window.close()">Bekor</button>
 		<button type="button" class="btn btn-primary flex-fill" onclick="document.getElementById('orderForm').requestSubmit()">Tasdiqlash</button>
 	</div>
