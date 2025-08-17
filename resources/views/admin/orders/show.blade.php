@@ -62,11 +62,22 @@
                 <div class="flex items-center gap-2">
                     <label class="text-xs text-gray-600">To'lov usuli</label>
                     <select name="payment_method" class="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                        @php($allowed = $order->restaurant->payment_methods ?? ['cash','card'])
-                        @if(in_array('cash', $allowed))<option value="cash" {{ ($order->payment_method ?? $order->payment_type) === 'cash' ? 'selected' : '' }}>Naqd</option>@endif
-                        @if(in_array('card', $allowed))<option value="card" {{ ($order->payment_method ?? $order->payment_type) === 'card' ? 'selected' : '' }}>Karta</option>@endif
-                        @if(in_array('click', $allowed))<option value="click" {{ ($order->payment_method ?? $order->payment_type) === 'click' ? 'selected' : '' }}>Click</option>@endif
-                        @if(in_array('payme', $allowed))<option value="payme" {{ ($order->payment_method ?? $order->payment_type) === 'payme' ? 'selected' : '' }}>Payme</option>@endif
+                        @php
+                            $allowed = $order->restaurant->payment_methods ?? ['cash','card'];
+                            if (empty($allowed)) { $allowed = ['cash','card','click','payme']; }
+                        @endphp
+                        @if(in_array('cash', $allowed))
+                            <option value="cash" {{ ($order->payment_method ?? $order->payment_type) === 'cash' ? 'selected' : '' }}>Naqd</option>
+                        @endif
+                        @if(in_array('card', $allowed))
+                            <option value="card" {{ ($order->payment_method ?? $order->payment_type) === 'card' ? 'selected' : '' }}>Karta</option>
+                        @endif
+                        @if(in_array('click', $allowed))
+                            <option value="click" {{ ($order->payment_method ?? $order->payment_type) === 'click' ? 'selected' : '' }}>Click</option>
+                        @endif
+                        @if(in_array('payme', $allowed))
+                            <option value="payme" {{ ($order->payment_method ?? $order->payment_type) === 'payme' ? 'selected' : '' }}>Payme</option>
+                        @endif
                     </select>
                 </div>
                 <div class="flex items-center gap-2">
