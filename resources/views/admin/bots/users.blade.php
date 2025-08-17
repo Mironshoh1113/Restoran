@@ -223,7 +223,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Barchaga xabar yuborish</h3>
-            <button onclick="closeSendToAllModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <button onclick="closeSendToAllModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Yopish">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -255,7 +255,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Tanlanganlarga xabar yuborish</h3>
-            <button onclick="closeSendToSelectedModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <button onclick="closeSendToSelectedModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Yopish">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -339,6 +339,19 @@ function closeSendToAllModal() {
     } else {
         console.error('Modal element not found');
     }
+    
+    // Force close with multiple methods
+    try {
+        const modalElement = document.getElementById('sendToAllModal');
+        if (modalElement) {
+            modalElement.style.display = 'none';
+            modalElement.classList.add('hidden');
+            modalElement.classList.remove('flex');
+            console.log('Modal force closed with multiple methods');
+        }
+    } catch (e) {
+        console.error('Error in force close:', e);
+    }
 }
 
 function showSendToSelectedModal() {
@@ -351,8 +364,26 @@ function showSendToSelectedModal() {
 }
 
 function closeSendToSelectedModal() {
-    document.getElementById('sendToSelectedModal').classList.add('hidden');
+    const modal = document.getElementById('sendToSelectedModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        modal.classList.remove('flex');
+    }
     document.getElementById('sendToSelectedMessage').value = '';
+    
+    // Force close with multiple methods
+    try {
+        const modalElement = document.getElementById('sendToSelectedModal');
+        if (modalElement) {
+            modalElement.style.display = 'none';
+            modalElement.classList.add('hidden');
+            modalElement.classList.remove('flex');
+            console.log('Selected modal force closed with multiple methods');
+        }
+    } catch (e) {
+        console.error('Error in force close selected modal:', e);
+    }
 }
 
 // Local notification function to ensure it works
@@ -410,7 +441,16 @@ function sendToAllUsers() {
         
         if (data.success) {
             showNotification('✅ ' + data.message, 'success');
-            closeSendToAllModal();
+            // Force close modal immediately
+            setTimeout(() => {
+                closeSendToAllModal();
+                // Additional fallback close
+                const modal = document.getElementById('sendToAllModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.classList.add('hidden');
+                }
+            }, 100);
             // Clear the message field
             document.getElementById('sendToAllMessage').value = '';
         } else {
@@ -464,7 +504,16 @@ function sendToSelectedUsers() {
     .then(data => {
         if (data.success) {
             showNotification('✅ ' + data.message, 'success');
-            closeSendToSelectedModal();
+            // Force close modal immediately
+            setTimeout(() => {
+                closeSendToSelectedModal();
+                // Additional fallback close
+                const modal = document.getElementById('sendToSelectedModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.classList.add('hidden');
+                }
+            }, 100);
             // Uncheck all checkboxes
             document.querySelectorAll('.user-checkbox').forEach(checkbox => checkbox.checked = false);
             document.getElementById('selectAll').checked = false;
@@ -520,6 +569,27 @@ function viewUserDetails(userId) {
 // Load stats on page load
 document.addEventListener('DOMContentLoaded', function() {
     getUsersStats();
+    
+    // Add escape key handler for modals
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSendToAllModal();
+            closeSendToSelectedModal();
+        }
+    });
+    
+    // Add click outside to close for modals
+    document.addEventListener('click', function(e) {
+        const sendToAllModal = document.getElementById('sendToAllModal');
+        const sendToSelectedModal = document.getElementById('sendToSelectedModal');
+        
+        if (e.target === sendToAllModal) {
+            closeSendToAllModal();
+        }
+        if (e.target === sendToSelectedModal) {
+            closeSendToSelectedModal();
+        }
+    });
 });
 </script>
 @endsection 
