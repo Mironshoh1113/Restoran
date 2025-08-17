@@ -2,12 +2,13 @@
 <html lang="uz">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<title>Buyurtmani tasdiqlash</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 	<style>
 		:root { --primary: #667eea; --accent: #ff6b35; --text: #2c3e50; --bg:#fff; }
-		body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f6f7fb; color:var(--text); padding-bottom: 84px; }
+		body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f6f7fb; color:var(--text); padding-bottom: calc(68px + env(safe-area-inset-bottom)); margin: 0; }
+		.footer-actions { padding-bottom: calc( env(safe-area-inset-bottom) + 8px ); }
 		.container-sm { max-width: 440px; }
 		.card { border:none; border-radius:14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
 		.card-header { background: linear-gradient(135deg, var(--primary), #764ba2); color:#fff; border-radius:14px 14px 0 0; padding:0.75rem 1rem; }
@@ -23,7 +24,7 @@
 		.item { display:flex; justify-content:space-between; align-items:center; font-size:0.9rem; margin-bottom:6px; }
 		.small { color:#64748b; }
 		/* Sticky footer actions */
-		.footer-actions { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid #e5e7eb; padding: 8px 12px; display: flex; gap: 8px; }
+		.footer-actions { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid #e5e7eb; padding: 8px 12px; display: flex; gap: 8px; box-shadow: 0 -8px 24px rgba(0,0,0,0.06); }
 		.footer-actions .btn { padding: 0.55rem 0.75rem; font-size: 0.95rem; border-radius: 10px; }
 	</style>
 </head>
