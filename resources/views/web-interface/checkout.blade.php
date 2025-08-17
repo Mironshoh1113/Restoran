@@ -7,7 +7,7 @@
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 	<style>
 		:root { --primary: #667eea; --accent: #ff6b35; --text: #2c3e50; --bg:#fff; }
-		body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f6f7fb; color:var(--text); }
+		body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f6f7fb; color:var(--text); padding-bottom: 84px; }
 		.container-sm { max-width: 440px; }
 		.card { border:none; border-radius:14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
 		.card-header { background: linear-gradient(135deg, var(--primary), #764ba2); color:#fff; border-radius:14px 14px 0 0; padding:0.75rem 1rem; }
@@ -22,6 +22,9 @@
 		.btn-secondary { background:#6c757d; border:none; }
 		.item { display:flex; justify-content:space-between; align-items:center; font-size:0.9rem; margin-bottom:6px; }
 		.small { color:#64748b; }
+		/* Sticky footer actions */
+		.footer-actions { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid #e5e7eb; padding: 8px 12px; display: flex; gap: 8px; }
+		.footer-actions .btn { padding: 0.55rem 0.75rem; font-size: 0.95rem; border-radius: 10px; }
 	</style>
 </head>
 <body>
@@ -62,13 +65,18 @@
 						<label class="form-label">Izoh (ixtiyoriy)</label>
 						<textarea class="form-control" id="notes" rows="2"></textarea>
 					</div>
-					<div class="d-flex gap-2 mt-2">
+					<div class="d-flex gap-2 mt-2 d-none d-md-flex">
 						<button type="button" class="btn btn-secondary w-50" onclick="window.close()">Bekor</button>
 						<button type="submit" class="btn btn-primary w-50">Tasdiqlash</button>
 					</div>
 				</form>
 			</div>
 		</div>
+	</div>
+	<!-- Sticky footer actions for mobile -->
+	<div class="footer-actions d-md-none">
+		<button type="button" class="btn btn-secondary flex-fill" onclick="window.close()">Bekor</button>
+		<button type="button" class="btn btn-primary flex-fill" onclick="document.getElementById('orderForm').requestSubmit()">Tasdiqlash</button>
 	</div>
 	<script>
 	(function(){
