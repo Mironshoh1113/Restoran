@@ -22,13 +22,13 @@ class OrderController extends Controller
         if ($user->isSuperAdmin()) {
             $orders = Order::with(['restaurant', 'courier'])
                 ->orderBy('created_at', 'desc')
-                ->paginate(20);
+                ->paginate(15);
         } else {
             $restaurantIds = $user->ownedRestaurants()->pluck('id');
             $orders = Order::whereIn('restaurant_id', $restaurantIds)
                 ->with(['restaurant', 'courier'])
                 ->orderBy('created_at', 'desc')
-                ->paginate(20);
+                ->paginate(15);
         }
         
         return view('admin.orders.index', compact('orders'));
