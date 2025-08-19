@@ -229,27 +229,32 @@
                                     <h4 class="text-lg font-semibold text-gray-800">Webhook Holati</h4>
                                 </div>
                                 
-                                <div id="webhookInfoSection">
-                                    @if($restaurant->bot_token)
-                                        <div class="space-y-3" id="webhookInfoDisplay" style="display: none;">
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-600">Holat:</span>
-                                                <span class="px-2 py-1 text-xs rounded-full" id="webhookStatusBadge">Yuklanmoqda...</span>
-                                            </div>
-                                            <div class="text-xs text-gray-600 break-all" id="webhookUrlDisplay" style="display: none;"></div>
-                                            <div class="text-xs text-red-600" id="webhookErrorDisplay" style="display: none;"></div>
-                                        </div>
-                                        <div class="text-center py-4" id="webhookInfoLoading">
-                                            <i class="fas fa-spinner fa-spin text-green-500 text-2xl mb-2"></i>
-                                            <p class="text-gray-600">Webhook holati tekshirilmoqda...</p>
-                                        </div>
-                                    @else
-                                        <div class="text-center py-4">
-                                            <i class="fas fa-unlink text-red-500 text-2xl mb-2"></i>
-                                            <p class="text-gray-600">Webhook o'rnatilmagan</p>
-                                        </div>
-                                    @endif
-                                </div>
+                                																	<div id="webhookInfoSection">
+																	@if($restaurant->bot_token)
+																		<div class="space-y-3" id="webhookInfoDisplay" style="display: none;">
+																			<div class="flex justify-between">
+																				<span class="text-gray-600">Holat:</span>
+																				<span class="px-2 py-1 text-xs rounded-full" id="webhookStatusBadge">Yuklanmoqda...</span>
+																			</div>
+																			<div class="text-xs text-gray-600 break-all" id="webhookUrlDisplay" style="display: none;"></div>
+																			<div class="text-xs text-red-600" id="webhookErrorDisplay" style="display: none;"></div>
+																			<div class="flex items-center space-x-2 pt-2">
+																				<button type="button" id="btnSetWebhook" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"><i class="fas fa-link mr-1"></i>Webhookni o'rnatish</button>
+																				<button type="button" id="btnSetWebhookAuto" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"><i class="fas fa-magic mr-1"></i>Auto o'rnatish</button>
+																				<button type="button" id="btnDeleteWebhook" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded"><i class="fas fa-unlink mr-1"></i>O'chirish</button>
+																			</div>
+																		</div>
+																		<div class="text-center py-4" id="webhookInfoLoading">
+																			<i class="fas fa-spinner fa-spin text-green-500 text-2xl mb-2"></i>
+																			<p class="text-gray-600">Webhook holati tekshirilmoqda...</p>
+																		</div>
+																	@else
+																		<div class="text-center py-4">
+																			<i class="fas fa-unlink text-red-500 text-2xl mb-2"></i>
+																			<p class="text-gray-600">Webhook o'rnatilmagan</p>
+																		</div>
+																	@endif
+																</div>
                             </div>
 
                             <!-- Quick Stats Card -->
@@ -1132,6 +1137,105 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize live preview updates
     updatePreviews();
+});
+
+// Helper to show toast
+function showToast(message, type = 'success') {
+	const el = document.createElement('div');
+	el.innerHTML = message;
+	el.className = `fixed top-4 right-4 ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white px-4 py-2 rounded-lg shadow-lg z-50`;
+	document.body.appendChild(el);
+	setTimeout(() => document.body.removeChild(el), 4000);
+}
+
+// Init bot info + webhook status loaders
+document.addEventListener('DOMContentLoaded', async function() {
+	const hasBotToken = {!! $restaurant->bot_token ? 'true' : 'false' !!};
+	if (!hasBotToken) return;
+
+	const botInfoUrl = '{{ route('admin.bots.info', $restaurant) }}';
+	const webhookInfoUrl = '{{ route('admin.bots.webhook-info', $restaurant) }}';
+
+	// Load Bot Info
+	try {
+		const r = await fetch(botInfoUrl, {headers: {'X-Requested-With':'XMLHttpRequest'}});
+		const data = await r.json();
+		if (data.success && data.botInfo && data.botInfo.ok && data.botInfo.result) {
+			document.getElementById('botInfoLoading')?.style && (document.getElementById('botInfoLoading').style.display = 'none');
+			document.getElementById('botInfoDisplay')?.style && (document.getElementById('botInfoDisplay').style.display = 'block');
+			document.getElementById('botNameDisplay').textContent = data.botInfo.result.first_name || '{{ $restaurant->bot_name ?? '-' }}';
+			document.getElementById('botStatusDisplay').textContent = 'Aktiv';
+		} else {
+			// keep loader hidden and show minimal text
+		}
+	} catch (e) {}
+
+	// Load Webhook Info
+	try {
+		const r2 = await fetch(webhookInfoUrl, {headers: {'X-Requested-With':'XMLHttpRequest'}});
+		const data2 = await r2.json();
+		const loading = document.getElementById('webhookInfoLoading');
+		const display = document.getElementById('webhookInfoDisplay');
+		const badge = document.getElementById('webhookStatusBadge');
+		const urlEl = document.getElementById('webhookUrlDisplay');
+		const errEl = document.getElementById('webhookErrorDisplay');
+		if (loading) loading.style.display = 'none';
+		if (display) display.style.display = 'block';
+		if (data2.success && data2.webhookInfo) {
+			const info = data2.webhookInfo;
+			if (info.ok && info.result && info.result.url) {
+				badge.className = 'px-2 py-1 text-xs rounded-full bg-green-100 text-green-800';
+				badge.textContent = 'O\'rnatilgan';
+				urlEl.style.display = 'block';
+				urlEl.textContent = info.result.url;
+				if (info.result.pending_update_count > 0) {
+					badge.className = 'px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800';
+					badge.textContent = 'Kutilmoqda (' + info.result.pending_update_count + ')';
+				}
+			} else {
+				badge.className = 'px-2 py-1 text-xs rounded-full bg-red-100 text-red-800';
+				badge.textContent = 'O\'rnatilmagan';
+				urlEl.style.display = 'none';
+				if (info.description) { errEl.style.display = 'block'; errEl.textContent = info.description; }
+			}
+		} else {
+			badge.className = 'px-2 py-1 text-xs rounded-full bg-red-100 text-red-800';
+			badge.textContent = 'Xatolik';
+			errEl.style.display = 'block';
+			errEl.textContent = data2.message || 'Webhook ma\'lumotlari olinmadi';
+		}
+	} catch (e) {}
+
+	// Button handlers
+	const postJson = async (url, method = 'POST') => {
+		const res = await fetch(url, {
+			method,
+			headers: {
+				'X-CSRF-TOKEN': '{{ csrf_token() }}',
+				'X-Requested-With': 'XMLHttpRequest'
+			}
+		});
+		return res.json();
+	};
+
+	document.getElementById('btnSetWebhook')?.addEventListener('click', async () => {
+		const url = '{{ route('admin.bots.set-webhook', $restaurant) }}';
+		const res = await postJson(url, 'POST');
+		if (res.success) { showToast('Webhook o\'rnatildi ✅'); location.reload(); } else { showToast(res.message || 'Xatolik', 'error'); }
+	});
+
+	document.getElementById('btnSetWebhookAuto')?.addEventListener('click', async () => {
+		const url = '{{ route('admin.bots.set-webhook-auto', $restaurant) }}';
+		const res = await postJson(url, 'POST');
+		if (res.success) { showToast('Webhook auto o\'rnatildi ✅'); location.reload(); } else { showToast(res.message || 'Xatolik', 'error'); }
+	});
+
+	document.getElementById('btnDeleteWebhook')?.addEventListener('click', async () => {
+		if (!confirm('Webhookni o\'chirmoqchimisiz?')) return;
+		const url = '{{ route('admin.bots.delete-webhook', $restaurant) }}';
+		const res = await postJson(url, 'DELETE');
+		if (res.success) { showToast('Webhook o\'chirildi ✅'); location.reload(); } else { showToast(res.message || 'Xatolik', 'error'); }
+	});
 });
 
 // Color picker synchronization
