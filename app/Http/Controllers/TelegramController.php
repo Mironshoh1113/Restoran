@@ -591,19 +591,17 @@ class TelegramController extends Controller
     private function sendRecentOrders($restaurant, $telegramUser)
     {
         try {
-            $ordersQuery = \App\Models\Order::where('restaurant_id', $restaurant->id)
-                ->orderBy('created_at', 'desc');
-
-            // Primary: match by telegram_chat_id
-            $orders = (clone $ordersQuery)
+            $orders = \App\Models\Order::where('restaurant_id', $restaurant->id)
                 ->where('telegram_chat_id', (string) $telegramUser->telegram_id)
+                ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get();
 
-            // Fallback: if none found, try by saved phone number
+            // Fallback: match by phone number if chat_id not present in older orders
             if ($orders->isEmpty() && !empty($telegramUser->phone_number)) {
-                $orders = (clone $ordersQuery)
+                $orders = \App\Models\Order::where('restaurant_id', $restaurant->id)
                     ->where('customer_phone', $telegramUser->phone_number)
+                    ->orderBy('created_at', 'desc')
                     ->limit(5)
                     ->get();
             }
@@ -616,15 +614,15 @@ class TelegramController extends Controller
             $message = "📊 Oxirgi buyurtmalaringiz:\n\n";
             foreach ($orders as $order) {
                 $orderNo = $order->order_number ?: ('#' . $order->id);
-                $total = number_format((float)($order->total_price ?? 0), 0, ',', ' ');
-                $date = optional($order->created_at)->format('d.m.Y H:i');
+                $total = number_format((float)($order->total_price ?? 0), 0, ' ', ' ');
+                $date = optional($order->created_at)->timezone(config('app.timezone', 'Asia/Tashkent'))->format('d.m.Y H:i');
                 $statusMap = [
-                    'new' => '⏳ Yangi',
+                    'new' => '🆕 Yangi',
+                    'pending' => '⏳ Kutilmoqda',
                     'preparing' => '👨‍🍳 Tayyorlanmoqda',
                     'on_way' => '🚚 Yolda',
                     'delivered' => '✅ Yetkazildi',
-                    'cancelled' => '❌ Bekor',
-                    'pending' => '⏳ Yangi',
+                    'cancelled' => '❌ Bekor'
                 ];
                 $status = $statusMap[$order->status] ?? '❓ Noma’lum';
                 $message .= "📦 {$orderNo} — {$status}\n💰 {$total} so'm\n📅 {$date}\n\n";
