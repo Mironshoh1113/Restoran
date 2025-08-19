@@ -59,6 +59,19 @@
                             Statistika
                         </a>
                     @endif
+
+                    @if(Auth::user()->isSuperAdmin())
+                        <a href="{{ route('super.plans.index') }}" 
+                           class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('super.plans.*') ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                            <i class="fas fa-layer-group mr-2"></i>
+                            Tariflar
+                        </a>
+                        <a href="{{ route('super.subscriptions.index') }}" 
+                           class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('super.subscriptions.*') ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                            <i class="fas fa-id-card mr-2"></i>
+                            Obunalar
+                        </a>
+                    @endif
                 </div>
             </div>
 
@@ -171,6 +184,19 @@
                     Statistika
                 </a>
             @endif
+
+            @if(Auth::user()->isSuperAdmin())
+                <a href="{{ route('super.plans.index') }}" 
+                   class="block px-3 py-2 text-base font-medium rounded-lg transition-colors {{ request()->routeIs('super.plans.*') ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                    <i class="fas fa-layer-group mr-2"></i>
+                    Tariflar
+                </a>
+                <a href="{{ route('super.subscriptions.index') }}" 
+                   class="block px-3 py-2 text-base font-medium rounded-lg transition-colors {{ request()->routeIs('super.subscriptions.*') ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                    <i class="fas fa-id-card mr-2"></i>
+                    Obunalar
+                </a>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
@@ -198,7 +224,7 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" 
-                            class="block w-full text-left px-3 py-2 text-base font-medium rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
+                            class="block w-full text-left px-4 py-2 text-base font-medium rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
                         <i class="fas fa-sign-out-alt mr-2"></i>
                         Chiqish
                     </button>

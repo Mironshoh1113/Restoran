@@ -11,74 +11,93 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+	/** @use HasFactory<\Database\Factories\UserFactory> */
+	use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
-        'restaurant_id',
-        'phone',
-        'telegram_chat_id',
-    ];
+	/**
+	 * The attributes that are mass assignable.
+	 *
+	 * @var list<string>
+	 */
+	protected $fillable = [
+		'name',
+		'email',
+		'password',
+		'role',
+		'restaurant_id',
+		'phone',
+		'telegram_chat_id',
+	];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+	/**
+	 * The attributes that should be hidden for serialization.
+	 *
+	 * @var list<string>
+	 */
+	protected $hidden = [
+		'password',
+		'remember_token',
+	];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+	/**
+	 * Get the attributes that should be cast.
+	 *
+	 * @return array<string, string>
+	 */
+	protected function casts(): array
+	{
+		return [
+			'email_verified_at' => 'datetime',
+			'password' => 'hashed',
+		];
+	}
 
-    public function restaurant(): BelongsTo
-    {
-        return $this->belongsTo(Restaurant::class);
-    }
+	public function restaurant(): BelongsTo
+	{
+		return $this->belongsTo(Restaurant::class);
+	}
 
-    public function ownedRestaurants(): HasMany
-    {
-        return $this->hasMany(Restaurant::class, 'owner_user_id');
-    }
+	public function ownedRestaurants(): HasMany
+	{
+		return $this->hasMany(Restaurant::class, 'owner_user_id');
+	}
 
-    public function orders(): HasMany
-    {
-        return $this->hasMany(Order::class);
-    }
+	public function orders(): HasMany
+	{
+		return $this->hasMany(Order::class);
+	}
 
-    public function isSuperAdmin(): bool
-    {
-        return $this->role === 'super_admin';
-    }
+	public function subscriptions(): HasMany
+	{
+		return $this->hasMany(Subscription::class);
+	}
 
-    public function isRestaurantManager(): bool
-    {
-        return $this->role === 'restaurant_manager';
-    }
+	public function activeSubscriptionForRestaurant(?int $restaurantId): ?Subscription
+	{
+		if (!$restaurantId) {
+			return null;
+		}
+		return $this->subscriptions()
+			->where('restaurant_id', $restaurantId)
+			->where('status', 'active')
+			->where(function ($q) { $q->whereNull('ends_at')->orWhere('ends_at', '>=', now()); })
+			->latest('starts_at')
+			->with('plan')
+			->first();
+	}
 
-    public function isCourier(): bool
-    {
-        return $this->role === 'courier';
-    }
+	public function isSuperAdmin(): bool
+	{
+		return $this->role === 'super_admin';
+	}
+
+	public function isRestaurantManager(): bool
+	{
+		return $this->role === 'restaurant_manager';
+	}
+
+	public function isCourier(): bool
+	{
+		return $this->role === 'courier';
+	}
 }

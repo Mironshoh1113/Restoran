@@ -84,4 +84,19 @@ class Restaurant extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function activeSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where(function ($q) { $q->whereNull('ends_at')->orWhere('ends_at', '>=', now()); })
+            ->latest('starts_at')
+            ->with('plan')
+            ->first();
+    }
 } 

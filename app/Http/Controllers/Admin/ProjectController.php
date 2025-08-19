@@ -11,90 +11,95 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ProjectController extends Controller
 {
-    use AuthorizesRequests;
+	use AuthorizesRequests;
 
-    public function index(Restaurant $restaurant)
-    {
-        $this->authorize('view', $restaurant);
-        
-        $projects = Project::where('restaurant_id', $restaurant->id)
-            ->with(['categories.menuItems'])
-            ->get();
-        
-        return view('admin.projects.index', compact('restaurant', 'projects'));
-    }
+	public function __construct()
+	{
+		$this->middleware('check.plan.limits:projects')->only(['create', 'store']);
+	}
 
-    public function create(Restaurant $restaurant)
-    {
-        $this->authorize('update', $restaurant);
-        
-        return view('admin.projects.create', compact('restaurant'));
-    }
+	public function index(Restaurant $restaurant)
+	{
+		$this->authorize('view', $restaurant);
+		
+		$projects = Project::where('restaurant_id', $restaurant->id)
+			->with(['categories.menuItems'])
+			->get();
+		
+		return view('admin.projects.index', compact('restaurant', 'projects'));
+	}
 
-    public function store(Request $request, Restaurant $restaurant)
-    {
-        $this->authorize('update', $restaurant);
-        
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean'
-        ]);
+	public function create(Restaurant $restaurant)
+	{
+		$this->authorize('update', $restaurant);
+		
+		return view('admin.projects.create', compact('restaurant'));
+	}
 
-        $project = Project::create([
-            'restaurant_id' => $restaurant->id,
-            'name' => $request->name,
-            'description' => $request->description,
-            'is_active' => $request->has('is_active')
-        ]);
+	public function store(Request $request, Restaurant $restaurant)
+	{
+		$this->authorize('update', $restaurant);
+		
+		$request->validate([
+			'name' => 'required|string|max:255',
+			'description' => 'nullable|string',
+			'is_active' => 'boolean'
+		]);
 
-        return redirect()->route('admin.projects.index', $restaurant)
-            ->with('success', 'Loyiha muvaffaqiyatli yaratildi.');
-    }
+		$project = Project::create([
+			'restaurant_id' => $restaurant->id,
+			'name' => $request->name,
+			'description' => $request->description,
+			'is_active' => $request->has('is_active')
+		]);
 
-    public function show(Restaurant $restaurant, Project $project)
-    {
-        $this->authorize('view', $restaurant);
-        
-        $project->load(['categories.menuItems']);
-        
-        return view('admin.projects.show', compact('restaurant', 'project'));
-    }
+		return redirect()->route('admin.projects.index', $restaurant)
+			->with('success', 'Loyiha muvaffaqiyatli yaratildi.');
+	}
 
-    public function edit(Restaurant $restaurant, Project $project)
-    {
-        $this->authorize('update', $restaurant);
-        
-        return view('admin.projects.edit', compact('restaurant', 'project'));
-    }
+	public function show(Restaurant $restaurant, Project $project)
+	{
+		$this->authorize('view', $restaurant);
+		
+		$project->load(['categories.menuItems']);
+		
+		return view('admin.projects.show', compact('restaurant', 'project'));
+	}
 
-    public function update(Request $request, Restaurant $restaurant, Project $project)
-    {
-        $this->authorize('update', $restaurant);
-        
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean'
-        ]);
+	public function edit(Restaurant $restaurant, Project $project)
+	{
+		$this->authorize('update', $restaurant);
+		
+		return view('admin.projects.edit', compact('restaurant', 'project'));
+	}
 
-        $project->update([
-            'name' => $request->name,
-            'description' => $request->description,
-            'is_active' => $request->has('is_active')
-        ]);
+	public function update(Request $request, Restaurant $restaurant, Project $project)
+	{
+		$this->authorize('update', $restaurant);
+		
+		$request->validate([
+			'name' => 'required|string|max:255',
+			'description' => 'nullable|string',
+			'is_active' => 'boolean'
+		]);
 
-        return redirect()->route('admin.projects.index', $restaurant)
-            ->with('success', 'Loyiha muvaffaqiyatli yangilandi.');
-    }
+		$project->update([
+			'name' => $request->name,
+			'description' => $request->description,
+			'is_active' => $request->has('is_active')
+		]);
 
-    public function destroy(Restaurant $restaurant, Project $project)
-    {
-        $this->authorize('update', $restaurant);
-        
-        $project->delete();
+		return redirect()->route('admin.projects.index', $restaurant)
+			->with('success', 'Loyiha muvaffaqiyatli yangilandi.');
+	}
 
-        return redirect()->route('admin.projects.index', $restaurant)
-            ->with('success', 'Loyiha muvaffaqiyatli o\'chirildi.');
-    }
+	public function destroy(Restaurant $restaurant, Project $project)
+	{
+		$this->authorize('update', $restaurant);
+		
+		$project->delete();
+
+		return redirect()->route('admin.projects.index', $restaurant)
+			->with('success', 'Loyiha muvaffaqiyatli o\'chirildi.');
+	}
 } 

@@ -707,6 +707,21 @@ class BotController extends Controller
             return response()->json(['success' => false, 'message' => 'Bot token o\'rnatilmagan']);
         }
 
+        // Plan limit: optional daily broadcast cap
+        $user = $request->user();
+        $subscription = $user?->activeSubscriptionForRestaurant($restaurant->id);
+        $limits = $subscription?->effectiveLimits() ?? [];
+        $dailyCap = isset($limits['broadcast_per_day']) ? (int)$limits['broadcast_per_day'] : null;
+        if ($dailyCap) {
+            $todayCount = \App\Models\TelegramMessage::where('restaurant_id', $restaurant->id)
+                ->where('direction', 'outgoing')
+                ->whereDate('created_at', now()->toDateString())
+                ->count();
+            if ($todayCount >= $dailyCap) {
+                return response()->json(['success' => false, 'message' => 'Kunlik xabar yuborish limiti tugagan']);
+            }
+        }
+        
         try {
             // Create TelegramService with restaurant's bot token
             $telegramService = new TelegramService($restaurant->bot_token);

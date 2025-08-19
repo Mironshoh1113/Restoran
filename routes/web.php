@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\GlobalTelegramController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\Admin\SuperAdmin\PlanController as SuperPlanController;
+use App\Http\Controllers\Admin\SuperAdmin\SubscriptionController as SuperSubscriptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +32,20 @@ Route::middleware('auth')->group(function () {
 	Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 	Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 	Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+	
+	// Super Admin routes
+	Route::prefix('super')->name('super.')->middleware(function($request, $next){
+		if (!auth()->user() || !auth()->user()->isSuperAdmin()) {
+			abort(403);
+		}
+		return $next($request);
+	})->group(function(){
+		Route::resource('plans', SuperPlanController::class)->except(['show']);
+		Route::get('subscriptions', [SuperSubscriptionController::class, 'index'])->name('subscriptions.index');
+		Route::post('subscriptions', [SuperSubscriptionController::class, 'store'])->name('subscriptions.store');
+		Route::delete('subscriptions/{subscription}', [SuperSubscriptionController::class, 'destroy'])->name('subscriptions.destroy');
+		Route::post('users/reset-password', [SuperSubscriptionController::class, 'resetPassword'])->name('users.reset-password');
+	});
 	
 	Route::prefix('admin')->name('admin.')->group(function () {
 		Route::resource('restaurants', RestaurantController::class);
