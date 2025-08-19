@@ -25,7 +25,7 @@
         </div>
         
     <!-- Main Form Container -->
-    <form action="{{ route('admin.restaurants.update', $restaurant) }}" method="POST" enctype="multipart/form-data" id="restaurantForm">
+    		<form action="{{ route('admin.restaurants.update', $restaurant) }}" method="POST" enctype="multipart/form-data" id="restaurantForm" novalidate>
             @csrf
             @method('PUT')
         
@@ -64,7 +64,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                                 <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Restoran nomi *</label>
-                        <input type="text" id="name" name="name" value="{{ old('name', $restaurant->name) }}" required
+                        							<input type="text" id="name" name="name" value="{{ old('name', $restaurant->name) }}"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                        placeholder="Restoran nomi kiriting">
                         @error('name')
@@ -74,7 +74,7 @@
                             
                             <div>
                                 <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Telefon raqam *</label>
-                                <input type="text" id="phone" name="phone" value="{{ old('phone', $restaurant->phone) }}" required
+                                								<input type="text" id="phone" name="phone" value="{{ old('phone', $restaurant->phone) }}"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                        placeholder="+998901234567">
                                 @error('phone')
@@ -95,7 +95,7 @@
                     
                     <div>
                             <label for="address" class="block text-sm font-medium text-gray-700 mb-2">Manzil *</label>
-                        <textarea id="address" name="address" rows="3" required
+                        							<textarea id="address" name="address" rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                       placeholder="Restoran manzili">{{ old('address', $restaurant->address) }}</textarea>
                         @error('address')
