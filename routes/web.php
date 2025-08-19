@@ -34,12 +34,7 @@ Route::middleware('auth')->group(function () {
 	Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 	
 	// Super Admin routes
-	Route::prefix('super')->name('super.')->middleware(function($request, $next){
-		if (!auth()->user() || !auth()->user()->isSuperAdmin()) {
-			abort(403);
-		}
-		return $next($request);
-	})->group(function(){
+	Route::prefix('super')->name('super.')->middleware('super.admin')->group(function(){
 		Route::resource('plans', SuperPlanController::class)->except(['show']);
 		Route::get('subscriptions', [SuperSubscriptionController::class, 'index'])->name('subscriptions.index');
 		Route::post('subscriptions', [SuperSubscriptionController::class, 'store'])->name('subscriptions.store');

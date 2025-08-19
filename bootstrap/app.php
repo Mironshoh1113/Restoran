@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         
         $middleware->alias([
         	'check.plan.limits' => \App\Http\Middleware\CheckPlanLimits::class,
+        	'super.admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
