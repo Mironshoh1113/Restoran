@@ -191,17 +191,17 @@ class OrderController extends Controller
 				'cancelled' => '❌ Buyurtma bekor qilindi'
 			];
 
-			$message = "📋 *Buyurtma #{$order->order_number}*\n\n";
-			$message .= "🏪 Restoran: *{$order->restaurant->name}*\n";
-			$message .= "👤 Mijoz: *{$order->customer_name}*\n";
-			$message .= "📞 Telefon: *{$order->customer_phone}*\n";
+			$message = "📋 <b>Buyurtma #{$order->order_number}</b>\n\n";
+			$message .= "🏪 Restoran: <b>{$order->restaurant->name}</b>\n";
+			$message .= "👤 Mijoz: <b>{$order->customer_name}</b>\n";
+			$message .= "📞 Telefon: <b>{$order->customer_phone}</b>\n";
 			if ($order->delivery_address) {
-				$message .= "📍 Manzil: *{$order->delivery_address}*\n";
+				$message .= "📍 Manzil: <b>{$order->delivery_address}</b>\n";
 			}
-			$message .= "💰 Jami: *" . number_format($order->total_amount ?? $order->total_price ?? 0, 0, ',', ' ') . " so'm*\n\n";
-			$message .= "🔄 *Holat o'zgartirildi:*\n";
-			$message .= "`{$oldStatus}` → `{$order->status}`\n\n";
-			$message .= "📝 *Yangilangan holat:* " . ($statusMessages[$order->status] ?? $order->status);
+			$message .= "💰 Jami: <b>" . number_format($order->total_amount ?? $order->total_price ?? 0, 0, ',', ' ') . " so'm</b>\n\n";
+			$message .= "🔄 <b>Holat o'zgartirildi:</b>\n";
+			$message .= "<code>{$oldStatus}</code> → <code>{$order->status}</code>\n\n";
+			$message .= "📝 <b>Yangilangan holat:</b> " . ($statusMessages[$order->status] ?? $order->status);
 
 			Log::info('Sending Telegram message', [
 				'chat_id' => $order->telegram_chat_id,
@@ -209,12 +209,12 @@ class OrderController extends Controller
 				'bot_token' => $order->restaurant->bot_token
 			]);
 
-			// Prefer Markdown for current message formatting
-			$result = $telegramService->sendMessage($order->telegram_chat_id, $message, null, 'Markdown');
+			// Prefer HTML formatting (we used <b>, <code>)
+			$result = $telegramService->sendMessage($order->telegram_chat_id, $message, null, 'HTML');
 			if (!$result['ok']) {
-				// Fallback to plain text without formatting
-				$plain = strip_tags(str_replace(['*','`'], '', $message));
-				$result = $telegramService->sendMessage($order->telegram_chat_id, $plain, null, 'HTML');
+				// Fallback to plain text
+				$plain = trim(strip_tags($message));
+				$result = $telegramService->sendMessage($order->telegram_chat_id, $plain, null, null);
 			}
 			
 			if ($result['ok']) {
