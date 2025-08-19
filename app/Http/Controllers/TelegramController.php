@@ -591,11 +591,22 @@ class TelegramController extends Controller
     private function sendRecentOrders($restaurant, $telegramUser)
     {
         try {
-            $orders = \App\Models\Order::where('restaurant_id', $restaurant->id)
+            $ordersQuery = \App\Models\Order::where('restaurant_id', $restaurant->id)
+                ->orderBy('created_at', 'desc');
+
+            // Primary: match by telegram_chat_id
+            $orders = (clone $ordersQuery)
                 ->where('telegram_chat_id', (string) $telegramUser->telegram_id)
-                ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get();
+
+            // Fallback: if none found, try by saved phone number
+            if ($orders->isEmpty() && !empty($telegramUser->phone_number)) {
+                $orders = (clone $ordersQuery)
+                    ->where('customer_phone', $telegramUser->phone_number)
+                    ->limit(5)
+                    ->get();
+            }
 
             if ($orders->isEmpty()) {
                 $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, "Sizda hali buyurtmalar yo'q.");
@@ -612,7 +623,8 @@ class TelegramController extends Controller
                     'preparing' => '👨‍🍳 Tayyorlanmoqda',
                     'on_way' => '🚚 Yolda',
                     'delivered' => '✅ Yetkazildi',
-                    'cancelled' => '❌ Bekor'
+                    'cancelled' => '❌ Bekor',
+                    'pending' => '⏳ Yangi',
                 ];
                 $status = $statusMap[$order->status] ?? '❓ Noma’lum';
                 $message .= "📦 {$orderNo} — {$status}\n💰 {$total} so'm\n📅 {$date}\n\n";
