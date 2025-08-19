@@ -38,9 +38,9 @@
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ $telegramUser->full_name }}</h3>
                 <p class="text-gray-600 dark:text-gray-400">{{ $telegramUser->display_name }}</p>
                 <p class="text-sm text-gray-500 dark:text-gray-500">ID: {{ $telegramUser->telegram_id }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-500">
-                    So'nggi faollik: {{ $telegramUser->last_activity ? $telegramUser->last_activity->diffForHumans() : 'Noma'lum' }}
-                </p>
+                					<p class="text-sm text-gray-500 dark:text-gray-500">
+						So'nggi faollik: {{ $telegramUser->last_activity ? $telegramUser->last_activity->diffForHumans() : "Noma'lom" }}
+					</p>
             </div>
             <div class="text-right">
                 <div class="text-sm text-gray-500 dark:text-gray-400">
