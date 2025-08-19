@@ -33,7 +33,7 @@
 					<input name="duration_days" type="number" min="1" class="w-full border p-2 rounded" value="30" />
 				</div>
 				<div class="flex items-end">
-					<label class="inline-flex items-center"><input type="checkbox" name="is_active" class="mr-2" checked /> Faol</label>
+					<label class="inline-flex items-center"><input type="checkbox" name="is_active" value="1" class="mr-2" checked /> Faol</label>
 				</div>
 			</div>
 			<div class="border rounded p-4">
