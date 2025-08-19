@@ -1023,31 +1023,4 @@ class TelegramController extends Controller
 
         return $this->placeOrder($request, $botToken);
     }
-
-    /**
-     * Get recent orders for a Telegram user (by chat id or phone fallback)
-     */
-    public function getRecentOrdersForWeb(Request $request)
-    {
-        $botToken = $request->query('bot_token');
-        $restaurant = Restaurant::where('bot_token', $botToken)->first();
-        if (!$restaurant) {
-            return response()->json(['success' => false, 'error' => 'Restaurant not found'], 404);
-        }
-
-        $chatId = $request->query('telegram_chat_id');
-        $phone = $request->query('phone');
-
-        $query = Order::where('restaurant_id', $restaurant->id);
-        if ($chatId) {
-            $query->where('telegram_chat_id', (string)$chatId);
-        } elseif ($phone) {
-            $query->where('customer_phone', $phone);
-        } else {
-            return response()->json(['success' => true, 'orders' => []]);
-        }
-
-        $orders = $query->orderByDesc('created_at')->limit(10)->get(['id','order_number','status','total_price','created_at']);
-        return response()->json(['success' => true, 'orders' => $orders]);
-    }
 } 

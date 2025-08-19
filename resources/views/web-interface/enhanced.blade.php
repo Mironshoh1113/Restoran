@@ -797,8 +797,8 @@
                 </div>
                 <div class="col">
                     <div class="restaurant-info">
-                        <h1>{{ $restaurant->web_app_title ?? $restaurant->name . ' ' }}</h1>
-                        <p>{{ $restaurant->web_app_description ?? 'maxsulotlar menyusi' }}</p>
+                        <h1>{{ $restaurant->web_app_title ?? $restaurant->name . ' - Menyu' }}</h1>
+                        <p>{{ $restaurant->web_app_description ?? 'Zamonaviy restoran menyusi' }}</p>
                     </div>
                 </div>
             </div>
@@ -807,7 +807,7 @@
 
     <!-- Search -->
     <div class="search-container">
-        <input type="text" class="search-input" placeholder="Maxsulotni qidiring..." id="searchInput">
+        <input type="text" class="search-input" placeholder="Taom nomi yoki tarkibini qidiring..." id="searchInput">
     </div>
 
     <!-- Filters removed per request -->
@@ -1008,13 +1008,6 @@
             }
         } catch(_) {}
 
-        // Persist Telegram user id for fallback outside WebApp
-        try {
-            const cid = tg?.initDataUnsafe?.user?.id || window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-            if (cid) {
-                localStorage.setItem('tg_chat_id', String(cid));
-            }
-        } catch(_) {}
         
         // Apply Telegram theme
 // document.body.classList.add('telegram-theme'); // DISABLED
@@ -1033,7 +1026,7 @@ function openCheckoutPopup(){
 			restaurant_id: {{ $restaurant->id }},
 			items,
 			total_amount: total,
-			telegram_chat_id: (window.Telegram?.WebApp?.initDataUnsafe?.user?.id)||localStorage.getItem('tg_chat_id')||null,
+			telegram_chat_id: (window.Telegram?.WebApp?.initDataUnsafe?.user?.id)||null,
 			bot_token: '{{ $botToken ?? $restaurant->bot_token ?? "" }}'
 		};
 		localStorage.setItem('checkout_preview', JSON.stringify(preview));
@@ -1423,7 +1416,7 @@ function applyCustomSettings() {
                     return total + (qty * price);
                 }, 0),
                 payment_method: document.getElementById('paymentMethod').value,
-                telegram_chat_id: tg.initDataUnsafe?.user?.id || localStorage.getItem('tg_chat_id') || null,
+                telegram_chat_id: tg.initDataUnsafe?.user?.id || null,
                 bot_token: botToken,
                 customer_name: customerData?.name || 'Anonim',
                 customer_phone: customerData?.phone || 'Kiritilmagan',

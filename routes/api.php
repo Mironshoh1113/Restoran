@@ -194,9 +194,6 @@ Route::post('/orders', function (Request $request) {
     }
 }); 
 
-// Recent orders for WebApp (by telegram_chat_id or phone)
-Route::get('/orders/recent', [TelegramController::class, 'getRecentOrdersForWeb']); 
-
 
 
  
