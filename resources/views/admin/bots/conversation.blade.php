@@ -95,7 +95,7 @@
                         @endif
                         <div class="flex {{ $message->direction === 'incoming' ? 'justify-start' : 'justify-end' }}">
                             <div class="bubble {{ $message->direction === 'incoming' ? 'bubble-in' : 'bubble-out' }}">
-                                <div class="text-sm"></div>
+                                <div class="text-sm">{{ $message->message_text }}</div>
                                 <div class="msg-meta {{ $message->direction === 'incoming' ? 'text-gray-500 dark:text-gray-300' : 'text-blue-100' }}">
                                     {{ $message->created_at->format('H:i') }}
                                     @if($message->direction === 'incoming' && !$message->is_read)

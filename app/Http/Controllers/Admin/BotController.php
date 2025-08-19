@@ -850,7 +850,6 @@ class BotController extends Controller
         $messages = \App\Models\TelegramMessage::where('restaurant_id', $restaurant->id)
             ->where('telegram_user_id', $telegramUser->id)
             ->orderBy('created_at', 'asc')
-            ->limit(100)
             ->get();
         
         // Get user info from global table if exists
