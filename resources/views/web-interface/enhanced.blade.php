@@ -797,8 +797,8 @@
                 </div>
                 <div class="col">
                     <div class="restaurant-info">
-                        <h1>{{ $restaurant->web_app_title ?? $restaurant->name . ' - Menyu' }}</h1>
-                        <p>{{ $restaurant->web_app_description ?? 'Zamonaviy restoran menyusi' }}</p>
+                        <h1>{{ $restaurant->web_app_title ?? $restaurant->name . ' ' }}</h1>
+                        <p>{{ $restaurant->web_app_description ?? ' ' }}</p>
                     </div>
                 </div>
             </div>
