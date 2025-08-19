@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Storage;
 use App\Models\TelegramUser;
 use App\Models\TelegramMessage;
+use Illuminate\Support\Carbon; // added
 
 class BotController extends Controller
 {
@@ -916,7 +917,7 @@ class BotController extends Controller
     /**
      * Get new messages from user
      */
-    public function getNewMessages(Restaurant $restaurant, TelegramUser $telegramUser)
+    public function getNewMessages(Restaurant $restaurant, TelegramUser $telegramUser, Request $request)
     {
         $this->authorize('view', $restaurant);
         
@@ -925,13 +926,25 @@ class BotController extends Controller
             return response()->json(['success' => false, 'message' => 'Foydalanuvchi topilmadi']);
         }
         
-        $messages = TelegramMessage::where('restaurant_id', $restaurant->id)
+        $lastTime = $request->query('last_message_time');
+        $query = TelegramMessage::where('restaurant_id', $restaurant->id)
             ->where('telegram_user_id', $telegramUser->id)
-            ->where('direction', 'incoming')
-            ->where('is_read', false)
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get();
+            ->where('direction', 'incoming');
+        
+        if (!empty($lastTime)) {
+            try {
+                $parsed = Carbon::parse($lastTime);
+                $query->where('created_at', '>', $parsed);
+            } catch (\Exception $e) {
+                // If parse fails, fall back to unread-only to avoid flooding
+                $query->where('is_read', false);
+            }
+        } else {
+            // First load without timestamp: only unread to avoid duplicates
+            $query->where('is_read', false);
+        }
+        
+        $messages = $query->orderBy('created_at', 'asc')->limit(100)->get();
         
         return response()->json([
             'success' => true,
