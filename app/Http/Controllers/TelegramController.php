@@ -592,7 +592,16 @@ class TelegramController extends Controller
     {
         try {
             $orders = \App\Models\Order::where('restaurant_id', $restaurant->id)
-                ->where('telegram_chat_id', (string) $telegramUser->telegram_id)
+                ->where(function($q) use ($telegramUser, $restaurant) {
+                    $q->where('telegram_chat_id', (string) $telegramUser->telegram_id);
+                    if (!empty($telegramUser->phone_number)) {
+                        $q->orWhere('customer_phone', $telegramUser->phone_number);
+                    }
+                    $q->orWhere(function($qq) use ($restaurant, $telegramUser) {
+                        $qq->where('bot_token', $restaurant->bot_token)
+                           ->where('telegram_chat_id', (string) $telegramUser->telegram_id);
+                    });
+                })
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get();
@@ -606,6 +615,18 @@ class TelegramController extends Controller
                     ->get();
             }
 
+            // Fallback 2: recent orders in this restaurant without chat id (last 24h)
+            $usedFallback2 = false;
+            if ($orders->isEmpty()) {
+                $orders = \App\Models\Order::where('restaurant_id', $restaurant->id)
+                    ->whereNull('telegram_chat_id')
+                    ->where('created_at', '>=', now()->subDay())
+                    ->orderBy('created_at', 'desc')
+                    ->limit(5)
+                    ->get();
+                $usedFallback2 = $orders->isNotEmpty();
+            }
+
             if ($orders->isEmpty()) {
                 $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, "Sizda hali buyurtmalar yo'q.");
                 return;
@@ -617,6 +638,10 @@ class TelegramController extends Controller
                 $total = number_format((float)($order->total_price ?? 0), 0, ' ', ' ');
                 $date = optional($order->created_at)->timezone(config('app.timezone', 'Asia/Tashkent'))->format('d.m.Y H:i');
                 $statusMap = [
+                    // normalize possible legacy statuses
+                    'pending' => '⏳ Kutilmoqda',
+                    'processing' => '👨‍🍳 Tayyorlanmoqda',
+                    'prepared' => '👨‍🍳 Tayyorlanmoqda',
                     'new' => '🆕 Yangi',
                     'pending' => '⏳ Kutilmoqda',
                     'preparing' => '👨‍🍳 Tayyorlanmoqda',
