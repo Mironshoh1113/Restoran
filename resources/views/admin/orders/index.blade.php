@@ -159,39 +159,26 @@
                             @endif
                         </div>
                         
-                        <!-- Compact Restaurant & Items Info -->
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center space-x-1 text-xs">
-                                <i class="fas fa-store text-purple-500 w-3"></i>
-                                <span class="text-gray-600 truncate">
-                                    @if($order->restaurant)
-                                        {{ $order->restaurant->name }}
-                                    @elseif($order->project && $order->project->restaurant)
-                                        {{ $order->project->restaurant->name }}
-                                    @else
-                                        Nomalum
-                                    @endif
-                                </span>
-                            </div>
-                            @if($order->items || $order->orderItems)
-                                @php
-                                    $itemCount = 0;
-                                    if ($order->items) {
-                                        // Check if items is already an array or needs to be decoded
-                                        if (is_array($order->items)) {
-                                            $items = $order->items;
-                                        } else {
-                                            $items = json_decode($order->items, true);
-                                        }
-                                        $itemCount = is_array($items) ? count($items) : 0;
-                                    } elseif ($order->orderItems) {
-                                        $itemCount = $order->orderItems->count();
-                                    }
-                                @endphp
-                                <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{{ $itemCount }} ta</span>
-                            @endif
+                        <!-- Inline Items Preview -->
+                        @php
+                            $lines = [];
+                            if ($order->relationLoaded('orderItems') && $order->orderItems && $order->orderItems->count() > 0) {
+                                foreach ($order->orderItems as $oi) {
+                                    $lines[] = ($oi->menuItem->name ?? 'Taom') . ' x ' . (int)($oi->quantity ?? 1);
+                                }
+                            } elseif (is_array($order->items)) {
+                                foreach ($order->items as $it) {
+                                    $lines[] = ($it['name'] ?? 'Taom') . ' x ' . (int)($it['quantity'] ?? 1);
+                                }
+                            }
+                            $preview = implode(', ', array_slice($lines, 0, 3));
+                        @endphp
+                        @if(!empty($preview))
+                        <div class="text-xs text-gray-600 mb-2">
+                            🧾 {{ $preview }}@if(count($lines) > 3), ...@endif
                         </div>
-                        
+                        @endif
+
                         <!-- Compact Price and Actions -->
                         <div class="flex items-center justify-between pt-2 border-t border-gray-100">
                             <div class="text-right">
@@ -203,41 +190,73 @@
                                     <i class="fas fa-truck mr-1"></i>{{ $order->courier->name }}
                                 </div>
                                 @endif
+                                <div class="text-xs mt-1">
+                                    <span class="px-2 py-0.5 rounded {{ $order->is_paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        {{ $order->is_paid ? 'To\'langan' : 'To\'lanmagan' }}
+                                    </span>
+                                    @if($order->payment_method)
+                                        <span class="ml-1 text-gray-500">({{ strtoupper($order->payment_method) }})</span>
+                                    @endif
+                                </div>
                             </div>
                             <div class="flex items-center space-x-1">
                                 <a href="{{ route('admin.orders.show', ['order' => $order->id, 'page' => request('page')]) }}" 
-                                   class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200 block">
+                                    class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200 block" title="Batafsil">
                                     <i class="fas fa-eye text-xs"></i>
                                 </a>
-                                @if($order->status !== 'delivered' && $order->status !== 'cancelled')
-                                    <div class="relative" x-data="{ open: false }">
-                                        <button @click="open = !open" 
-                                                class="p-1.5 text-green-600 hover:bg-green-50 rounded transition-all duration-200">
-                                            <i class="fas fa-edit text-xs"></i>
-                                        </button>
-                                        <div x-show="open" @click.away="open = false" 
-                                             class="absolute right-0 mt-1 w-40 bg-white rounded shadow-lg border border-gray-200 z-50">
-                                            <div class="py-1">
-                                                <button onclick="updateStatus({{ $order->id }}, 'preparing')" 
-                                                        class="block w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 transition-colors">
-                                                    <i class="fas fa-utensils mr-1"></i>Tayyorlanmoqda
-                                                </button>
-                                                <button onclick="updateStatus({{ $order->id }}, 'on_way')" 
-                                                        class="block w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 transition-colors">
-                                                    <i class="fas fa-truck mr-1"></i>Yolda
-                                                </button>
-                                                <button onclick="updateStatus({{ $order->id }}, 'delivered')" 
-                                                        class="block w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 transition-colors">
-                                                    <i class="fas fa-check mr-1"></i>Yetkazildi
-                                                </button>
-                                                <hr class="my-1">
-                                                <button onclick="updateStatus({{ $order->id }}, 'cancelled')" 
-                                                        class="block w-full text-left px-2 py-1 text-xs text-red-600 hover:bg-red-50 transition-colors">
-                                                    <i class="fas fa-times mr-1"></i>Bekor qilish
-                                                </button>
-                                            </div>
-                                        </div>
+                                <!-- Quick status actions -->
+                                <div class="flex items-center space-x-1">
+                                    @if($order->status !== 'preparing')
+                                        <button class="p-1.5 text-orange-600 hover:bg-orange-50 rounded text-xs" title="Tayyorlanmoqda"
+                                                onclick="quickUpdateStatus({{ $order->id }}, 'preparing', this)"><i class="fas fa-utensils"></i></button>
+                                    @endif
+                                    @if($order->status !== 'on_way')
+                                        <button class="p-1.5 text-purple-600 hover:bg-purple-50 rounded text-xs" title="Yolda"
+                                                onclick="quickUpdateStatus({{ $order->id }}, 'on_way', this)"><i class="fas fa-truck"></i></button>
+                                    @endif
+                                    @if($order->status !== 'delivered')
+                                        <button class="p-1.5 text-green-600 hover:bg-green-50 rounded text-xs" title="Yetkazildi"
+                                                onclick="quickUpdateStatus({{ $order->id }}, 'delivered', this)"><i class="fas fa-check"></i></button>
+                                    @endif
+                                    @if($order->status !== 'cancelled')
+                                        <button class="p-1.5 text-red-600 hover:bg-red-50 rounded text-xs" title="Bekor qilish"
+                                                onclick="quickUpdateStatus({{ $order->id }}, 'cancelled', this)"><i class="fas fa-times"></i></button>
+                                    @endif
+                                    @if(!$order->is_paid)
+                                        <button class="p-1.5 text-teal-700 hover:bg-teal-50 rounded text-xs" title="To'langan deb belgilash"
+                                                onclick="markAsPaid({{ $order->id }}, '{{ $order->payment_method ?? 'cash' }}', this)"><i class="fas fa-money-bill-wave"></i></button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+ 
+                        <!-- Collapsible details -->
+                        <div class="mt-2">
+                            <button class="text-xs text-gray-600 hover:text-gray-800" onclick="toggleDetails(this)">
+                                <i class="fas fa-chevron-down mr-1"></i> Buyurtma batafsil
+                            </button>
+                            <div class="hidden text-xs text-gray-700 mt-2 space-y-1">
+                                @if(!empty($lines))
+                                    <div>
+                                        <span class="font-semibold">Taomlar:</span>
+                                        <ul class="list-disc ml-4">
+                                            @if($order->relationLoaded('orderItems') && $order->orderItems && $order->orderItems->count() > 0)
+                                                @foreach($order->orderItems as $oi)
+                                                    <li>{{ $oi->menuItem->name ?? 'Taom' }} x {{ (int)($oi->quantity ?? 1) }} — {{ number_format((float)($oi->subtotal ?? ($oi->price * (int)($oi->quantity ?? 1))), 0, ',', ' ') }} so'm</li>
+                                                @endforeach
+                                            @else
+                                                @foreach($lines as $l)
+                                                    <li>{{ $l }}</li>
+                                                @endforeach
+                                            @endif
+                                        </ul>
                                     </div>
+                                @endif
+                                @if($order->delivery_address)
+                                    <div><span class="font-semibold">Manzil:</span> {{ $order->delivery_address }}</div>
+                                @endif
+                                @if($order->notes)
+                                    <div><span class="font-semibold">Izoh:</span> {{ $order->notes }}</div>
                                 @endif
                             </div>
                         </div>
@@ -315,19 +334,58 @@ function updateStatus(orderId, status) {
             },
             body: JSON.stringify({ status: status })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Xatolik yuz berdi');
-            }
-        })
+        .then(r => r.json())
+        .then(data => { if (data.success) { location.reload(); } else { alert('Xatolik yuz berdi'); } })
         .catch(error => {
             console.error('Error:', error);
             alert('Xatolik yuz berdi');
         });
     }
+}
+
+// Quick inline update without reload
+function quickUpdateStatus(orderId, status, btn) {
+    btn.disabled = true;
+    fetch(`/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ status })
+    }).then(r => r.json()).then(data => {
+        if (!data.success) throw new Error('update_failed');
+        // Update badge color/icon by reloading minimal UI (fallback: refresh)
+        location.reload();
+    }).catch(() => { alert('Xatolik yuz berdi'); }).finally(() => { btn.disabled = false; });
+}
+
+function toggleDetails(trigger) {
+    const wrap = trigger.nextElementSibling;
+    if (!wrap) return;
+    const icon = trigger.querySelector('i');
+    if (wrap.classList.contains('hidden')) {
+        wrap.classList.remove('hidden');
+        if (icon) icon.classList.replace('fa-chevron-down','fa-chevron-up');
+    } else {
+        wrap.classList.add('hidden');
+        if (icon) icon.classList.replace('fa-chevron-up','fa-chevron-down');
+    }
+}
+
+function markAsPaid(orderId, method, btn) {
+    btn.disabled = true;
+    fetch(`/admin/orders/${orderId}/payment`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ payment_method: method || 'cash', is_paid: true })
+    }).then(r => r.json()).then(data => {
+        if (!data.success) throw new Error('update_failed');
+        location.reload();
+    }).catch(() => { alert('To\'lovni belgilashda xatolik'); }).finally(() => { btn.disabled = false; });
 }
 
 // Auto-refresh orders every 30 seconds

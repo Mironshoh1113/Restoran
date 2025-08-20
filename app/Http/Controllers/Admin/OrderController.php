@@ -21,13 +21,13 @@ class OrderController extends Controller
 		$user = Auth::user();
 		
 		if ($user->isSuperAdmin()) {
-			$orders = Order::with(['restaurant', 'courier'])
+			$orders = Order::with(['restaurant', 'courier', 'orderItems.menuItem'])
 				->orderBy('created_at', 'desc')
 				->paginate(15);
 		} else {
 			$restaurantIds = $user->ownedRestaurants()->pluck('id');
 			$orders = Order::whereIn('restaurant_id', $restaurantIds)
-				->with(['restaurant', 'courier'])
+				->with(['restaurant', 'courier', 'orderItems.menuItem'])
 				->orderBy('created_at', 'desc')
 				->paginate(15);
 		}
@@ -73,8 +73,17 @@ class OrderController extends Controller
 		// Send notification to customer via Telegram
 		$this->sendOrderStatusNotification($order, $oldStatus);
 
-		return redirect()->back()
-			->with('success', 'Buyurtma holati yangilandi.');
+		// If AJAX/JSON request, return JSON
+		if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+			return response()->json([
+				'success' => true,
+				'order_id' => $order->id,
+				'new_status' => $order->status,
+				'delivered_at' => $order->delivered_at?->toISOString(),
+			]);
+		}
+
+		return redirect()->back()->with('success', 'Buyurtma holati yangilandi.');
 	}
 
 	public function assignCourier(Request $request, Order $order)
@@ -104,6 +113,15 @@ class OrderController extends Controller
 			'payment_method' => $request->payment_method,
 			'is_paid' => (bool) $request->is_paid,
 		]);
+
+		if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+			return response()->json([
+				'success' => true,
+				'order_id' => $order->id,
+				'payment_method' => $order->payment_method,
+				'is_paid' => (bool) $order->is_paid,
+			]);
+		}
 
 		return redirect()->back()->with('success', "To'lov ma'lumotlari yangilandi.");
 	}
