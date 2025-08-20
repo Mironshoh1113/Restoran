@@ -43,12 +43,22 @@ class CheckPlanLimits
 			'categories' => $restaurant->has('projects') ? \App\Models\Category::where('restaurant_id', $restaurant->id)->count() : 0,
 			'menu_items' => \App\Models\MenuItem::where('restaurant_id', $restaurant->id)->count(),
 			'couriers' => $restaurant->couriers()->count(),
+			'restaurants' => $user->ownedRestaurants()->count(),
 			'broadcast_per_day' => 0, // placeholder; implement counters if needed
 			default => 0,
 		};
 
 		if ($currentCount >= (int) $limit) {
-			return redirect()->back()->withErrors(['plan' => 'Tarif limiti oshib ketdi: ' . $feature]);
+			$names = [
+				'projects' => 'loyihalar',
+				'categories' => 'kategoriyalar',
+				'menu_items' => 'taomlar',
+				'couriers' => 'kuryerlar',
+				'restaurants' => 'restoranlar',
+				'broadcast_per_day' => 'efir xabarlari (kunlik)',
+			];
+			$name = $names[$feature] ?? $feature;
+			return redirect()->back()->withErrors(['plan' => "Sizning tarif bo'yicha limit tugagan: $name. Iltimos, tarifni yangilang yoki yangisini tanlang."]);
 		}
 
 		return $next($request);

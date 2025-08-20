@@ -31,12 +31,38 @@ class RestaurantController extends Controller
 
     public function create()
     {
+        $user = Auth::user();
+        if (!$user->isSuperAdmin()) {
+            // If user has any active subscription, check restaurants limit
+            $activeSub = $user->subscriptions()->where('status','active')->latest('starts_at')->first();
+            $limit = $activeSub?->effectiveLimits()['restaurants'] ?? null;
+            if ($limit !== null) {
+                $owned = $user->ownedRestaurants()->count();
+                if ($owned >= (int)$limit) {
+                    return redirect()->route('admin.restaurants.index')
+                        ->withErrors(['plan' => "Sizning tarif bo'yicha restoranlar soni limiti tugagan. Iltimos, tarifni yangilang yoki keraksiz restoranlarni o'chiring."]);
+                }
+            }
+        }
         return view('admin.restaurants.create');
     }
 
     public function store(Request $request)
     {
         try {
+            // Enforce restaurants limit again on store
+            $user = Auth::user();
+            if (!$user->isSuperAdmin()) {
+                $activeSub = $user->subscriptions()->where('status','active')->latest('starts_at')->first();
+                $limit = $activeSub?->effectiveLimits()['restaurants'] ?? null;
+                if ($limit !== null) {
+                    $owned = $user->ownedRestaurants()->count();
+                    if ($owned >= (int)$limit) {
+                        return redirect()->route('admin.restaurants.index')
+                            ->withErrors(['plan' => "Sizning tarif bo'yicha restoranlar soni limiti tugagan. Iltimos, tarifni yangilang yoki keraksiz restoranlarni o'chiring."]);
+                    }
+                }
+            }
             $data = $request->only([
                 'name',
                 'phone',

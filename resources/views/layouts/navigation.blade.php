@@ -46,18 +46,6 @@
                             <i class="fab fa-telegram mr-2"></i>
                             Bot sozlamalari
                         </a>
-                        
-                        <a href="{{ route('admin.couriers.index') }}" 
-                           class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <i class="fas fa-users mr-2"></i>
-                            Kuryerlar
-                        </a>
-                        
-                        <a href="{{ route('dashboard.stats') }}" 
-                           class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <i class="fas fa-chart-bar mr-2"></i>
-                            Statistika
-                        </a>
                     @endif
 
                     @if(Auth::user()->isSuperAdmin())
@@ -170,18 +158,6 @@
                    class="block px-3 py-2 text-base font-medium rounded-lg transition-colors {{ request()->routeIs('admin.bots.*') ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                     <i class="fab fa-telegram mr-2"></i>
                     Bot sozlamalari
-                </a>
-                
-                <a href="{{ route('admin.couriers.index') }}" 
-                   class="block px-3 py-2 text-base font-medium rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <i class="fas fa-users mr-2"></i>
-                    Kuryerlar
-                </a>
-                
-                <a href="{{ route('dashboard.stats') }}" 
-                   class="block px-3 py-2 text-base font-medium rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <i class="fas fa-chart-bar mr-2"></i>
-                    Statistika
                 </a>
             @endif
 
