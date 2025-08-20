@@ -171,6 +171,15 @@
         </div>
     </div>
 
+    <!-- Image Preview Modal -->
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+            <div class="modal-content bg-transparent border-0">
+                <img id="imagePreviewImage" src="" alt="Preview" class="img-fluid d-block mx-auto rounded shadow" style="max-height: 90vh; cursor: zoom-out;" data-bs-dismiss="modal">
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('assets/js/web-interface-index.js') }}"></script>

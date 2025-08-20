@@ -143,10 +143,35 @@ function addServiceWorkerSupport() { if ('serviceWorker' in navigator) { navigat
 
 function addAnalytics() { document.addEventListener('click', function(e) { if (e.target.closest('.menu-item')) { /* track click */ } if (e.target.closest('.checkout-btn')) { /* track click */ } }); let maxScroll = 0; window.addEventListener('scroll', function() { const scrollPercent = Math.round((window.pageYOffset / (document.body.scrollHeight - window.innerHeight)) * 100); if (scrollPercent > maxScroll) { maxScroll = scrollPercent; } }); }
 
-document.addEventListener('DOMContentLoaded', function() { updateCart(); initializeImageHandling(); initializeLazyLoading(); addPerformanceMonitoring(); addSmoothScrolling(); addKeyboardNavigation(); addFocusManagement(); addErrorBoundary(); addOfflineSupport(); addServiceWorkerSupport(); addAnalytics(); addFinalOptimizations(); });
+document.addEventListener('DOMContentLoaded', function() { updateCart(); initializeImageHandling(); initializeLazyLoading(); addPerformanceMonitoring(); addSmoothScrolling(); addKeyboardNavigation(); addFocusManagement(); addErrorBoundary(); addOfflineSupport(); addServiceWorkerSupport(); addAnalytics(); addFinalOptimizations(); attachImagePreview(); });
 
 function addKeyboardNavigation() { document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { const modal = document.querySelector('.modal.show'); if (modal) { const modalInstance = bootstrap.Modal.getInstance(modal); if (modalInstance) modalInstance.hide(); } } if (e.key === 'Enter' && document.activeElement.classList.contains('menu-item')) { const itemId = document.activeElement.dataset.itemId; if (itemId) changeQuantity(parseInt(itemId, 10), 1); } }); }
 
 function addFinalOptimizations() { const criticalImages = document.querySelectorAll('img[data-src]'); criticalImages.forEach(img => { if (img.dataset.src) { const link = document.createElement('link'); link.rel = 'preload'; link.as = 'image'; link.href = img.dataset.src; document.head.appendChild(link); } }); if (!document.querySelector('meta[name="viewport"])) { const viewport = document.createElement('meta'); viewport.name = 'viewport'; viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'; document.head.appendChild(viewport); } if (!document.querySelector('meta[name="theme-color"])) { const themeColor = document.createElement('meta'); themeColor.name = 'theme-color'; themeColor.content = getComputedStyle(document.documentElement).getPropertyValue('--primary-color'); document.head.appendChild(themeColor); } }
 
-function initializeImageHandling() { document.querySelectorAll('.menu-item-image').forEach(img => { img.addEventListener('error', function() { handleImageError(this); }); img.addEventListener('load', function() { handleImageLoad(this); }); }); } 
+function initializeImageHandling() { document.querySelectorAll('.menu-item-image').forEach(img => { img.addEventListener('error', function() { handleImageError(this); }); img.addEventListener('load', function() { handleImageLoad(this); }); }); }
+
+// Image preview modal
+function attachImagePreview() {
+	const modalEl = document.getElementById('imagePreviewModal');
+	if (!modalEl) return;
+	const modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+	const imgEl = document.getElementById('imagePreviewImage');
+	document.querySelectorAll('.menu-item-image').forEach(img => {
+		img.style.cursor = 'zoom-in';
+		img.addEventListener('click', () => {
+			let src = img.getAttribute('src');
+			if (img.dataset && img.dataset.src && img.dataset.src.length > 0 && src && src.startsWith('data:image')) {
+				src = img.dataset.src;
+			}
+			imgEl.setAttribute('src', src || '');
+			modal.show();
+		});
+	});
+	// Close when clicking on image (data-bs-dismiss attribute already set) or backdrop
+	modalEl.addEventListener('click', (e) => {
+		if (e.target === modalEl) {
+			modal.hide();
+		}
+	});
+} 
