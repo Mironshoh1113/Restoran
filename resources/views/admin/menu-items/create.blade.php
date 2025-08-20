@@ -113,10 +113,10 @@
                             </button>
                         </div>
                         
-                        <p class="text-xs text-gray-500">
-                            Rasm formati: JPG, PNG, GIF. Maksimal hajm: 2MB. 
-                            Tavsiya etilgan o'lcham: 800x600 piksel.
-                        </p>
+                        						<p class="text-xs text-gray-500">
+							Rasm formati: JPG, PNG, GIF. Maksimal hajm: 5MB. 
+							Tavsiya etilgan o'lcham: 800x600 piksel.
+						</p>
                     </div>
                     @error('image')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

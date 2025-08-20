@@ -54,7 +54,7 @@ class MenuItemController extends Controller
 			'name' => 'required|string|max:255',
 			'description' => 'nullable|string',
 			'price' => 'required|numeric|min:0',
-			'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+			'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
 			'sort_order' => 'nullable|integer|min:0',
 			'is_active' => 'boolean'
 		]);
@@ -73,7 +73,7 @@ class MenuItemController extends Controller
 			try {
 				// Use Laravel validation
 				$request->validate([
-					'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048' // 2MB = 2048 KB
+					'image' => 'image|mimes:jpeg,png,jpg,gif|max:5120' // 5MB = 5120 KB
 				]);
 				
 				// Store using Laravel Storage (consistent with Restaurant images)
@@ -137,7 +137,7 @@ class MenuItemController extends Controller
 			'name' => 'required|string|max:255',
 			'description' => 'nullable|string',
 			'price' => 'required|numeric|min:0',
-			'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+			'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
 			'sort_order' => 'nullable|integer|min:0',
 			'is_active' => 'boolean'
 		]);
@@ -154,7 +154,7 @@ class MenuItemController extends Controller
 			try {
 				// Use Laravel validation
 				$request->validate([
-					'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048' // 2MB = 2048 KB
+					'image' => 'image|mimes:jpeg,png,jpg,gif|max:5120' // 5MB = 5120 KB
 				]);
 				
 				// Delete old image if exists
