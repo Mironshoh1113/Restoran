@@ -49,6 +49,7 @@
                 </div>
                 <div class="w-6 h-6 bg-white bg-opacity-20 rounded flex items-center justify-center">
                     <i class="fas fa-clock text-xs"></i>
+                    
                 </div>
             </div>
         </div>
