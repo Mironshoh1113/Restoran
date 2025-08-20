@@ -172,7 +172,7 @@ Route::post('/orders', function (Request $request) {
                 if (!empty($data['customer_name'])) $lines[] = "👤 Mijoz: " . $data['customer_name'];
                 if (!empty($data['customer_phone'])) $lines[] = "📞 Telefon: " . $data['customer_phone'];
                 if (!empty($data['customer_address'])) $lines[] = "📍 Manzil: " . $data['customer_address'];
-                $lines[] = "\n🧾 Taomlar:";
+                $lines[] = "\n🧾 Buyurtmangiz:";
                 foreach ($menuItems as $menuItem) {
                     $qty = $quantitiesById[$menuItem->id] ?? 0;
                     if ($qty > 0) {
