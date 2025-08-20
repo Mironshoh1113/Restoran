@@ -57,6 +57,10 @@
 						<label class="block mb-1">Kuryerlar soni</label>
 						<input name="limits[couriers]" type="number" min="0" class="w-full border p-2 rounded" value="{{ $limits['couriers'] ?? '' }}" />
 					</div>
+					<div>
+						<label class="block mb-1">Restoranlar soni</label>
+						<input name="limits[restaurants]" type="number" min="0" class="w-full border p-2 rounded" value="{{ $limits['restaurants'] ?? '' }}" />
+					</div>
 				</div>
 			</div>
 			<div class="flex gap-2">
