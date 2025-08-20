@@ -210,7 +210,6 @@ class OrderController extends Controller
 			];
 
 			$message = "📋 <b>Buyurtma #{$order->order_number}</b>\n\n";
-			$message .= "🏪 Restoran: <b>{$order->restaurant->name}</b>\n";
 			$message .= "👤 Mijoz: <b>{$order->customer_name}</b>\n";
 			$message .= "📞 Telefon: <b>{$order->customer_phone}</b>\n";
 			if ($order->delivery_address) {
