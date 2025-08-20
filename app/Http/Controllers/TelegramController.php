@@ -602,6 +602,7 @@ class TelegramController extends Controller
                            ->where('telegram_chat_id', (string) $telegramUser->telegram_id);
                     });
                 })
+                ->with(['orderItems.menuItem'])
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get();
@@ -610,6 +611,7 @@ class TelegramController extends Controller
             if ($orders->isEmpty() && !empty($telegramUser->phone_number)) {
                 $orders = \App\Models\Order::where('restaurant_id', $restaurant->id)
                     ->where('customer_phone', $telegramUser->phone_number)
+                    ->with(['orderItems.menuItem'])
                     ->orderBy('created_at', 'desc')
                     ->limit(5)
                     ->get();
@@ -621,6 +623,7 @@ class TelegramController extends Controller
                 $orders = \App\Models\Order::where('restaurant_id', $restaurant->id)
                     ->whereNull('telegram_chat_id')
                     ->where('created_at', '>=', now()->subDay())
+                    ->with(['orderItems.menuItem'])
                     ->orderBy('created_at', 'desc')
                     ->limit(5)
                     ->get();
@@ -635,22 +638,51 @@ class TelegramController extends Controller
             $message = "📊 Oxirgi buyurtmalaringiz:\n\n";
             foreach ($orders as $order) {
                 $orderNo = $order->order_number ?: ('#' . $order->id);
-                $total = number_format((float)($order->total_price ?? 0), 0, ' ', ' ');
+                $total = number_format((float)($order->total_price ?? $order->total_amount ?? 0), 0, ',', ' ');
                 $date = optional($order->created_at)->timezone(config('app.timezone', 'Asia/Tashkent'))->format('d.m.Y H:i');
                 $statusMap = [
-                    // normalize possible legacy statuses
                     'pending' => '⏳ Kutilmoqda',
                     'processing' => '👨‍🍳 Tayyorlanmoqda',
                     'prepared' => '👨‍🍳 Tayyorlanmoqda',
                     'new' => '🆕 Yangi',
-                    'pending' => '⏳ Kutilmoqda',
                     'preparing' => '👨‍🍳 Tayyorlanmoqda',
                     'on_way' => '🚚 Yolda',
                     'delivered' => '✅ Yetkazildi',
                     'cancelled' => '❌ Bekor'
                 ];
                 $status = $statusMap[$order->status] ?? '❓ Noma’lum';
-                $message .= "📦 {$orderNo} — {$status}\n💰 {$total} so'm\n📅 {$date}\n\n";
+                $message .= "📦 {$orderNo} — {$status}\n💰 {$total} so'm\n📅 {$date}\n";
+
+                // Build items list (prefer relation; fallback to JSON column)
+                $lines = [];
+                if ($order->relationLoaded('orderItems') && $order->orderItems && $order->orderItems->count() > 0) {
+                    foreach ($order->orderItems as $oi) {
+                        $name = $oi->menuItem->name ?? 'Taom';
+                        $qty = (int) ($oi->quantity ?? 1);
+                        $lineTotal = (float) ($oi->subtotal ?? ($oi->price * $qty));
+                        $lines[] = "• {$name} x {$qty} — " . number_format($lineTotal, 0, ',', ' ') . " so'm";
+                    }
+                } elseif (is_array($order->items)) {
+                    foreach ($order->items as $it) {
+                        $name = $it['name'] ?? 'Taom';
+                        $qty = (int) ($it['quantity'] ?? 1);
+                        $price = (float) ($it['price'] ?? 0);
+                        $lineTotal = (float) ($it['total'] ?? ($qty * $price));
+                        $lines[] = "• {$name} x {$qty} — " . number_format($lineTotal, 0, ',', ' ') . " so'm";
+                    }
+                }
+
+                if (!empty($lines)) {
+                    $maxItemsToShow = 5;
+                    $shown = array_slice($lines, 0, $maxItemsToShow);
+                    $message .= "🧾 Taomlar:\n" . implode("\n", $shown);
+                    if (count($lines) > $maxItemsToShow) {
+                        $message .= "\n… va boshqalar";
+                    }
+                    $message .= "\n";
+                }
+
+                $message .= "\n"; // space between orders
             }
 
             $this->sendTelegramMessage($restaurant->bot_token, $telegramUser->telegram_id, $message);
