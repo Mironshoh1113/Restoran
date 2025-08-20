@@ -504,7 +504,7 @@ class TelegramController extends Controller
             if ($restaurant->working_hours) {
                 $info[] = "⏰ Ish vaqti: {$restaurant->working_hours}";
             }
-            $info[] = "\n📋 /menu - Menyuni ko'rish";
+            $info[] = "";
             
             $message = implode("\n", $info);
             
@@ -675,7 +675,7 @@ class TelegramController extends Controller
                 if (!empty($lines)) {
                     $maxItemsToShow = 5;
                     $shown = array_slice($lines, 0, $maxItemsToShow);
-                    $message .= "🧾 Taomlar:\n" . implode("\n", $shown);
+                    $message .= "🧾 Buyurtmangiz:\n" . implode("\n", $shown);
                     if (count($lines) > $maxItemsToShow) {
                         $message .= "\n… va boshqalar";
                     }
