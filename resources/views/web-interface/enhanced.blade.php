@@ -210,6 +210,7 @@
             object-fit: cover;
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             transition: transform 0.3s ease;
+            cursor: zoom-in;
         }
         
         .menu-item-image:hover {
@@ -948,6 +949,15 @@
         </div>
     </div>
 
+    <!-- Image Preview Modal -->
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+            <div class="modal-content bg-transparent border-0">
+                <img id="imagePreviewImage" src="" alt="Preview" class="img-fluid d-block mx-auto rounded shadow" style="max-height: 90vh; cursor: zoom-out;" data-bs-dismiss="modal">
+            </div>
+        </div>
+    </div>
+
     <!-- Fixed Cart -->
     <div class="cart-fixed">
         <div class="cart-content">
@@ -1520,6 +1530,9 @@ function applyCustomSettings() {
                 console.log('Window loaded, applying settings again...');
                 applyCustomSettings();
             });
+
+            // Attach image preview modal handlers
+            attachImagePreview();
         });
         
         // Apply settings when page becomes visible
@@ -1535,7 +1548,27 @@ function applyCustomSettings() {
             console.log('Window focused, applying settings...');
             applyCustomSettings();
         });
-
+        
+        // Image preview modal initializer
+        function attachImagePreview() {
+            try {
+                const modalEl = document.getElementById('imagePreviewModal');
+                if (!modalEl) return;
+                const modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+                const imgEl = document.getElementById('imagePreviewImage');
+                document.querySelectorAll('.menu-item-image').forEach(img => {
+                    img.style.cursor = 'zoom-in';
+                    img.addEventListener('click', function() {
+                        const src = this.getAttribute('src') || '';
+                        imgEl.setAttribute('src', src);
+                        modal.show();
+                    });
+                });
+                // Close when clicking on backdrop
+                modalEl.addEventListener('click', (e) => { if (e.target === modalEl) { modal.hide(); } });
+            } catch(_) {}
+        }
+		
 		window.addEventListener('message', function(event){
 			if (event.origin !== window.location.origin) return;
 			if (event.data && event.data.type === 'order_placed') {
