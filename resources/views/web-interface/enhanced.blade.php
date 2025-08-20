@@ -221,9 +221,11 @@
         #imagePreviewImage {
             transition: transform 0.25s ease;
             will-change: transform;
+            transform-origin: center center;
+            transform: rotate(calc(var(--auto-rotate, 0deg) + var(--manual-rotate, 0deg)));
         }
         .image-preview-rotated {
-            transform: rotate(90deg);
+            --auto-rotate: 90deg;
             max-width: 90vh;
             max-height: 90vw;
         }
@@ -963,7 +965,10 @@
     <!-- Image Preview Modal -->
     <div class="modal fade" id="imagePreviewModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
-            <div class="modal-content bg-transparent border-0">
+            <div class="modal-content bg-transparent border-0 position-relative">
+                <button id="imageRotateBtn" type="button" class="btn btn-light btn-sm rounded-circle shadow position-absolute" style="top:8px; right:8px; z-index: 1056;" title="Aylantirish">
+                    <i class="fas fa-rotate-right"></i>
+                </button>
                 <img id="imagePreviewImage" src="" alt="Preview" class="img-fluid d-block mx-auto rounded shadow" style="max-height: 90vh; cursor: zoom-out;" data-bs-dismiss="modal">
             </div>
         </div>
@@ -1567,27 +1572,79 @@ function applyCustomSettings() {
                 if (!modalEl) return;
                 const modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
                 const imgEl = document.getElementById('imagePreviewImage');
-                
-                // Helper: set rotation by current viewport orientation
+                const rotateBtn = document.getElementById('imageRotateBtn');
+                let manualRotate = 0;
+                let rotationIntervalId = null;
+
+                const computeIsLandscape = () => {
+                    try {
+                        if (window.screen && window.screen.orientation && typeof window.screen.orientation.angle === 'number') {
+                            return Math.abs(window.screen.orientation.angle % 180) === 90;
+                        }
+                    } catch(_) {}
+                    try {
+                        if (typeof window.orientation === 'number') {
+                            return Math.abs(window.orientation) === 90;
+                        }
+                    } catch(_) {}
+                    try {
+                        if (window.matchMedia && window.matchMedia('(orientation: landscape)').matches) return true;
+                    } catch(_) {}
+                    return (window.innerWidth || 0) > (window.innerHeight || 0);
+                };
+
+                const applyManualRotate = () => {
+                    imgEl.style.setProperty('--manual-rotate', `${manualRotate}deg`);
+                };
+
                 const updateRotation = () => {
-                    const isLandscape = (window.matchMedia && window.matchMedia('(orientation: landscape)').matches) || (window.innerWidth > window.innerHeight);
+                    const isLandscape = computeIsLandscape();
                     if (isLandscape) {
                         imgEl.classList.add('image-preview-rotated');
                     } else {
                         imgEl.classList.remove('image-preview-rotated');
                     }
                 };
+
+                const onDeviceOrientation = () => updateRotation();
+                const onResize = () => updateRotation();
+
+                function startWatchingRotation() {
+                    updateRotation();
+                    if (rotationIntervalId) clearInterval(rotationIntervalId);
+                    window.addEventListener('orientationchange', onResize);
+                    window.addEventListener('resize', onResize);
+                    if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
+                    window.addEventListener('deviceorientation', onDeviceOrientation, true);
+                    rotationIntervalId = setInterval(updateRotation, 500);
+                }
+
+                function stopWatchingRotation() {
+                    window.removeEventListener('orientationchange', onResize);
+                    window.removeEventListener('resize', onResize);
+                    if (window.visualViewport) window.visualViewport.removeEventListener('resize', onResize);
+                    window.removeEventListener('deviceorientation', onDeviceOrientation, true);
+                    if (rotationIntervalId) { clearInterval(rotationIntervalId); rotationIntervalId = null; }
+                }
                 
-                // Recompute on modal show + on orientation/resize
-                modalEl.addEventListener('shown.bs.modal', updateRotation);
-                window.addEventListener('orientationchange', updateRotation);
-                window.addEventListener('resize', updateRotation);
+                // Recompute on modal show/hide + on orientation/resize
+                modalEl.addEventListener('shown.bs.modal', () => { manualRotate = 0; applyManualRotate(); startWatchingRotation(); });
+                modalEl.addEventListener('hidden.bs.modal', () => { stopWatchingRotation(); });
+                
+                if (rotateBtn) {
+                    rotateBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        manualRotate = (manualRotate + 90) % 360;
+                        applyManualRotate();
+                    });
+                }
                 
                 document.querySelectorAll('.menu-item-image').forEach(img => {
                     img.style.cursor = 'zoom-in';
                     img.addEventListener('click', function() {
                         const src = this.getAttribute('src') || '';
                         imgEl.setAttribute('src', src);
+                        manualRotate = 0; applyManualRotate();
                         modal.show();
                         updateRotation();
                     });
