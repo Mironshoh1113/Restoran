@@ -96,7 +96,16 @@
             @if($orders->count() > 0)
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 p-4">
                     @foreach($orders as $order)
-                    <div class="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all duration-200 order-item" 
+                    @php
+                        $cardClasses = [
+                            'new' => 'bg-yellow-50 border-yellow-200 border-l-4 border-l-yellow-400',
+                            'preparing' => 'bg-orange-50 border-orange-200 border-l-4 border-l-orange-400',
+                            'on_way' => 'bg-purple-50 border-purple-200 border-l-4 border-l-purple-400',
+                            'delivered' => 'bg-green-50 border-green-200 border-l-4 border-l-green-500',
+                            'cancelled' => 'bg-red-50 border-red-200 border-l-4 border-l-red-500',
+                        ];
+                    @endphp
+                    <div class="border rounded-lg p-3 hover:shadow-md transition-all duration-200 order-item {{ $cardClasses[$order->status] ?? 'bg-white border-gray-200' }}" 
                          data-status="{{ $order->status }}" 
                          data-number="{{ $order->order_number ?? $order->id }}">
                         
