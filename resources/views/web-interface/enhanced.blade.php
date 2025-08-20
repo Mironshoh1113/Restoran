@@ -217,6 +217,17 @@
             transform: scale(1.05);
         }
         
+        /* Image preview rotation support */
+        #imagePreviewImage {
+            transition: transform 0.25s ease;
+            will-change: transform;
+        }
+        .image-preview-rotated {
+            transform: rotate(90deg);
+            max-width: 90vh;
+            max-height: 90vw;
+        }
+        
         .menu-item-image-placeholder {
             width: 100%;
             height: 200px;
@@ -1556,12 +1567,29 @@ function applyCustomSettings() {
                 if (!modalEl) return;
                 const modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
                 const imgEl = document.getElementById('imagePreviewImage');
+                
+                // Helper: set rotation by current viewport orientation
+                const updateRotation = () => {
+                    const isLandscape = (window.matchMedia && window.matchMedia('(orientation: landscape)').matches) || (window.innerWidth > window.innerHeight);
+                    if (isLandscape) {
+                        imgEl.classList.add('image-preview-rotated');
+                    } else {
+                        imgEl.classList.remove('image-preview-rotated');
+                    }
+                };
+                
+                // Recompute on modal show + on orientation/resize
+                modalEl.addEventListener('shown.bs.modal', updateRotation);
+                window.addEventListener('orientationchange', updateRotation);
+                window.addEventListener('resize', updateRotation);
+                
                 document.querySelectorAll('.menu-item-image').forEach(img => {
                     img.style.cursor = 'zoom-in';
                     img.addEventListener('click', function() {
                         const src = this.getAttribute('src') || '';
                         imgEl.setAttribute('src', src);
                         modal.show();
+                        updateRotation();
                     });
                 });
                 // Close when clicking on backdrop
