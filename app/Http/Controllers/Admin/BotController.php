@@ -623,7 +623,8 @@ class BotController extends Controller
         $request->validate([
             'user_ids' => 'required|array',
             'user_ids.*' => 'integer',
-            'message' => 'required|string|max:4096'
+            'message' => 'nullable|string|max:4096',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096'
         ]);
 
         if (!$restaurant->bot_token) {
@@ -640,9 +641,22 @@ class BotController extends Controller
                 return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
             }
             
+            // Prepare optional photo URL
+            $photoUrl = null;
+            if ($request->hasFile('photo')) {
+                $path = $request->file('photo')->store('broadcasts', 'public');
+                $photoUrl = url(\Illuminate\Support\Facades\Storage::url($path));
+            }
+            $caption = (string) ($request->message ?? '');
+            
             // Get selected users for this specific restaurant only
+            $userIds = $request->user_ids;
+            if (is_string($userIds)) {
+                $decoded = json_decode($userIds, true);
+                if (json_last_error() === JSON_ERROR_NONE) { $userIds = $decoded; }
+            }
             $users = TelegramUser::where('restaurant_id', $restaurant->id)
-                ->whereIn('telegram_id', $request->user_ids) // Use telegram_id instead of id
+                ->whereIn('telegram_id', $userIds) // Use telegram_id instead of id
                 ->get();
             
             $successCount = 0;
@@ -650,7 +664,9 @@ class BotController extends Controller
             $errors = [];
             
             foreach ($users as $user) {
-                $result = $telegramService->sendMessage($user->telegram_id, $request->message);
+                $result = $photoUrl
+                    ? $telegramService->sendPhoto($user->telegram_id, $photoUrl, $caption)
+                    : $telegramService->sendMessage($user->telegram_id, $caption ?: '');
                 
                 if ($result['ok']) {
                     $successCount++;
@@ -661,9 +677,9 @@ class BotController extends Controller
                         'telegram_user_id' => $user->id,
                         'message_id' => $result['result']['message_id'] ?? null,
                         'direction' => 'outgoing',
-                        'message_text' => $request->message,
+                        'message_text' => $caption,
                         'message_data' => $result['result'] ?? null,
-                        'message_type' => 'text',
+                        'message_type' => $photoUrl ? 'photo' : 'text',
                         'is_read' => false,
                     ]);
                 } else {
@@ -700,7 +716,8 @@ class BotController extends Controller
         $this->authorize('update', $restaurant);
         
         $request->validate([
-            'message' => 'required|string|max:4096'
+            'message' => 'nullable|string|max:4096',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096'
         ]);
 
         if (!$restaurant->bot_token) {
@@ -737,6 +754,14 @@ class BotController extends Controller
                 return response()->json(['success' => false, 'message' => 'Bot token noto\'g\'ri: ' . ($botInfo['description'] ?? 'Unknown error')]);
             }
             
+            // Optional photo upload
+            $photoUrl = null;
+            if ($request->hasFile('photo')) {
+                $path = $request->file('photo')->store('broadcasts', 'public');
+                $photoUrl = url(\Illuminate\Support\Facades\Storage::url($path));
+            }
+            $caption = (string) ($request->message ?? '');
+            
             // Get all telegram users for this specific restaurant only
             $users = TelegramUser::where('restaurant_id', $restaurant->id)
                 ->where('is_active', true)
@@ -750,9 +775,11 @@ class BotController extends Controller
             $errorCount = 0;
             $errors = [];
             
-            foreach ($users as $user) {
+            foreach ($users as $userRow) {
                 try {
-                    $result = $telegramService->sendMessage($user->telegram_id, $request->message);
+                    $result = $photoUrl
+                        ? $telegramService->sendPhoto($userRow->telegram_id, $photoUrl, $caption)
+                        : $telegramService->sendMessage($userRow->telegram_id, $caption ?: '');
                     
                     if ($result['ok']) {
                         $successCount++;
@@ -760,29 +787,29 @@ class BotController extends Controller
                         // Save outgoing message to database
                         TelegramMessage::create([
                             'restaurant_id' => $restaurant->id,
-                            'telegram_user_id' => $user->id,
+                            'telegram_user_id' => $userRow->id,
                             'message_id' => $result['result']['message_id'] ?? null,
                             'direction' => 'outgoing',
-                            'message_text' => $request->message,
+                            'message_text' => $caption,
                             'message_data' => $result['result'] ?? null,
-                            'message_type' => 'text',
+                            'message_type' => $photoUrl ? 'photo' : 'text',
                             'is_read' => false,
                         ]);
                     } else {
                         $errorCount++;
-                        $errors[] = "User {$user->telegram_id}: " . ($result['description'] ?? 'Unknown error');
+                        $errors[] = "User {$userRow->telegram_id}: " . ($result['description'] ?? 'Unknown error');
                         \Log::warning('Failed to send message to user', [
-                            'user_id' => $user->id,
-                            'telegram_id' => $user->telegram_id,
+                            'user_id' => $userRow->id,
+                            'telegram_id' => $userRow->telegram_id,
                             'error' => $result['description'] ?? 'Unknown error'
                         ]);
                     }
                 } catch (\Exception $e) {
                     $errorCount++;
-                    $errors[] = "User {$user->telegram_id}: " . $e->getMessage();
+                    $errors[] = "User {$userRow->telegram_id}: " . $e->getMessage();
                     \Log::error('Exception sending message to user', [
-                        'user_id' => $user->id,
-                        'telegram_id' => $user->telegram_id,
+                        'user_id' => $userRow->id,
+                        'telegram_id' => $userRow->telegram_id,
                         'error' => $e->getMessage()
                     ]);
                 }
@@ -798,7 +825,7 @@ class BotController extends Controller
                 'success_count' => $successCount,
                 'error_count' => $errorCount,
                 'total_users' => $users->count(),
-                'message_length' => strlen($request->message)
+                'message_length' => strlen($caption)
             ]);
             
             return response()->json([

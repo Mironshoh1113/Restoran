@@ -235,6 +235,11 @@
                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           placeholder="Xabar matnini kiriting..."></textarea>
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rasm (ixtiyoriy)</label>
+                <input type="file" id="sendToAllPhoto" accept="image/*" class="block w-full text-sm text-gray-700 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <img id="sendToAllPreview" src="" alt="Preview" class="mt-2 rounded-md shadow max-h-40 hidden">
+            </div>
             
             <div class="flex items-center justify-end space-x-3">
                 <button onclick="closeSendToAllModal()" 
@@ -266,6 +271,11 @@
                 <textarea id="sendToSelectedMessage" rows="4" 
                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           placeholder="Xabar matnini kiriting..."></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rasm (ixtiyoriy)</label>
+                <input type="file" id="sendToSelectedPhoto" accept="image/*" class="block w-full text-sm text-gray-700 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <img id="sendToSelectedPreview" src="" alt="Preview" class="mt-2 rounded-md shadow max-h-40 hidden">
             </div>
             
             <div class="flex items-center justify-end space-x-3">
@@ -335,6 +345,12 @@ function closeSendToAllModal() {
         if (messageField) {
             messageField.value = '';
         }
+        // Clear photo preview
+        const photoPreview = document.getElementById('sendToAllPreview');
+        if (photoPreview) {
+            photoPreview.src = '';
+            photoPreview.classList.add('hidden');
+        }
         console.log('Modal closed successfully');
     } else {
         console.error('Modal element not found');
@@ -371,6 +387,12 @@ function closeSendToSelectedModal() {
         modal.classList.remove('flex');
     }
     document.getElementById('sendToSelectedMessage').value = '';
+    // Clear photo preview
+    const photoPreview = document.getElementById('sendToSelectedPreview');
+    if (photoPreview) {
+        photoPreview.src = '';
+        photoPreview.classList.add('hidden');
+    }
     
     // Force close with multiple methods
     try {
@@ -409,8 +431,9 @@ function testModal() {
 // Send message functions
 function sendToAllUsers() {
     const message = document.getElementById('sendToAllMessage').value.trim();
-    if (!message) {
-        showNotification('Xabar matnini kiriting', 'warning');
+    const photoInput = document.getElementById('sendToAllPhoto');
+    if (!message && (!photoInput || !photoInput.files || photoInput.files.length === 0)) {
+        showNotification('Kamida rasm yoki matn kiriting', 'warning');
         return;
     }
     
@@ -422,15 +445,18 @@ function sendToAllUsers() {
     sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuborilmoqda...';
     sendButton.disabled = true;
     
+    const formData = new FormData();
+    formData.append('message', message);
+    if (photoInput && photoInput.files && photoInput.files[0]) {
+        formData.append('photo', photoInput.files[0]);
+    }
+    
     fetch(`/admin/bots/{{ $restaurant->id }}/users/send-all`, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json'
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({
-            message: message
-        })
+        body: formData
     })
     .then(response => {
         console.log('Response status:', response.status);
@@ -453,6 +479,12 @@ function sendToAllUsers() {
             }, 100);
             // Clear the message field
             document.getElementById('sendToAllMessage').value = '';
+            // Clear photo preview
+            const photoPreview = document.getElementById('sendToAllPreview');
+            if (photoPreview) {
+                photoPreview.src = '';
+                photoPreview.classList.add('hidden');
+            }
         } else {
             showNotification('❌ ' + (data.message || 'Xatolik yuz berdi'), 'error');
         }
@@ -470,16 +502,17 @@ function sendToAllUsers() {
 
 function sendToSelectedUsers() {
     const message = document.getElementById('sendToSelectedMessage').value.trim();
-    if (!message) {
-        showNotification('Xabar matnini kiriting', 'warning');
-        return;
-    }
+    const photoInput = document.getElementById('sendToSelectedPhoto');
     
     const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked'))
         .map(checkbox => parseInt(checkbox.value));
     
     if (selectedUsers.length === 0) {
         showNotification('Kamida bitta foydalanuvchi tanlang', 'warning');
+        return;
+    }
+    if (!message && (!photoInput || !photoInput.files || photoInput.files.length === 0)) {
+        showNotification('Kamida rasm yoki matn kiriting', 'warning');
         return;
     }
     
@@ -489,16 +522,19 @@ function sendToSelectedUsers() {
     sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuborilmoqda...';
     sendButton.disabled = true;
 
+    const formData = new FormData();
+    formData.append('message', message);
+    formData.append('user_ids', JSON.stringify(selectedUsers));
+    if (photoInput && photoInput.files && photoInput.files[0]) {
+        formData.append('photo', photoInput.files[0]);
+    }
+    
     fetch(`/admin/bots/{{ $restaurant->id }}/users/send`, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json'
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({
-            user_ids: selectedUsers,
-            message: message
-        })
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
@@ -517,6 +553,12 @@ function sendToSelectedUsers() {
             // Uncheck all checkboxes
             document.querySelectorAll('.user-checkbox').forEach(checkbox => checkbox.checked = false);
             document.getElementById('selectAll').checked = false;
+            // Clear photo preview
+            const photoPreview = document.getElementById('sendToSelectedPreview');
+            if (photoPreview) {
+                photoPreview.src = '';
+                photoPreview.classList.add('hidden');
+            }
         } else {
             showNotification('❌ ' + data.message, 'error');
         }
@@ -569,6 +611,27 @@ function viewUserDetails(userId) {
 // Load stats on page load
 document.addEventListener('DOMContentLoaded', function() {
     getUsersStats();
+    // Previews
+    const allInp = document.getElementById('sendToAllPhoto');
+    const allPrev = document.getElementById('sendToAllPreview');
+    if (allInp) {
+        allInp.addEventListener('change', () => {
+            if (allInp.files && allInp.files[0]) {
+                const url = URL.createObjectURL(allInp.files[0]);
+                allPrev.src = url; allPrev.classList.remove('hidden');
+            } else { allPrev.src = ''; allPrev.classList.add('hidden'); }
+        });
+    }
+    const selInp = document.getElementById('sendToSelectedPhoto');
+    const selPrev = document.getElementById('sendToSelectedPreview');
+    if (selInp) {
+        selInp.addEventListener('change', () => {
+            if (selInp.files && selInp.files[0]) {
+                const url = URL.createObjectURL(selInp.files[0]);
+                selPrev.src = url; selPrev.classList.remove('hidden');
+            } else { selPrev.src = ''; selPrev.classList.add('hidden'); }
+        });
+    }
     
     // Add escape key handler for modals
     document.addEventListener('keydown', function(e) {
