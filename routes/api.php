@@ -73,7 +73,7 @@ Route::post('/orders', function (Request $request) {
             ->map(fn($item) => (int) $item['quantity']);
 
         $menuItems = \App\Models\MenuItem::whereIn('id', $quantitiesById->keys())
-            ->get(['id', 'price']);
+            ->get(['id', 'price', 'name']);
 
         if ($menuItems->count() !== $quantitiesById->count()) {
             return response()->json([
@@ -157,6 +157,39 @@ Route::post('/orders', function (Request $request) {
         } catch (\Exception $e) {
             \Log::warning('Failed to upsert TelegramUser from WebApp order', [
                 'restaurant_id' => $restaurant->id,
+                'chat_id' => $data['telegram_chat_id'] ?? null,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        // Send confirmation message to customer via Telegram, if chat_id and bot token present
+        try {
+            if (!empty($data['telegram_chat_id']) && !empty($data['bot_token'])) {
+                $telegram = new \App\Services\TelegramService($data['bot_token']);
+                $lines = [];
+                $lines[] = "✅ Buyurtmangiz qabul qilindi!";
+                $lines[] = "\n📦 Buyurtma raqami: " . $order->order_number;
+                if (!empty($data['customer_name'])) $lines[] = "👤 Mijoz: " . $data['customer_name'];
+                if (!empty($data['customer_phone'])) $lines[] = "📞 Telefon: " . $data['customer_phone'];
+                if (!empty($data['customer_address'])) $lines[] = "📍 Manzil: " . $data['customer_address'];
+                $lines[] = "\n🧾 Taomlar:";
+                foreach ($menuItems as $menuItem) {
+                    $qty = $quantitiesById[$menuItem->id] ?? 0;
+                    if ($qty > 0) {
+                        $lines[] = "• {$menuItem->name} x {$qty} - " . number_format($qty * (float)$menuItem->price, 0, ',', ' ') . " so'm";
+                    }
+                }
+                if ($deliveryFee > 0) {
+                    $lines[] = "🚚 Yetkazib berish: " . number_format($deliveryFee, 0, ',', ' ') . " so'm";
+                }
+                $lines[] = "💰 Jami: " . number_format($totalPrice, 0, ',', ' ') . " so'm";
+                $lines[] = "\nRahmat! Tez orada buyurtmangizni yetkazamiz.";
+                $message = implode("\n", $lines);
+                $telegram->sendMessage($data['telegram_chat_id'], $message, null, 'HTML');
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Telegram confirmation failed', [
+                'order_id' => $order->id,
                 'chat_id' => $data['telegram_chat_id'] ?? null,
                 'error' => $e->getMessage()
             ]);

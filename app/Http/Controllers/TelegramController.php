@@ -406,8 +406,8 @@ class TelegramController extends Controller
     {
         try {
             $message = "🎉 Xush kelibsiz!\n\n";
-            $message .= "🏪 Restoran: {$restaurant->name}\n";
-            $message .= "📱 Menyu tugmasini bosing va darhol Web App ochiladi:\n\n";
+            $message .= "🏪 {$restaurant->name}\n";
+            $message .= "📱 Menyu tugmasini bosing !\n\n";
             
             $webAppUrl = url('/enhanced-web-interface?bot_token=' . $restaurant->bot_token);
             $buttonText = $restaurant->web_app_button_text ?: "Menyuni ko'rish";
