@@ -25,6 +25,9 @@ Route::get('/', function () {
 	return view('welcome');
 });
 
+// Public contact form submission
+Route::post('/contact', [App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
+
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 Route::get('/dashboard/stats', [App\Http\Controllers\DashboardController::class, 'getStats'])->middleware(['auth', 'verified'])->name('dashboard.stats');
 
@@ -40,6 +43,12 @@ Route::middleware('auth')->group(function () {
 		Route::post('subscriptions', [SuperSubscriptionController::class, 'store'])->name('subscriptions.store');
 		Route::delete('subscriptions/{subscription}', [SuperSubscriptionController::class, 'destroy'])->name('subscriptions.destroy');
 		Route::post('users/reset-password', [SuperSubscriptionController::class, 'resetPassword'])->name('users.reset-password');
+		
+		// Contact messages
+		Route::get('contact-messages', [\App\Http\Controllers\Admin\SuperAdmin\ContactMessageController::class, 'index'])->name('contact-messages.index');
+		Route::get('contact-messages/{contactMessage}', [\App\Http\Controllers\Admin\SuperAdmin\ContactMessageController::class, 'show'])->name('contact-messages.show');
+		Route::patch('contact-messages/{contactMessage}/status', [\App\Http\Controllers\Admin\SuperAdmin\ContactMessageController::class, 'updateStatus'])->name('contact-messages.update-status');
+		Route::delete('contact-messages/{contactMessage}', [\App\Http\Controllers\Admin\SuperAdmin\ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
 	});
 	
 	Route::prefix('admin')->name('admin.')->group(function () {

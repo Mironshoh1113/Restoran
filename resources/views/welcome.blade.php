@@ -352,7 +352,7 @@
                 @if(session('status'))
                   <div class="alert alert-success" role="alert">{{ session('status') }}</div>
                 @endif
-                <form class="contact-form" method="post" action="{{ Route::has('contact.submit') ? route('contact.submit') : '#' }}" novalidate>
+                <form class="contact-form" method="post" action="{{ route('contact.submit') }}" novalidate>
                   @csrf
                   <div class="mb-3">
                     <label for="name" class="form-label fw-semibold">Ism</label>
