@@ -822,7 +822,13 @@
     <!-- Search -->
     <div class="search-container">
         <input type="text" class="search-input" placeholder="Maxsulotni qidiring..." id="searchInput">
-           <div class="category-tabs">
+    </div>
+
+    <!-- Filters removed per request -->
+
+    <!-- Categories -->
+    <div class="categories-container">
+        <div class="category-tabs">
             @foreach($categories as $category)
                 <div class="category-tab {{ $loop->first ? 'active' : '' }}" 
                      data-category-id="{{ $category->id }}" 
@@ -831,15 +837,6 @@
                 </div>
             @endforeach
         </div>
-    </div>
-
-    <!-- Filters removed per request -->
-
-    <!-- Categories -->
-    <div class="categories-container">
-
-    
-     
     </div>
 
     <!-- Menu Container -->
