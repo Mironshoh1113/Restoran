@@ -163,7 +163,7 @@
         
         .menu-item-image {
             width: 100%;
-            height: 120px;
+            height: 220px;
             object-fit: cover;
             background: #f1f5f9;
             transition: transform 0.3s ease;
