@@ -12,6 +12,10 @@ use Carbon\Carbon;
 
 class UserSubscriptionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('super.admin');
+    }
     /**
      * Display a listing of users with their subscription information
      */
