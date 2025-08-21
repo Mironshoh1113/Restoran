@@ -49,12 +49,6 @@ Route::middleware('auth')->group(function () {
 		Route::get('contact-messages/{contactMessage}', [\App\Http\Controllers\Admin\SuperAdmin\ContactMessageController::class, 'show'])->name('contact-messages.show');
 		Route::patch('contact-messages/{contactMessage}/status', [\App\Http\Controllers\Admin\SuperAdmin\ContactMessageController::class, 'updateStatus'])->name('contact-messages.update-status');
 		Route::delete('contact-messages/{contactMessage}', [\App\Http\Controllers\Admin\SuperAdmin\ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
-		
-		// User management
-		Route::get('users', [\App\Http\Controllers\Admin\SuperAdmin\UserController::class, 'index'])->name('users.index');
-		Route::get('users/{user}', [\App\Http\Controllers\Admin\SuperAdmin\UserController::class, 'show'])->name('users.show');
-		Route::post('users/{user}/assign-plan', [\App\Http\Controllers\Admin\SuperAdmin\UserController::class, 'assignPlan'])->name('users.assign-plan');
-		Route::patch('subscriptions/{subscription}/status', [\App\Http\Controllers\Admin\SuperAdmin\UserController::class, 'updateSubscriptionStatus'])->name('subscriptions.update-status');
 	});
 	
 	Route::prefix('admin')->name('admin.')->group(function () {

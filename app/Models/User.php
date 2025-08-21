@@ -72,11 +72,6 @@ class User extends Authenticatable
 		return $this->hasMany(Subscription::class);
 	}
 
-	public function activeSubscriptions(): HasMany
-	{
-		return $this->hasMany(Subscription::class)->where('status', 'active');
-	}
-
 	public function activeSubscriptionForRestaurant(?int $restaurantId): ?Subscription
 	{
 		if (!$restaurantId) {
