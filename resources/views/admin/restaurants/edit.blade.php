@@ -1052,6 +1052,176 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Web App Tab -->
+                <div id="web-app-tab" class="tab-content hidden">
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Web App sozlamalari</h3>
+                            <p class="text-sm text-gray-600 mb-6">Web ilova uchun sozlamalar</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="web_app_title" class="block text-sm font-medium text-gray-700 mb-2">Web App sarlavhasi</label>
+                                <input type="text" id="web_app_title" name="web_app_title" 
+                                       value="{{ old('web_app_title', $restaurant->web_app_title) }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="Web App sarlavhasi">
+                            </div>
+                            
+                            <div>
+                                <label for="web_app_description" class="block text-sm font-medium text-gray-700 mb-2">Web App tavsifi</label>
+                                <textarea id="web_app_description" name="web_app_description" rows="3"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                          placeholder="Web App haqida qisqacha ma'lumot">{{ old('web_app_description', $restaurant->web_app_description) }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="web_app_button_text" class="block text-sm font-medium text-gray-700 mb-2">Tugma matni</label>
+                            <input type="text" id="web_app_button_text" name="web_app_button_text" 
+                                   value="{{ old('web_app_button_text', $restaurant->web_app_button_text) }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="Menyu ochish">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Design Tab -->
+                <div id="design-tab" class="tab-content hidden">
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Dizayn sozlamalari</h3>
+                            <p class="text-sm text-gray-600 mb-6">Ranglar va stillar</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="primary_color" class="block text-sm font-medium text-gray-700 mb-2">Asosiy rang</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="primary_color" name="primary_color" 
+                                           value="{{ old('primary_color', $restaurant->primary_color) ?? '#3B82F6' }}"
+                                           class="w-12 h-10 border border-gray-300 rounded cursor-pointer">
+                                    <input type="text" value="{{ old('primary_color', $restaurant->primary_color) ?? '#3B82F6' }}" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-lg" readonly>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="secondary_color" class="block text-sm font-medium text-gray-700 mb-2">Ikkilamchi rang</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="secondary_color" name="secondary_color" 
+                                           value="{{ old('secondary_color', $restaurant->secondary_color) ?? '#6B7280' }}"
+                                           class="w-12 h-10 border border-gray-300 rounded cursor-pointer">
+                                    <input type="text" value="{{ old('secondary_color', $restaurant->secondary_color) ?? '#6B7280' }}" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-lg" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="border_radius" class="block text-sm font-medium text-gray-700 mb-2">Burchak radiusi</label>
+                                <select id="border_radius" name="border_radius" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="0px" {{ (old('border_radius', $restaurant->border_radius) == '0px') ? 'selected' : '' }}>0px</option>
+                                    <option value="4px" {{ (old('border_radius', $restaurant->border_radius) == '4px') ? 'selected' : '' }}>4px</option>
+                                    <option value="8px" {{ (old('border_radius', $restaurant->border_radius) == '8px') ? 'selected' : '' }}>8px</option>
+                                    <option value="12px" {{ (old('border_radius', $restaurant->border_radius) == '12px') ? 'selected' : '' }}>12px</option>
+                                    <option value="16px" {{ (old('border_radius', $restaurant->border_radius) == '16px') ? 'selected' : '' }}>16px</option>
+                                    <option value="20px" {{ (old('border_radius', $restaurant->border_radius) == '20px') ? 'selected' : '' }}>20px</option>
+                                    <option value="24px" {{ (old('border_radius', $restaurant->border_radius) == '24px') ? 'selected' : '' }}>24px</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="shadow" class="block text-sm font-medium text-gray-700 mb-2">Soya</label>
+                                <select id="shadow" name="shadow" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="none" {{ (old('shadow', $restaurant->shadow) == 'none') ? 'selected' : '' }}>Yo'q</option>
+                                    <option value="0 1px 3px rgba(0,0,0,0.1)" {{ (old('shadow', $restaurant->shadow) == '0 1px 3px rgba(0,0,0,0.1)') ? 'selected' : '' }}>Engil</option>
+                                    <option value="0 4px 6px rgba(0,0,0,0.1)" {{ (old('shadow', $restaurant->shadow) == '0 4px 6px rgba(0,0,0,0.1)') ? 'selected' : '' }}>O'rtacha</option>
+                                    <option value="0 10px 15px rgba(0,0,0,0.1)" {{ (old('shadow', $restaurant->shadow) == '0 10px 15px rgba(0,0,0,0.1)') ? 'selected' : '' }}>Kuchli</option>
+                                    <option value="0 20px 25px rgba(0,0,0,0.1)" {{ (old('shadow', $restaurant->border_radius) == '0 20px 25px rgba(0,0,0,0.1)') ? 'selected' : '' }}>Juda kuchli</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Business Tab -->
+                <div id="business-tab" class="tab-content hidden">
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Biznes sozlamalari</h3>
+                            <p class="text-sm text-gray-600 mb-6">Yetkazib berish va to'lov sozlamalari</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="delivery_fee" class="block text-sm font-medium text-gray-700 mb-2">Yetkazib berish narxi</label>
+                                <input type="number" id="delivery_fee" name="delivery_fee" 
+                                       value="{{ old('delivery_fee', $restaurant->delivery_fee) }}" step="0.01" min="0"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="0.00">
+                            </div>
+                            
+                            <div>
+                                <label for="min_order_amount" class="block text-sm font-medium text-gray-700 mb-2">Minimal buyurtma miqdori</label>
+                                <input type="number" id="min_order_amount" name="min_order_amount" 
+                                       value="{{ old('min_order_amount', $restaurant->min_order_amount) }}" step="0.01" min="0"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="0.00">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">To'lov usullari</label>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <input type="checkbox" name="payment_methods[]" value="cash" 
+                                           {{ in_array('cash', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
+                                           class="rounded border-gray-300 text-blue-600">
+                                    <span class="ml-3 text-sm text-gray-700 flex items-center">
+                                        <i class="fas fa-money-bill text-green-500 mr-2"></i>
+                                        Naqd pul
+                                    </span>
+                                </label>
+                                
+                                <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <input type="checkbox" name="payment_methods[]" value="card" 
+                                           {{ in_array('card', old('payment_methods', $restaurant->border_radius) ?? [])) ? 'checked' : '' }}
+                                           class="rounded border-gray-300 text-blue-600">
+                                    <span class="text-sm text-gray-700 flex items-center">
+                                        <i class="fas fa-credit-card text-blue-500 mr-2"></i>
+                                        Plastik karta
+                                    </span>
+                                </label>
+                                
+                                <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <input type="checkbox" name="payment_methods[]" value="click" 
+                                           {{ in_array('click', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
+                                           class="rounded border-gray-300 text-blue-600">
+                                    <span class="ml-3 text-sm text-gray-7 flex items-center">
+                                        <i class="text-blue-500 mr-2"></i>
+                                        Click
+                                    </span>
+                                </label>
+                                
+                                <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <input type="checkbox" name="payment_methods[]" value="payme" 
+                                           {{ in_array('payme', old('payment_methods', $restaurant->border_radius) ?? [])) ? 'checked' : '' }}
+                                           class="rounded border-gray-300 text-blue-600">
+                                    <span class="ml-3 text-sm text-gray-700 flex items-center">
+                                        <i class="fas fa-wallet text-purple-500 mr-2"></i>
+                                        Payme
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Form Actions -->
@@ -1074,7 +1244,8 @@
                 </div>
             </div>
             </div>
-        </form>
+        </div>
+    </form>
     
     <!-- Danger Zone -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -1110,39 +1281,44 @@
 <!-- JavaScript -->
 <script>
 // Form submission handling
-document.getElementById('restaurantForm').addEventListener('submit', function(e) {
-    console.log('Form submitted!');
-    console.log('Form action:', this.action);
-    console.log('Form method:', this.method);
-    
-    // Log form data
-    const formData = new FormData(this);
-    for (let [key, value] of formData.entries()) {
-        console.log(key + ': ' + value);
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('restaurantForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submitted!');
+            console.log('Form action:', this.action);
+            console.log('Form method:', this.method);
+            
+            // Log form data
+            const formData = new FormData(this);
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ': ' + value);
+            }
+            
+            // Check if required fields are filled
+            const requiredFields = ['name', 'phone', 'address'];
+            let hasErrors = false;
+            
+            requiredFields.forEach(field => {
+                const input = this.querySelector(`[name="${field}"]`);
+                if (!input.value.trim()) {
+                    console.error('Required field empty:', field);
+                    hasErrors = true;
+                    input.classList.add('border-red-500');
+                } else {
+                    input.classList.remove('border-red-500');
+                }
+            });
+            
+            if (hasErrors) {
+                e.preventDefault();
+                alert('Iltimos, barcha majburiy maydonlarni to\'ldiring!');
+                return false;
+            }
+            
+            console.log('Form validation passed, submitting...');
+        });
     }
-    
-    // Check if required fields are filled
-    const requiredFields = ['name', 'phone', 'address'];
-    let hasErrors = false;
-    
-    requiredFields.forEach(field => {
-        const input = this.querySelector(`[name="${field}"]`);
-        if (!input.value.trim()) {
-            console.error('Required field empty:', field);
-            hasErrors = true;
-            input.classList.add('border-red-500');
-        } else {
-            input.classList.remove('border-red-500');
-        }
-    });
-    
-    if (hasErrors) {
-        e.preventDefault();
-        alert('Iltimos, barcha majburiy maydonlarni to\'ldiring!');
-        return false;
-    }
-    
-    console.log('Form validation passed, submitting...');
 });
 
 // Tab functionality
