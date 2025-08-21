@@ -1191,7 +1191,7 @@
                                 
                                 <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
                                     <input type="checkbox" name="payment_methods[]" value="card" 
-                                           {{ in_array('card', old('payment_methods', $restaurant->border_radius) ?? [])) ? 'checked' : '' }}
+                                           {{ in_array('card', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
                                            class="rounded border-gray-300 text-blue-600">
                                     <span class="text-sm text-gray-700 flex items-center">
                                         <i class="fas fa-credit-card text-blue-500 mr-2"></i>
@@ -1203,15 +1203,15 @@
                                     <input type="checkbox" name="payment_methods[]" value="click" 
                                            {{ in_array('click', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
                                            class="rounded border-gray-300 text-blue-600">
-                                    <span class="ml-3 text-sm text-gray-7 flex items-center">
-                                        <i class="text-blue-500 mr-2"></i>
+                                    <span class="ml-3 text-sm text-gray-700 flex items-center">
+                                        <i class="fas fa-credit-card text-blue-500 mr-2"></i>
                                         Click
                                     </span>
                                 </label>
                                 
                                 <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
                                     <input type="checkbox" name="payment_methods[]" value="payme" 
-                                           {{ in_array('payme', old('payment_methods', $restaurant->border_radius) ?? [])) ? 'checked' : '' }}
+                                           {{ in_array('payme', old('payment_methods', $restaurant->payment_methods ?? [])) ? 'checked' : '' }}
                                            class="rounded border-gray-300 text-blue-600">
                                     <span class="ml-3 text-sm text-gray-700 flex items-center">
                                         <i class="fas fa-wallet text-purple-500 mr-2"></i>
