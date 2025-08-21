@@ -99,7 +99,7 @@
             background: var(--card-bg, #ffffff) !important;
             border-bottom: 1px solid rgba(0,0,0,0.1);
             position: sticky;
-            top: 10px;
+            top: 100px;
             z-index: 999;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
