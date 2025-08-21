@@ -94,8 +94,16 @@ class RestaurantController extends Controller
             // Add owner user ID
             $data['owner_user_id'] = Auth::id();
             
-            // Handle checkbox properly
-            $data['is_active'] = $request->has('is_active');
+            // Handle checkbox properly - unchecked checkboxes are not sent in request
+            $data['is_active'] = $request->boolean('is_active', false);
+            
+            // Debug logging for checkbox
+            \Log::info('Checkbox debug (store)', [
+                'request_has_is_active' => $request->has('is_active'),
+                'request_is_active_value' => $request->input('is_active'),
+                'request_boolean_is_active' => $request->boolean('is_active', false),
+                'final_is_active_value' => $data['is_active']
+            ]);
             
             // Handle file uploads with 10MB limit
             if ($request->hasFile('logo')) {
@@ -210,8 +218,18 @@ class RestaurantController extends Controller
                 'web_app_button_text',
             ]);
             
-            // Handle checkbox properly
-            $data['is_active'] = $request->has('is_active');
+            // Handle checkbox properly - unchecked checkboxes are not sent in request
+            $data['is_active'] = $request->boolean('is_active', false);
+            
+            // Debug logging for checkbox
+            \Log::info('Checkbox debug (update)', [
+                'restaurant_id' => $restaurant->id,
+                'request_has_is_active' => $request->has('is_active'),
+                'request_is_active_value' => $request->input('is_active'),
+                'request_boolean_is_active' => $request->boolean('is_active', false),
+                'final_is_active_value' => $data['is_active'],
+                'old_is_active_value' => $restaurant->is_active
+            ]);
             
             // Handle file uploads with 10MB limit
             if ($request->hasFile('logo')) {
