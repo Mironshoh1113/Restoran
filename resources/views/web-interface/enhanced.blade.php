@@ -740,7 +740,7 @@
             .menu-container { padding: 0.5rem; }
             .category-content { gap: 0.5rem; }
             .menu-item-image,
-            .menu-item-image-placeholder { height: 110px; }
+            .menu-item-image-placeholder { height: 210px; }
             .menu-item-content { padding: 0.6rem; }
             .menu-item-title { font-size: 0.95rem; }
             .menu-item-description { font-size: 0.75rem; }
