@@ -40,7 +40,7 @@
                         </div>
                     @else
                         <div class="restaurant-logo" style="background: rgba(255,255,255,0.2);">
-                            <i class="fas fa-utensils text-white" style="font-size: 1.5rem; line-height: 60px; text-align: center; width: 100%;"></i>
+                            <i class="fas fa-utensils text-white" style="font-size: 1.5rem; line-height: 120px; text-align: center; width: 100%;"></i>
                         </div>
                     @endif
                 </div>
