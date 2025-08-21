@@ -733,7 +733,7 @@
             .search-container { padding: 0.75rem; }
             .search-input { padding: 0.6rem 0.9rem; font-size: 0.9rem; border-radius: 18px; }
 
-            .categories-container { padding: 0.5rem 0; top: 80px; }
+            .categories-container { padding: 0.5rem 0; top: 50px; }
             .category-tabs { gap: 0.4rem; padding: 0 0.75rem; }
             .category-tab { padding: 0.45rem 0.9rem; font-size: 0.8rem; border-radius: 18px; }
 
@@ -819,10 +819,15 @@
         </div>
     </header>
 
-    <!-- Search -->
-    <div class="search-container">
+    <!-- Search 
+     
+    
+     <div class="search-container">
         <input type="text" class="search-input" placeholder="Maxsulotni qidiring..." id="searchInput">
     </div>
+    
+    -->
+   
 
     <!-- Filters removed per request -->
 
