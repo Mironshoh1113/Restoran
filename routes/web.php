@@ -141,6 +141,13 @@ Route::middleware('auth')->group(function () {
 		Route::get('restaurants/{restaurant}/projects/{project}/categories/{category}/menu-items/{menuItem}/edit', [MenuItemController::class, 'edit'])->name('menu-items.edit');
 		Route::patch('restaurants/{restaurant}/projects/{project}/categories/{category}/menu-items/{menuItem}', [MenuItemController::class, 'update'])->name('menu-items.update');
 		Route::delete('restaurants/{restaurant}/projects/{project}/categories/{category}/menu-items/{menuItem}', [MenuItemController::class, 'destroy'])->name('menu-items.destroy');
+		
+		// User Subscription Management
+		Route::get('user-subscriptions', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'index'])->name('user-subscriptions.index');
+		Route::get('user-subscriptions/{user}', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'show'])->name('user-subscriptions.show');
+		Route::post('user-subscriptions/{user}/assign-plan', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'assignPlan'])->name('user-subscriptions.assign-plan');
+		Route::post('user-subscriptions/{user}/cancel-subscription', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'cancelSubscription'])->name('user-subscriptions.cancel-subscription');
+		Route::post('user-subscriptions/{user}/reset-to-free-plan', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'resetToFreePlan'])->name('user-subscriptions.reset-to-free-plan');
 	});
 });
 

@@ -149,7 +149,7 @@ function addKeyboardNavigation() { document.addEventListener('keydown', function
 
 function addFinalOptimizations() { const criticalImages = document.querySelectorAll('img[data-src]'); criticalImages.forEach(img => { if (img.dataset.src) { const link = document.createElement('link'); link.rel = 'preload'; link.as = 'image'; link.href = img.dataset.src; document.head.appendChild(link); } }); if (!document.querySelector('meta[name="viewport"]')) { const viewport = document.createElement('meta'); viewport.name = 'viewport'; viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'; document.head.appendChild(viewport); } if (!document.querySelector('meta[name="theme-color"]')) { const themeColor = document.createElement('meta'); themeColor.name = 'theme-color'; themeColor.content = getComputedStyle(document.documentElement).getPropertyValue('--primary-color'); document.head.appendChild(themeColor); } }
 
-function initializeImageHandling() { document.querySelectorAll('.menu-item-image').forEach(img => { img.addEventListener('error', function() { handleImageError(this); }); img.addEventListener('load', function() { handleImageLoad(this); }); }); }
+function initializeImageHandling() { document.querySelectorAll('.menu-item-image').forEach(img => { img.addEventListener('error', function() { handleImageError(this); }); img.addEventListener('load', function() { handleImageLoad(this); }); }); } 
 
 // Image preview modal
 function attachImagePreview() {
