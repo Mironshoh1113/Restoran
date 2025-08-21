@@ -822,11 +822,11 @@
     <!-- Search 
      
     
-   <input type="text" class="search-input" placeholder="Maxsulotni qidiring..." id="searchInput">
+  
     
     -->
      <div class="search-container">
-        
+         <input type="text" class="search-input" placeholder="Maxsulotni qidiring..." id="searchInput">
     </div>
 
     <!-- Filters removed per request -->
