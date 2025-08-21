@@ -206,7 +206,7 @@
 
         .menu-item-image {
             width: 100%;
-            height: 200px;
+            height: 400px;
             object-fit: cover;
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             transition: transform 0.3s ease;
