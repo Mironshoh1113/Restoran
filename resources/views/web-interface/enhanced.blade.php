@@ -206,7 +206,7 @@
 
         .menu-item-image {
             width: 100%;
-            height: 400px;
+            height: 300px;
             object-fit: cover;
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             transition: transform 0.3s ease;
@@ -581,7 +581,7 @@
             
             .menu-item-image,
             .menu-item-image-placeholder {
-                height: 150px;
+                height: 250px;
             }
             
             .checkout-modal-content {
