@@ -768,7 +768,7 @@
 		.shrink-50 .category-tab { padding: 0.4rem 0.8rem; font-size: 0.75rem; border-radius: 16px; }
 		.shrink-50 .category-content { grid-template-columns: repeat(2, 1fr); gap: 0.45rem; }
 		.shrink-50 .menu-item { margin-bottom: 0.45rem; }
-		.shrink-50 .menu-item-image, .shrink-50 .menu-item-image-placeholder { height: 190px; }
+		.shrink-50 .menu-item-image, .shrink-50 .menu-item-image-placeholder { height: 150px; }
 		.shrink-50 .menu-item-content { padding: 0.5rem; }
 		.shrink-50 .menu-item-title { font-size: 0.85rem; }
 		.shrink-50 .menu-item-description { font-size: 0.7rem; }
