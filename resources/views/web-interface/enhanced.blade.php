@@ -820,14 +820,16 @@
     </header>
 
     <!-- Search -->
-    <div class="search-container">
-        <input type="text" class="search-input" placeholder="Maxsulotni qidiring..." id="searchInput">
-    </div>
+   
 
     <!-- Filters removed per request -->
 
     <!-- Categories -->
     <div class="categories-container">
+
+    <div class="search-container">
+        <input type="text" class="search-input" placeholder="Maxsulotni qidiring..." id="searchInput">
+    </div>
         <div class="category-tabs">
             @foreach($categories as $category)
                 <div class="category-tab {{ $loop->first ? 'active' : '' }}" 
