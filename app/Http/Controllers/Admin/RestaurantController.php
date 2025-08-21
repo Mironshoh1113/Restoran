@@ -50,6 +50,20 @@ class RestaurantController extends Controller
     public function store(Request $request)
     {
         try {
+            // Validate required fields
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'phone' => 'required|string|max:20',
+                'address' => 'required|string|max:500',
+                'description' => 'nullable|string|max:1000',
+                'working_hours' => 'nullable|string|max:100',
+                'bot_token' => 'nullable|string|max:100',
+                'bot_username' => 'nullable|string|max:100',
+                'bot_name' => 'nullable|string|max:100',
+                'bot_description' => 'nullable|string|max:500',
+                'is_active' => 'boolean',
+            ]);
+            
             // Enforce restaurants limit again on store
             $user = Auth::user();
             if (!$user->isSuperAdmin()) {
@@ -189,6 +203,20 @@ class RestaurantController extends Controller
         $this->authorize('update', $restaurant);
         
         try {
+            // Validate required fields
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'phone' => 'required|string|max:20',
+                'address' => 'required|string|max:500',
+                'description' => 'nullable|string|max:1000',
+                'working_hours' => 'nullable|string|max:100',
+                'bot_token' => 'nullable|string|max:100',
+                'bot_username' => 'nullable|string|max:100',
+                'bot_name' => 'nullable|string|max:100',
+                'bot_description' => 'nullable|string|max:500',
+                'is_active' => 'boolean',
+            ]);
+            
             // Only update fillable fields
             $data = $request->only([
                 'name',

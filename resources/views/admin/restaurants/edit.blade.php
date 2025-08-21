@@ -25,7 +25,7 @@
         </div>
         
     <!-- Main Form Container -->
-    		<form action="{{ route('admin.restaurants.update', $restaurant) }}" method="POST" enctype="multipart/form-data" id="restaurantForm" novalidate>
+    		<form action="{{ route('admin.restaurants.update', $restaurant) }}" method="POST" enctype="multipart/form-data" id="restaurantForm">
             @csrf
             @method('PUT')
         
@@ -1109,6 +1109,42 @@
 
 <!-- JavaScript -->
 <script>
+// Form submission handling
+document.getElementById('restaurantForm').addEventListener('submit', function(e) {
+    console.log('Form submitted!');
+    console.log('Form action:', this.action);
+    console.log('Form method:', this.method);
+    
+    // Log form data
+    const formData = new FormData(this);
+    for (let [key, value] of formData.entries()) {
+        console.log(key + ': ' + value);
+    }
+    
+    // Check if required fields are filled
+    const requiredFields = ['name', 'phone', 'address'];
+    let hasErrors = false;
+    
+    requiredFields.forEach(field => {
+        const input = this.querySelector(`[name="${field}"]`);
+        if (!input.value.trim()) {
+            console.error('Required field empty:', field);
+            hasErrors = true;
+            input.classList.add('border-red-500');
+        } else {
+            input.classList.remove('border-red-500');
+        }
+    });
+    
+    if (hasErrors) {
+        e.preventDefault();
+        alert('Iltimos, barcha majburiy maydonlarni to\'ldiring!');
+        return false;
+    }
+    
+    console.log('Form validation passed, submitting...');
+});
+
 // Tab functionality
 document.addEventListener('DOMContentLoaded', function() {
     const tabButtons = document.querySelectorAll('.tab-button');
