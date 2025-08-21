@@ -731,7 +731,7 @@
             .restaurant-info p { font-size: 0.8rem; }
 
             .search-container { padding: 0.75rem; }
-            .search-input { padding: 0.6rem 0.9rem; font-size: 0.9rem; border-radius: 18px; }
+            .search-input { padding: 0.4rem 0.6rem; font-size: 0.6rem; border-radius: 14px; }
 
             .categories-container { padding: 0.5rem 0; top: 50px; }
             .category-tabs { gap: 0.4rem; padding: 0 0.75rem; }
