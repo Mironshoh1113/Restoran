@@ -449,7 +449,9 @@ class TelegramController extends Controller
         try {
             $message = "📋 <b>{$restaurant->name}</b> menyusi:\n\n";
             
-            $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
+            $categories = Category::where('restaurant_id', $restaurant->id)->with(['menuItems' => function($query) {
+                $query->where('is_active', true);
+            }])->get();
             
             foreach ($categories as $category) {
                 $message .= "🍽 <b>{$category->name}</b>\n";
@@ -952,7 +954,9 @@ class TelegramController extends Controller
             ]);
 
             Log::info('Loading categories and menu items');
-            $categories = Category::where('restaurant_id', $restaurant->id)->with('menuItems')->get();
+            $categories = Category::where('restaurant_id', $restaurant->id)->with(['menuItems' => function($query) {
+                $query->where('is_active', true);
+            }])->get();
 
             Log::info('Categories loaded', [
                 'categories_count' => $categories->count(),
@@ -1013,7 +1017,7 @@ class TelegramController extends Controller
 
             foreach ($data['items'] as $item) {
                 $menuItem = MenuItem::find($item['id']);
-                if ($menuItem && $menuItem->restaurant_id == $restaurant->id) {
+                if ($menuItem && $menuItem->restaurant_id == $restaurant->id && $menuItem->is_active) {
                     $itemTotal = $menuItem->price * $item['quantity'];
                     $totalPrice += $itemTotal;
                     $orderItems[] = [
@@ -1022,7 +1026,7 @@ class TelegramController extends Controller
                         'price' => $menuItem->price,
                         'total' => $itemTotal
                     ];
-    }
+                }
             }
 
             if (empty($orderItems)) {
